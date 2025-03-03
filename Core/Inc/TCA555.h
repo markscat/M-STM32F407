@@ -7,6 +7,10 @@
 
 #ifndef INC_TCA555_H_
 #define INC_TCA555_H_
+//不加下面兩行,編譯就會有問題
+#include "main.h"  
+#define TCA9555_ADDR  (0x20 << 1)  // I2C 地址 (ADDR=GND)
+
 
 void TCA9555_Init();
 void TCA9555_WriteOutput(uint16_t data);
