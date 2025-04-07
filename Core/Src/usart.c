@@ -5,6 +5,13 @@
   * @brief   This file provides code for the configuration
   *          of the USART instances.
   ******************************************************************************
+  * USART2 通訊設定 <br/>
+  * 初始化 USART2<br/>
+  * BaudRate		:115200<br/>
+  * WordLength		:8 bit<br/>
+  * StopBits 		:1<br/>
+  * 流量控制			:無<br/>
+  *
   * @attention
   *
   * Copyright (c) 2025 STMicroelectronics.
@@ -15,6 +22,8 @@
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
+
+ *
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
@@ -27,11 +36,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/** @param  設定ＴＸ的Buff size，預設128bit */
+#define TX_BUF_SIZE 128
+
 
 //#define STDOUT_FILENO 1
 //#define STDERR_FILENO 2
 //#define STDIN_FILENO 0
-#define TX_BUF_SIZE 128
 //static uint8_t tx_buf[TX_BUF_SIZE];
 //volatile uint8_t uart_tx_busy = 0;  // 0: 空閒, 1: 發送中
 //uint8_t rx_byte;  // 用於接收單個字節
@@ -129,6 +140,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
+
 
 
 /* USER CODE END 1 */

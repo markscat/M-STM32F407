@@ -23,5 +23,7 @@ bool uart_data_available(void);
 // 自訂非阻塞回顯範例
 void echo_received_data(void);
 
+void clear_input_buffer() ;
+
 
 #endif /* INC_UART_IO_H_ */

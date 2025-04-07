@@ -1,0 +1,722 @@
+/*
+ *   ******************************************************************************
+ * @file eeprom_handler.c
+ * @brief AT2432 讀寫程式：
+ *
+ *	- AT24C32是32Kbit的EEPROM，也就是4KByte，分页的话，每页32字节<br/>
+ *
+ *	私有函數結構：（公開函數宣告在eeprom_handler.h）<br/>
+ *	EEPROM位置驗證<br/>
+ *	static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size);<br/>
+ *	內部寫入：<br/>
+ *	static EEPROM_Status Internal_Write(uint16_t addr, const uint8_t* data, uint16_t size);<br/>
+ *	內部讀取<br/>
+ *	static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size);<br/>
+ *	更新健康<br/>
+ *	static void Update_Health(bool success);<br/>
+ *	硬體重置<br/>
+ *	static void Hardware_Reset(void);<br/>
+ *
+ *
+ *  @date Mar 16, 2025<br/>
+ *  @author  Deepseek and Ethan<br/>
+ *
+ *    ******************************************************************************
+ */
+
+
+
+#include "eeprom_handler.h"
+#include <string.h>
+#include "stdlib.h"
+#include "stdbool.h"
+#include "stdio.h"
+#define MAX_EEPROM_WRITE_SIZE 32
+#define DS1307_Driver
+
+/* 私有变量 ------------------------------------------------------------------*/
+static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size);
+static EEPROM_Status Internal_Write(uint16_t addr, const uint8_t* data, uint16_t size);
+static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size);
+static void Update_Health(bool success);
+static void Hardware_Reset(void);
+
+static I2C_HandleTypeDef* hi2c_eeprom = &I2C_HANDLE;
+static EEPROM_Health health_monitor = {0};
+static const uint16_t crc_poly = 0x1021;  // CRC-16-CCITTInternal_Write
+
+/* [修改] 原EEPROM代码适配共用I2C ----------------------------------------------*/
+// 原文件 eeprom_handler.c 中修改：
+ //static I2C_HandleTypeDef* hi2c_eeprom = &EEPROM_I2C_HANDLE; //--> 修改为：
+I2C_HandleTypeDef* hi2c_main = &I2C_HANDLE;  // [MOD] 统一I2C句柄名称
+
+
+/* 私有函数原型 --------------------------------------------------------------*/
+
+
+uint16_t received_crc;          // 儲存從緩衝區提取的 CRC 值
+uint16_t computed_crc;          // 儲存即時計算的 CRC 值
+extern uint8_t* buffer;         // 外部宣告的數據緩衝區指標（需在其他檔案定義）
+extern uint16_t size;           // 外部宣告的數據長度（需在其他檔案定義）
+static uint32_t error_counter = 0; // 錯誤計數器（僅當前檔案可見）
+#define MAX_RETRIES 3           // 最大容許錯誤次數
+#define EEPROM_PAGE_SIZE 32  // 定义页大小
+
+//#define init_I2C_Driver
+//#define DS1307_Driver
+#define test2
+
+#ifdef init_I2C_Driver
+
+HAL_StatusTypeDef I2C_device_Init(void){
+	  if(HAL_I2C_IsDeviceReady(hi2c_main, EEPROM_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+		  printf("I2C initialization failed \n");
+	    return EEPROM_ERR_INIT;
+	  }
+	  if(HAL_I2C_IsDeviceReady(hi2c_main, DS1307_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+		  printf("RTC DS1307 initialization failed \n");
+
+	        return HAL_ERROR;
+	  }else{
+		  // RTC init
+		 	   /* 启用时钟振荡器（确保未处于停止模式）*/
+		 	    uint8_t sec_reg = 0;
+		 	    HAL_I2C_Mem_Read(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+		 	                    I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100);
+		 	    if(sec_reg & 0x80) {  // 如果时钟停止
+		 	        sec_reg &= ~0x80; // 清除停止位
+		 	        HAL_I2C_Mem_Write(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+		 	                         I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100);
+		 	    }
+		 	    return HAL_OK;
+	  }
+
+	  //EEPROM_init
+
+	  EEPROM_ResetHealth();
+	  	  printf("I2C Device is ready \n");
+	  return EEPROM_OK;
+
+
+
+
+	}
+#endif
+
+
+#ifdef DS1307_Driver
+
+
+#ifdef test2
+
+
+void Parse_TimeString(char *str) {
+    // 示例字符串格式："2023,12,31,23,59,30"
+    int year, month, day, hour, minute, second;
+
+    // 分段解析
+    char *token = strtok(str, ",");
+    if(!token) return;
+    year = atoi(token);
+
+    token = strtok(NULL, ",");
+    if(!token) return;
+    month = atoi(token);
+
+    token = strtok(NULL, ",");
+    if(!token) return;
+    day = atoi(token);
+
+    token = strtok(NULL, ",");
+    if(!token) return;
+    hour = atoi(token);
+
+    token = strtok(NULL, ",");
+    if(!token) return;
+    minute = atoi(token);
+
+    token = strtok(NULL, ",");
+    if(!token) return;
+    second = atoi(token);
+
+    // 打印验证
+    printf("[Received] %04d-%02d-%02d %02d:%02d:%02d\r\n",
+           year, month, day, hour, minute, second);
+}
+
+
+
+
+/* 设备初始化配置结构体 */
+
+
+typedef struct {
+  uint8_t dev_addr;               // 设备I2C地址（7位格式）
+  I2C_Status (*init_fn)(void);    // 设备专属初始化函数指针
+  const char* dev_name;           // 设备名称（用于调试信息）
+} I2C_DeviceConfig;
+
+
+/*----------------------------- 设备初始化函数 -----------------------------*/
+/**
+  * @brief  EEPROM (AT24C32) 初始化
+  * @retval I2C_Status 错误码
+  */
+static I2C_Status EEPROM_DeviceInit(void) {
+  // 检测设备是否存在
+  if (HAL_I2C_IsDeviceReady(&I2C_HANDLE, EEPROM_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+    return I2C_ERR_INIT;
+  }
+  // 可在此添加EEPROM特定初始化（例如写入默认配置）
+  EEPROM_ResetHealth();
+  return I2C_OK;
+}
+
+
+/**
+  * @brief  DS1307 实时时钟初始化
+  * @retval I2C_Status 错误码
+  */
+static I2C_Status DS1307_DeviceInit(void) {
+  // 检测设备是否存在
+  if (HAL_I2C_IsDeviceReady(&I2C_HANDLE, DS1307_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+    return I2C_ERR_INIT;
+  }
+
+  // 检查并启动时钟振荡器（清除CH位）
+  uint8_t sec_reg;
+  if (HAL_I2C_Mem_Read(&I2C_HANDLE, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+                      I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100) != HAL_OK) {
+    return I2C_ERR_COMM;
+  }
+
+  if (sec_reg & 0x80) {  // 如果时钟停止
+    sec_reg &= ~0x80;    // 清除停止位
+    if (HAL_I2C_Mem_Write(&I2C_HANDLE, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+                         I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100) != HAL_OK) {
+      return I2C_ERR_COMM;
+    }
+  }
+  return I2C_OK;
+}
+
+/*----------------------------- 核心初始化函数 -----------------------------*/
+/**
+  * @brief  统一I2C设备初始化入口
+  * @retval I2C_Status 错误码
+  *
+  */
+I2C_Status I2C_Init_Devices(void) {
+  // 设备配置表（按需扩展）
+	/**
+	 *
+	 * 模块化设备管理
+	 * 设备配置表 (dev_config[])：通过结构体数组定义连接的设备，包含：
+	 * 	dev_addr: 设备的7位I2C地址
+	 * 	init_fn: 设备专属初始化函数指针
+	 * 	dev_name: 设备名称（用于调试）
+	 * 	扩展性：未来新增设备只需在表中添加条目，例如添加温度传感器：
+	 * <code>
+	 * {
+	 * .dev_addr  = 0x48,  // 假设为LM75温度传感器
+	 * .init_fn   = LM75_DeviceInit,
+	 * .dev_name  = "LM75 Temperature Sensor"
+	 * }</code>
+  *
+	 * */
+  static const I2C_DeviceConfig dev_config[] = {
+    // EEPROM 设备
+    {
+      .dev_addr  = EEPROM_I2C_ADDR,  // 7位地址
+      .init_fn   = EEPROM_DeviceInit,
+      .dev_name  = "AT24C32 EEPROM"
+    },
+    // DS1307 设备
+    {
+      .dev_addr  = DS1307_I2C_ADDR,  // 7位地址
+      .init_fn   = DS1307_DeviceInit,
+      .dev_name  = "DS1307 RTC"
+    },
+    // 可在此添加更多设备...
+  };
+  //end I2C_DeviceConfig dev_config[]
+
+  /**
+   * 初始化流程分层
+   * graph TD
+   *  A[I2C_Init_Devices] --> B[初始化I2C硬件]
+   *  B --> C{遍历设备表}
+   *  C --> D[初始化EEPROM]
+   *  C --> E[初始化DS1307]
+   *  C --> F[...其他设备...]
+   *  D --> G{成功?}
+   *  G -->|是| H[继续下一个设备]
+   *  G -->|否| I[返回错误]
+   * */
+
+  // 步骤1: 初始化I2C硬件总线
+  if (HAL_I2C_Init(&I2C_HANDLE) != HAL_OK) {
+    return I2C_ERR_INIT;
+  }
+
+  // 步骤2: 遍历所有设备进行初始化
+  for (uint8_t i = 0; i < sizeof(dev_config)/sizeof(dev_config[0]); i++) {
+    I2C_Status status = dev_config[i].init_fn();
+    if (status != I2C_OK) {
+      // 输出调试信息（需实现printf）
+      printf("[I2C Init] Device %s initialization failed! Error: %d\n",
+            dev_config[i].dev_name, status);
+      return status; // 严格模式：遇到错误立即返回
+    }
+    printf("[I2C Init] %s initialized successfully.\n", dev_config[i].dev_name);
+  }
+
+  return I2C_OK;
+}
+
+
+/*
+ * typedef enum {
+  I2C_OK = 0,
+  I2C_ERR_INIT,		//I2C initialization failed
+  I2C_ERR_COMM,		//I2C communication failed
+  I2C_ERR_CRC,		//I2C CRC failed
+  I2C_ERR_ADDR,		//I2C Address failed
+  I2C_ERR_POWER,  	//Power Control failed
+  I2C_ERR_TIMEOUT,	//I2C communication Time out failed
+  I2C_ERR_BUS_BUSY,	//I2C BUS BUSY
+  I2C_ERR_Size		//over EEPROM Size
+} I2C_Status;
+ * */
+
+const char* I2C_Status_ToString(I2C_Status status) {
+  switch(status) {
+    case I2C_OK:          	return "Success";
+    case I2C_ERR_INIT:    	return "I2C hardware initialization failed";
+    case I2C_ERR_COMM:    	return "Communication error";
+    case I2C_ERR_CRC:	  	return"I2C CRC failed";
+    case I2C_ERR_ADDR:	  	return "I2C Address failed";
+    case I2C_ERR_TIMEOUT:	return "I2C communication Time out failed";
+    case I2C_ERR_BUS_BUSY:	return "I2C BUS BUSY";
+    case I2C_ERR_Size:		return "over EEPROM Size";
+    // ...其他错误码描述
+    default:              return "Unknown error";
+  }
+}
+#endif
+
+
+
+#ifdef test1
+/* [新增] DS1307 初始化函数 ----------------------------------------------------*/
+/**
+  * @brief 初始化 DS1307 时钟模块
+  * @retval HAL状态 (HAL_OK/HAL_ERROR)
+  */
+HAL_StatusTypeDef DS1307_Init(void) {
+    /* 检查设备是否就绪 */
+    if(HAL_I2C_IsDeviceReady(hi2c_main, DS1307_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+        return HAL_ERROR;
+    }
+
+    /* 启用时钟振荡器（确保未处于停止模式）*/
+    uint8_t sec_reg = 0;
+    HAL_I2C_Mem_Read(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+                    I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100);
+    if(sec_reg & 0x80) {  // 如果时钟停止
+        sec_reg &= ~0x80; // 清除停止位
+        HAL_I2C_Mem_Write(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+                         I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100);
+    }
+    return HAL_OK;
+}
+#endif
+
+
+/* [共用工具函数] BCD/十进制转换 ------------------------------------------------*/
+// [MOD] 新增以下两个转换函数
+uint8_t dec_to_bcd(uint8_t val) {
+    return ((val / 10) << 4) | (val % 10);
+}
+uint8_t bcd_to_dec(uint8_t val) {
+    return ((val >> 4) * 10) + (val & 0x0F);
+}
+
+/* [新增] DS1307 时间写入函数 ---------------------------------------------------*/
+/**
+  * @brief 设置DS1307时间
+  * @param time: 时间结构体指针
+  * @retval HAL状态
+  */
+HAL_StatusTypeDef DS1307_SetTime(DS1307_Time* time) {
+    uint8_t buffer[7];
+
+    // 转换十进制到BCD格式
+    buffer[0] = dec_to_bcd(time->seconds);
+    buffer[1] = dec_to_bcd(time->minutes);
+    buffer[2] = dec_to_bcd(time->hours);
+    buffer[3] = dec_to_bcd(time->day);
+    buffer[4] = dec_to_bcd(time->date);
+    buffer[5] = dec_to_bcd(time->month);
+    buffer[6] = dec_to_bcd(time->year);
+
+    // 写入时间寄存器
+    return HAL_I2C_Mem_Write(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+                            I2C_MEMADD_SIZE_8BIT, buffer, 7, 100);
+}
+
+/* [新增] DS1307 时间读取函数 ---------------------------------------------------*/
+/**
+  * @brief 读取DS1307时间
+  * @param time: 时间结构体指针
+  * @retval HAL状态
+  */
+HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time) {
+    uint8_t buffer[7];
+    HAL_StatusTypeDef status;
+
+    status = HAL_I2C_Mem_Read(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
+                             I2C_MEMADD_SIZE_8BIT, buffer, 7, 100);
+    if(status != HAL_OK) return status;
+
+    // 转换BCD到十进制并处理停止位
+    time->seconds = bcd_to_dec(buffer[0] & 0x7F); // 忽略停止位
+    time->minutes = bcd_to_dec(buffer[1]);
+    time->hours   = bcd_to_dec(buffer[2] & 0x3F); // 24小时模式
+    time->day     = bcd_to_dec(buffer[3]);
+    time->date    = bcd_to_dec(buffer[4]);
+    time->month   = bcd_to_dec(buffer[5]);
+    time->year    = bcd_to_dec(buffer[6]);
+
+    return HAL_OK;
+}
+
+/* [新增] 使用示例 ------------------------------------------------------------
+void Sample_Usage(void) {
+    // 初始化共用I2C总线
+    EEPROM_Init();  // 此函数已包含I2C初始化
+
+    // 初始化DS1307
+    if(DS1307_Init() == HAL_OK) {
+        // 设置时间示例
+        DS1307_Time new_time = {
+            .seconds = 30,
+            .minutes = 59,
+            .hours = 23,
+            .day = 5,       // 星期五
+            .date = 31,
+            .month = 12,
+            .year = 25      // 2025年
+        };
+        DS1307_SetTime(&new_time);
+
+        // 读取并存储到EEPROM
+        DS1307_Time current_time;
+        if(DS1307_GetTime(&current_time) == HAL_OK) {
+            EEPROM_Write(0x100, (uint8_t*)&current_time, sizeof(DS1307_Time));
+        }
+    }
+}*/
+#endif
+
+
+
+
+
+
+
+/**
+  * @brief 初始化EEPROM模块
+  * @retval 操作状态
+  */
+EEPROM_Status EEPROM_Init(void) {
+  /* 电源控制初始化 */
+#if EEPROM_PWR_CTRL_ENABLE
+  HAL_GPIO_WritePin(EEPROM_PWR_GPIO, EEPROM_PWR_PIN, GPIO_PIN_SET);
+  HAL_Delay(100);  // 等待电源稳定
+#endif
+
+  /* 设备就绪检查 */
+
+  //if(HAL_I2C_IsDeviceReady(hi2c_eeprom, EEPROM_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+   // 原代码使用 hi2c_eeprom，现在统一改为 hi2c_main
+
+  if(HAL_I2C_IsDeviceReady(hi2c_main, EEPROM_I2C_ADDR << 1, 3, 100) != HAL_OK) {
+	  printf("I2C initialization failed \n");
+    return EEPROM_ERR_INIT;
+  }
+
+  EEPROM_ResetHealth();
+  	  printf("I2C Device is ready \n");
+  return EEPROM_OK;
+}
+
+/**
+  * @brief 写入数据到EEPROM
+  * @param addr: 起始地址 (0x0000-0x0FFF)
+  * @param data: 数据指针
+  * @param size: 数据长度
+  * @retval 操作状态
+  */
+EEPROM_Status EEPROM_Write(uint16_t addr, const uint8_t* data, uint16_t size) {
+  /* 地址校验 */
+  EEPROM_Status addr_status = Validate_Address(addr, size);
+  if(addr_status != EEPROM_OK) {
+	  //printf("I2C address communication Fail \n");
+
+    return addr_status;
+  }else{
+	  //printf("I2C address communication pass\n");
+  }
+
+  /* 添加CRC校验码 */
+  uint16_t crc = Compute_CRC(data, size);
+  uint8_t* buffer = (uint8_t*)malloc(size + 2);
+
+
+  if(!buffer) {
+	  return EEPROM_ERR_COMM;
+	  //printf("I2C Write communication failed\n");
+
+  }else{
+	  //printf("I2C Write communication pass\n");
+  }
+
+
+  memcpy(buffer, data, size);
+  memcpy(buffer + size, &crc, 2);
+  //printf("memory copy pass\n");
+
+  /* 执行带错误恢复的写入 */
+
+  EEPROM_Status status = Internal_Write(addr, buffer, size + 2);
+  //printf("\n in EEPROM_Write() , after Internal_Write() , status = %d\n",status);
+
+  free(buffer);
+  //printf("Free buff \n");
+  //printf("\n in EEPROM_Write() , before Update_Health() , status = %d\n",status);
+  Update_Health(status == EEPROM_OK);
+
+  return status;
+}
+
+/**
+  * @brief 从EEPROM读取数据
+  * @param addr: 起始地址
+  * @param data: 数据缓存指针
+  * @param size: 读取数据长度
+  * @retval 操作状态
+  */
+EEPROM_Status EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size) {
+  /* 地址校验 */
+  EEPROM_Status addr_status = Validate_Address(addr, size);
+  if(addr_status != EEPROM_OK) {
+    return addr_status;
+  }
+
+  /* 读取数据+CRC */
+  uint8_t* buffer = (uint8_t*)malloc(size + 2);
+  if(!buffer){
+	  printf("I2C Read communication failed\n");
+	  return EEPROM_ERR_COMM;
+  }
+
+  EEPROM_Status status = Internal_Read(addr, buffer, size + 2);
+  if(status != EEPROM_OK) {
+    free(buffer);
+    return status;
+  }
+
+  /** CRC校验
+   *
+   * 從 buffer 中提取接收到的 CRC 值
+   * buffer + size 指向數據結尾後的位置（CRC 存儲位置）
+   * (uint16_t*) 強制轉換為 16-bit 指標，獲取兩個字節的 CRC 值
+   *
+   *  */
+  /* CRC 驗證區塊 */
+  // 安全複製 CRC 值（避免記憶體對齊問題）
+  memcpy(&received_crc, buffer + size, sizeof(received_crc));
+
+  // 計算當前數據的 CRC
+  computed_crc = Compute_CRC(buffer, size);  // 假設 Compute_CRC() 已正確定義
+
+  /* 錯誤處理區塊 */
+  if (computed_crc != received_crc) {
+      // 輸出詳細錯誤資訊
+      printf("[ERROR] CRC Mismatch! Computed: 0x%04X, Received: 0x%04X\n",
+             computed_crc, received_crc);
+
+      // 安全釋放緩衝區（需確保 buffer 是動態分配）
+      if (buffer != NULL) {
+          free(buffer);
+          buffer = NULL;  // 避免懸空指標
+      }
+
+      // 錯誤次數累加與系統復位檢查
+      error_counter++;
+      if (error_counter > MAX_RETRIES) {
+          printf("Fatal CRC Error! Triggering System Reset...\n");
+          NVIC_SystemReset();  // 需確認已包含 CMSIS 或 HAL 庫
+      }
+
+      return EEPROM_ERR_CRC;  // 假設 EEPROM_ERR_CRC 已定義為錯誤碼
+  }
+
+
+  memcpy(data, buffer, size);
+  free(buffer);
+
+  Update_Health(true);
+  return EEPROM_OK;
+}
+
+/* 私有函数实现 --------------------------------------------------------------*/
+
+/**
+  * @brief 计算CRC-16校验码
+  */
+uint16_t Compute_CRC(const uint8_t* data, uint16_t len) {
+  uint16_t crc = 0xFFFF;
+  for(uint16_t i=0; i<len; i++) {
+    crc ^= (uint16_t)data[i] << 8;
+    for(uint8_t j=0; j<8; j++) {
+      crc = (crc & 0x8000) ? (crc << 1) ^ crc_poly : (crc << 1);
+    }
+  }
+  return crc;
+}
+
+/**
+  * @brief 带自动重试的底层写入
+  */
+static EEPROM_Status Internal_Write(uint16_t addr, const uint8_t* data, uint16_t size) {
+  const uint8_t max_retries = 3;
+
+  for(uint8_t retry=0; retry<max_retries; retry++) {
+    HAL_StatusTypeDef hal_status = HAL_I2C_Mem_Write(hi2c_eeprom,EEPROM_I2C_ADDR << 1,addr,I2C_MEMADD_SIZE_16BIT,(uint8_t*)data,size,100);
+	  //printf("\n\n in Internal_Write: \n hal_status = %d\n",hal_status);
+	 //HAL_Delay(5);
+
+    if(hal_status == HAL_OK) {
+  	  //printf("\n\n in Internal_Write: \n hal_status = %d",hal_status);
+   	 HAL_Delay(5);
+
+      /* 验证写入完成 */
+      if(HAL_I2C_IsDeviceReady(hi2c_eeprom, EEPROM_I2C_ADDR << 1, 100, 100) == HAL_OK) {
+    	  //printf("\n\n in Internal_Write: \n EEPROM_OK = %d \n\n",EEPROM_OK);
+
+        return EEPROM_OK;
+      }
+    }
+
+    /* 错误恢复策略 */
+    if(retry == 1) Hardware_Reset();
+    HAL_Delay((retry+1)*10);
+  }
+  return EEPROM_ERR_COMM;
+}
+
+/**
+  * @brief 带自动重试的底层读取
+  */
+static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size) {
+  const uint8_t max_retries = 3;
+
+  for(uint8_t retry=0; retry<max_retries; retry++) {
+    HAL_StatusTypeDef hal_status = HAL_I2C_Mem_Read(hi2c_eeprom,
+                                                   EEPROM_I2C_ADDR << 1,
+                                                   addr,
+                                                   I2C_MEMADD_SIZE_16BIT,
+                                                   data,
+                                                   size,
+                                                   100);
+    if(hal_status == HAL_OK) {
+      return EEPROM_OK;
+    }
+
+    /* 错误恢复策略 */
+    if(retry == 1) Hardware_Reset();
+    HAL_Delay((retry+1)*10);
+  }
+  return EEPROM_ERR_COMM;
+}
+
+/**
+  * @brief 硬件复位操作
+  */
+static void Hardware_Reset(void) {
+  /* I2C总线复位 */
+  HAL_I2C_DeInit(hi2c_eeprom);
+  HAL_Delay(10);
+  HAL_I2C_Init(hi2c_eeprom);
+
+#if EEPROM_PWR_CTRL_ENABLE
+  /* 电源循环复位 */
+  HAL_GPIO_WritePin(EEPROM_PWR_GPIO, EEPROM_PWR_PIN, GPIO_PIN_RESET);
+  HAL_Delay(50);
+  HAL_GPIO_WritePin(EEPROM_PWR_GPIO, EEPROM_PWR_PIN, GPIO_PIN_SET);
+  HAL_Delay(100);
+#endif
+}
+
+/**
+  * @brief 地址有效性验证
+  */
+static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size) {
+  const uint16_t max_addr = 0x0FFF;  // AT24C32最大地址
+
+  if(addr > max_addr){
+	  printf("I2C Address failed");
+	  return EEPROM_ERR_ADDR;
+  }
+  if((addr + size) > max_addr)
+  {
+  	  printf("I2C Address failed\n");
+  	  return EEPROM_ERR_ADDR;
+   }
+  return EEPROM_OK;
+}
+
+/**
+  * @brief 更新设备健康状态
+  */
+static void Update_Health(bool success) {
+  health_monitor.last_op_time = HAL_GetTick();
+  health_monitor.error_count = success ? 0 : (health_monitor.error_count + 1);
+
+  if(success) {
+    health_monitor.hw_status |= 0x01;  // 标记最后一次操作成功
+  } else {
+    health_monitor.hw_status &= ~0x01;
+
+    /* 连续错误超过阈值触发安全机制 */
+    if(health_monitor.error_count >= 5) {
+      NVIC_SystemReset();  // 触发系统复位
+    }
+  }
+}
+
+/* 公开辅助函数 --------------------------------------------------------------*/
+
+void EEPROM_GetHealth(EEPROM_Health* health) {
+  memcpy(health, &health_monitor, sizeof(EEPROM_Health));
+}
+
+void EEPROM_ResetHealth(void) {
+  memset(&health_monitor, 0, sizeof(EEPROM_Health));
+}
+
+bool EEPROM_IsReady(void) {
+  return (HAL_I2C_IsDeviceReady(hi2c_eeprom, EEPROM_I2C_ADDR << 1, 1, 100) == HAL_OK);
+}
+
+#if EEPROM_PWR_CTRL_ENABLE
+void EEPROM_PowerCycle(void) {
+  HAL_GPIO_WritePin(EEPROM_PWR_GPIO, EEPROM_PWR_PIN, GPIO_PIN_RESET);
+  HAL_Delay(500);
+  HAL_GPIO_WritePin(EEPROM_PWR_GPIO, EEPROM_PWR_PIN, GPIO_PIN_SET);
+  HAL_Delay(100);
+}
+#endif
+

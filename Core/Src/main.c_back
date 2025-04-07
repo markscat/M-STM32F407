@@ -53,6 +53,7 @@
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
+#include "dma.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -75,8 +76,7 @@
 //#define EEPROM
 //#define EEPROM_read
 //#define EEPROM_write
-#define MAX_INPUT_LEN 32 // 输入字符串最大长度
-uint8_t rx_data;
+
 
 
 #ifdef EEPROM
@@ -166,47 +166,45 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
 
+	  //volatile uint32_t stack_ptr = __get_MSP();
+
+	    //volatile bool uart_tx_complete = false;
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /** Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
-  /* Configure the system clock */
+  /** Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
   /**
-     * @defgroup Initialize Initialize
-     * @brief Initialize all configured peripherals
-     * @{
-     */
+   * @defgroup Initialize Initialize
+   * @brief Initialize all configured peripherals
+   * @{
+   */
 
-    /**
-     * @brief  GPIO初始化
-     * param  無
-     * @return 無
-     * @note   這裡可以寫一些額外的備註
-     * @warning 這裡可以寫警告資訊
-     */
+  /**
+   * @brief  GPIO初始化
+   * param  無
+   * @return 無
+   * @note   這裡可以寫一些額外的備註
+   * @warning 這裡可以寫警告資訊
+   */
   MX_GPIO_Init();
 
   /**
@@ -215,40 +213,38 @@ int main(void)
      * @return 無
 
      */
+
   MX_SPI1_Init();
   /**
-      * @brief  USART初始化
-      * param  無
-      * @return 無
-      */
+     * @brief  USART初始化
+     * param  無
+     * @return 無
+     */
 
   MX_USART2_UART_Init();
   /**
-      * @brief  I2C初始化
-      * I2C1 GPIO Configuration
- 	 * PB6     ------> I2C1_SCL
- 	 * PB7     ------> I2C1_SDA
-      * param  無
-      * @return 無
-      *
- 	 *
-     */
+     * @brief  I2C初始化
+     * I2C1 GPIO Configuration
+	 * PB6     ------> I2C1_SCL
+	 * PB7     ------> I2C1_SDA
+     * param  無
+     * @return 無
+     *
+	 *
+    */
   MX_I2C1_Init();
 
-  //MX_I2C3_Init();
-  /* USER CODE BEGIN 2 */
-  uart_io_init(); // 初始化UART輸入輸出
+  void MX_DMA_Init(void);
 
 
   /**
-    * @}
-    */  //確保 `Initialize` 進入 `Initialize` 群組
+   * @}
+   */  //確保 `Initialize` 進入 `Initialize` 群組
 
 
   /* USER CODE BEGIN 2 */
   uart_io_init(); // 初始化UART輸入輸出
 
-  //
 
   I2C_Status status = I2C_Init_Devices();
     if (status != I2C_OK) {
@@ -258,35 +254,12 @@ int main(void)
     }
 
     printf("I2C device init ok!yy \n\n");
+    HAL_Delay(10);
+    //char input[32] = {0};
+    printf("input:\n");
+    //scanf("%31s", input);  // 注意：会阻塞直到收到回车
 
-    printf("System Ready. Enter a string:\r\n");
-
-
-   // setvbuf(stdout, NULL, _IONBF, 0);
-       // printf("UART Ready!\r\n");
-
-       // HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_byte, 1);
-
-
-    //char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-/*
-    if (scanf("%32s", input_str) == 1) { // 限制输入长度防止溢出
-                printf("Received: %s\r\n", input_str);
-            } else {
-                printf("Input error.\r\n");
-                // 清空缓冲区残留数据
-                while (getchar() != '\n');
-            }
-
-*/
-    //printf("\n abcd \n");
-
-while(1){
-
-}
-
-
-
+    //printf("input is=%s",input);
 
 #ifdef EEPROM
   printf("\n");
@@ -482,12 +455,22 @@ while(1){
 
     /* USER CODE END WHILE */
 
+	  //uint16_t mask = ~((uint16_t)1 << position);
+	  //TCA9555_WriteOutput(mask);
+	  //position = (position + 1) % 16;
+
+      //HAL_Delay(500);
+
+
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 #endif
-
 }
+
+
+
 
 /**
   * @brief System Clock Configuration

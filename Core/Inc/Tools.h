@@ -18,8 +18,10 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __I2C_H__
-#define __I2C_H__
+
+#ifndef __TOOLS_H
+#define __TOOLS_H
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,21 +29,20 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+//#include "stm32f4xx_hal.h"
+
+//extern uint32_t us;
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-extern I2C_HandleTypeDef hi2c1;
-
-extern I2C_HandleTypeDef hi2c3;
-
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_I2C1_Init(void);
-void MX_I2C3_Init(void);
+void Delay_us(uint32_t us);
+
 
 /* USER CODE BEGIN Prototypes */
 
@@ -51,5 +52,5 @@ void MX_I2C3_Init(void);
 }
 #endif
 
-#endif /* __I2C_H__ */
+#endif /* __TOOLS_H__ */
 
