@@ -13,12 +13,18 @@
 #include <stdint.h>
 
 #define RX_BUF_SIZE 128  // 接收緩衝區大小
+#define RINGBUF_ERROR_OVERFLOW (1 << 0) // 溢位錯誤標誌
+
+//extern volatile uint8_t rx_buf_error;  // 錯誤狀態標誌
 
 typedef struct {
+    volatile uint16_t head;
+    volatile uint16_t tail;
     uint8_t buffer[RX_BUF_SIZE];
-    volatile uint16_t head;  // 寫入位置
-    volatile uint16_t tail;  // 讀取位置
 } RingBuffer;
+
+
+
 
 // 初始化緩衝區
 void ring_buffer_init(void);
