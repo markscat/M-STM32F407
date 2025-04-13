@@ -42,13 +42,20 @@
  * 如果沒有，請參閱 <https://www.gnu.org/licenses/gpl-3.0.html>。  
  */
 #include "ring_buffer.h"
+#include "stm32f4xx_hal.h"  // 确保包含 HAL 头文件
+
+
 
 /**
  *  @brief 宣告緩衝區結構,並且將其結構的內容清空
  *  volatile 關鍵字：防止編譯器優化，確保緩衝區在 中斷服務程序（ISR） <br/>
  *  和主程序間的正確訪問（例如 UART 接收中斷即時寫入數據）。<br/>
  */
+
+
 volatile RingBuffer rx_buf = {0};
+volatile uint8_t rx_buf_error = 0;// 錯誤狀態標誌
+
 
 /**
  *  @brief初始化函式
@@ -57,6 +64,7 @@ volatile RingBuffer rx_buf = {0};
 void ring_buffer_init(void) {
     rx_buf.head = 0;
     rx_buf.tail = 0;
+    rx_buf_error = 0; // 初始化錯誤標誌
 }
 
 
@@ -81,6 +89,45 @@ bool rx_buf_is_full(void) {
  *  @brief 數據寫入
  *  僅在緩衝區未滿時寫入，避免數據覆蓋。
  */
+//<V4.12>
+//修改：添加臨界區保護與溢位標記
+void rx_buf_put(uint8_t data) {
+    uint32_t primask = __get_PRIMASK(); // 保存當前中斷狀態
+    __disable_irq();                    // 禁用中斷（進入臨界區）
+
+    if (!rx_buf_is_full()) {
+        rx_buf.buffer[rx_buf.head] = data;
+        rx_buf.head = (rx_buf.head + 1) % RX_BUF_SIZE;
+    } else {
+        rx_buf_error |= RINGBUF_ERROR_OVERFLOW; // 標記溢位錯誤
+    }
+
+    __set_PRIMASK(primask); // 恢復中斷狀態（退出臨界區）
+}
+
+
+/**
+ *  @brief 數據讀取
+ *  僅在緩衝區非空時讀取，避免讀取無效數據。
+ */
+// 修改：添加臨界區保護
+uint8_t rx_buf_get(void) {
+    uint8_t data = 0;
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+
+    if (!rx_buf_is_empty()) {
+        data = rx_buf.buffer[rx_buf.tail];
+        rx_buf.tail = (rx_buf.tail + 1) % RX_BUF_SIZE;
+    }
+
+    __set_PRIMASK(primask);
+    return data;
+}
+
+//</V4.12>
+
+#if oldcode
 void rx_buf_put(uint8_t data) {
 /**
  * @todo
@@ -107,6 +154,7 @@ void rx_buf_put(uint8_t data) {
     }
 }
 
+
 /**
  *  @brief 數據讀取
  *  僅在緩衝區非空時讀取，避免讀取無效數據。
@@ -119,4 +167,4 @@ uint8_t rx_buf_get(void) {
     }
     return data;
 }
-
+#endif

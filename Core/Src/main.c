@@ -246,7 +246,7 @@ int main(void)
 
 
   /* USER CODE BEGIN 2 */
-  uart_io_init(); // 初始化UART輸入輸出
+  //uart_io_init(); // 初始化UART輸入輸出
 
   //
 
@@ -260,6 +260,46 @@ int main(void)
     printf("I2C device init ok!yy \n\n");
 
     printf("System Ready. Enter a string:\r\n");
+
+
+
+    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+
+
+
+	    scanf("%32s", input_str);
+	    printf("Received: %s\r\n",input_str);
+
+		   printf("out for loop\n");
+
+	   //char Year,Moth,Day,Hour,Minute,Second;
+
+	   //uint8_t DayandTime=sizeof(input_str);
+
+	   //int i;
+
+		   for (int i = 0; input_str[i] != '\0'; i++) {
+		  				   //printf("in for loop \n");
+		  	              // 調用 printf 打印單個字符
+		  	              // 由於 printf 已重定向到 UART，這會透過 _write 發送到 UART
+		  				   printf("%c\n", input_str[i]);
+
+		  	              // 可選：添加短暫延遲，以便在慢速終端上能看到逐字打印效果
+		  	              // 注意：HAL_Delay 會阻塞主循環，僅用於演示或要求不高的地方
+		  	              // HAL_Delay(50); // 延遲 50 毫秒
+		  	          }
+		  			   //break;
+
+		   while(1){
+
+		   }
+
+
+    //scanf("%32s", input_str);
+    //printf("Received: %s\r\n", input_str);
+
+
+    //HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin); // 调试用LED
 
 
    // setvbuf(stdout, NULL, _IONBF, 0);
@@ -281,9 +321,6 @@ int main(void)
 */
     //printf("\n abcd \n");
 
-while(1){
-
-}
 
 
 
