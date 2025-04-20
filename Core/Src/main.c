@@ -48,6 +48,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <I2C_Peripherals.h>
 #include "main.h"
 #include "i2c.h"
 #include "spi.h"
@@ -62,7 +63,6 @@
 #include "ssd1306.h"
 #include "Tools.h"
 #include "error_handler.h"
-#include "eeprom_handler.h"
 
 /**
  * @defgroup Function_selete Function_selete
@@ -75,13 +75,20 @@
 //#define EEPROM
 //#define EEPROM_read
 //#define EEPROM_write
+//#define PrintfScanfTestCode
+//#define RTC_Read
+#define RTC_Write
+
+
+
+
 #define MAX_INPUT_LEN 32 // 输入字符串最大长度
 uint8_t rx_data;
 
 
 #ifdef EEPROM
 #include "error_handler.h"
-#include "eeprom_handler.h"
+#include <I2C_Peripherals.h>
 
 /**
 #define EEPROM_I2C_ADDR        0x50  // 7位地址 (A2A1A0接地)
@@ -260,99 +267,18 @@ int main(void)
     printf("I2C device init ok!yy \n\n");
 
     printf("System Ready. Enter a string:\r\n");
-
-
-
+/*
     char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
 
+    	    scanf("%32s", input_str);
+    	    printf("Received: %s\r\n",input_str);
+    	    while(1){
 
-
-	    scanf("%32s", input_str);
-	    printf("Received: %s\r\n",input_str);
-
-		   printf("out for loop\n");
-
-	   //char Year,Moth,Day,Hour,Minute,Second;
-
-	   //uint8_t DayandTime=sizeof(input_str);
-
-	   //int i;
-
-		   for (int i = 0; input_str[i] != '\0'; i++) {
-		  				   //printf("in for loop \n");
-		  	              // 調用 printf 打印單個字符
-		  	              // 由於 printf 已重定向到 UART，這會透過 _write 發送到 UART
-		  				   printf("%c\n", input_str[i]);
-
-		  	              // 可選：添加短暫延遲，以便在慢速終端上能看到逐字打印效果
-		  	              // 注意：HAL_Delay 會阻塞主循環，僅用於演示或要求不高的地方
-		  	              // HAL_Delay(50); // 延遲 50 毫秒
-		  	          }
-		  			   //break;
-
-		   while(1){
-
-		   }
-
-
-    //scanf("%32s", input_str);
-    //printf("Received: %s\r\n", input_str);
-
-
-    //HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin); // 调试用LED
-
-
-   // setvbuf(stdout, NULL, _IONBF, 0);
-       // printf("UART Ready!\r\n");
-
-       // HAL_UART_Receive_IT(&huart2, (uint8_t *)&rx_byte, 1);
-
-
-    //char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-/*
-    if (scanf("%32s", input_str) == 1) { // 限制输入长度防止溢出
-                printf("Received: %s\r\n", input_str);
-            } else {
-                printf("Input error.\r\n");
-                // 清空缓冲区残留数据
-                while (getchar() != '\n');
-            }
-
+    	    }
 */
-    //printf("\n abcd \n");
 
 
-
-
-
-#ifdef EEPROM
-  printf("\n");
-
-  printf("start......\n\n");
-
-  if(EEPROM_Init() != EEPROM_OK) {
-      Error_Handler();
-    }
-
-  printf("eeprom init ok......\n\n");
-
-
-    uint8_t test_data[] = "STM32 EEPROM 5566";
-
-    setvbuf(stdout, NULL, _IONBF, 0);
-    //int S_test_data=10;
-    //int S_test_data2=sizeof(test_data);
-
-    //printf("arry size (bytes): %d\n",S_test_data ); // 輸出 10
-    //printf("arry size (bytes): %d\n",S_test_data2 ); // 輸出 18
-
-    //fflush(stdout); // 確保每個數值立即輸出
-#endif
-
-
-
-
-#ifdef ds1307_test
+#ifdef RTC_Read
       // 初始化成功后的操作
       DS1307_Time current_time;
       status = DS1307_GetTime(&current_time);
@@ -380,11 +306,174 @@ int main(void)
         	               current_time.seconds);
         	        printf("星期: 周%d\n", current_time.day);  // 根据DS1307规范(1=周日,7=周六)
         	        printf("--------------------------------\n\n");
-               	 HAL_Delay(1000);
+               	 HAL_Delay(100);
 
         }
 
 #endif
+
+
+
+
+#ifdef RTC_Write
+        //<讀取階段>
+
+    //char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+    //scanf("%32s", input_str);
+    //printf("Received: %s\r\n",input_str);
+    //DateAndTime dt = Parse_TimeString(input_str);
+    //dt 接收到的時間
+	//printf("從電腦取得時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",dt.year, dt.month, dt.date, dt.day,dt.hour, dt.minute, dt.second);
+
+     /* 轉換為DS1307時間結構 */
+	/*
+    DS1307_Time ds_time; 			//RTC的時間,讀取和寫入共用
+    ds_time.date    = dt.date;       // 日期中的日
+    ds_time.month   = dt.month;     // 月份
+    ds_time.year    = dt.year % 100;// 年份後兩位
+    ds_time.hours   = dt.hour;      // 小時
+    ds_time.minutes = dt.minute;    // 分鐘
+    ds_time.seconds = dt.second;    // 秒數
+    ds_time.day     = dt.day;       //星期
+
+    //寫入階段
+
+    HAL_StatusTypeDef DT_status = DS1307_SetTime(&ds_time);
+
+    if (DT_status == HAL_OK) {
+
+    	printf("時間設定成功: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    			dt.year, dt.month, dt.date, dt.day,
+				dt.hour, dt.minute, dt.second);
+    } else {
+        printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    }
+    memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+    */
+
+//讀取階段
+        DS1307_Time ds_time;
+        HAL_StatusTypeDef DT_status;
+
+    while(1){
+
+    	 DT_status = DS1307_GetTime(&ds_time);
+
+    	    if (DT_status == HAL_OK) {
+
+    	        printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    	               			ds_time.year, ds_time.month,ds_time.date ,ds_time.day,
+    	        				ds_time.hours, ds_time.minutes, ds_time.seconds);
+    	        } else {
+    	            printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	        }
+    	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+
+    	       	HAL_Delay(1000);
+
+/*
+       	printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+       			ds_time.year, ds_time.month,ds_time.date ,ds_time.day,
+				ds_time.hours, ds_time.minutes, ds_time.seconds);
+       	HAL_Delay(1000);
+       	*/
+       }
+
+#endif
+
+
+#ifdef RTC_Read
+      // 初始化成功后的操作
+    DS1307_Time current_time;
+
+      status = DS1307_GetTime(&current_time);
+
+        printf("当前RTC时间:\n");
+        printf("--------------------------------\n");
+        printf("日期: 20%02d-%02d-%02d\n",   // 假设年份为两位表示(00-99)
+               current_time.year,
+               current_time.month,
+               current_time.date);
+        printf("时间: %02d:%02d:%02d\n",
+               current_time.hours,
+               current_time.minutes,
+               current_time.seconds);
+        printf("星期: 周%d\n", current_time.day);  // 根据DS1307规范(1=周日,7=周六)
+        printf("--------------------------------\n\n");
+
+
+        while (1)
+        {
+
+        	printf("Time: %02d:%02d:%02d\n",
+        	               current_time.hours,
+        	               current_time.minutes,
+        	               current_time.seconds);
+        	        printf("星期: 周%d\n", current_time.day);  // 根据DS1307规范(1=周日,7=周六)
+        	        printf("--------------------------------\n\n");
+               	 HAL_Delay(100);
+
+        }
+
+#endif
+
+#ifdef PrintfScanfTestCode
+
+    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+
+	    scanf("%32s", input_str);
+	    printf("Received: %s\r\n",input_str);
+
+	    DateAndTime result = Parse_TimeString(input_str);
+
+	    printf("Parsed time: %04d-%02d-%02d %02d:%02d:%02d\n",
+	               result.year, result.month, result.day,
+	               result.hour, result.minute, result.second);
+
+
+
+
+
+
+		   while(1){
+
+		   }
+
+#endif
+
+
+
+
+
+#ifdef EEPROM
+  printf("\n");
+
+  printf("start......\n\n");
+
+  if(EEPROM_Init() != EEPROM_OK) {
+      Error_Handler();
+    }
+
+  printf("eeprom init ok......\n\n");
+
+
+    uint8_t test_data[] = "STM32 EEPROM 5566";
+
+    setvbuf(stdout, NULL, _IONBF, 0);
+    //int S_test_data=10;
+    //int S_test_data2=sizeof(test_data);
+
+    //printf("arry size (bytes): %d\n",S_test_data ); // 輸出 10
+    //printf("arry size (bytes): %d\n",S_test_data2 ); // 輸出 18
+
+    //fflush(stdout); // 確保每個數值立即輸出
+
+    while(1){
+
+   		   }
+#endif
+
+
 
 
 
