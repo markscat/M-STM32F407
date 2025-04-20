@@ -6,8 +6,8 @@
  */
 
 
+#include <I2C_Peripherals.h>
 #include "data_recovery.h"
-#include "eeprom_handler.h"
 #include "error_handler.h"
 #include <string.h>
 #include <stdlib.h>
