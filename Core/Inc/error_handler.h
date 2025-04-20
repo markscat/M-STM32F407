@@ -9,7 +9,7 @@
 #define INC_ERROR_HANDLER_H_
 
 #pragma once
-#include "eeprom_handler.h"
+#include <I2C_Peripherals.h>
 #include "gpio.h"
 
 
