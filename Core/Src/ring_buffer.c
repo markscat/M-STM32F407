@@ -91,6 +91,7 @@ bool rx_buf_is_full(void) {
  */
 //<V4.12>
 //修改：添加臨界區保護與溢位標記
+
 void rx_buf_put(uint8_t data) {
     uint32_t primask = __get_PRIMASK(); // 保存當前中斷狀態
     __disable_irq();                    // 禁用中斷（進入臨界區）

@@ -26,13 +26,12 @@
   */
 
 
-
-#include "uart_io.h"
-#include "ring_buffer.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
+#include "uart_io.h"
+#include "ring_buffer.h"
 #include "gpio.h"
 
 
@@ -206,7 +205,6 @@ int _read(int file, char *ptr, int len) {
 //--------------------------------------------------
 */
 
-#define BUFFER_SIZE 100
 char inputBuffer[BUFFER_SIZE];
 uint8_t RX_index = 0;
 
@@ -216,13 +214,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
         char received_char = rxBuffer[0]; // 获取接收到的字符
         rx_buf_put(received_char); // 存入环形缓冲区
-
-
         // 边界检查，防止溢出
         if (RX_index < BUFFER_SIZE - 1) { // 保留一个位置给终止符
             if (received_char == '\r' || received_char == '\n') {
                 inputBuffer[RX_index] = '\0'; // 终止字符串
-                //printf("\r\nReceived: %s\r\n", inputBuffer); // 回显
                 RX_index = 0; // 重置索引
             } else {
                 inputBuffer[RX_index++] = received_char; // 存储字符
@@ -230,7 +225,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         } else {
             // 缓冲区满，清空并提示错误
             RX_index = 0;
-            //printf("\r\nError: Buffer overflow!\r\n");
         }
 
         // 重启接收中断

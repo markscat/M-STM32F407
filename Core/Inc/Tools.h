@@ -29,6 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "I2C_Peripherals.h"
 //#include "stm32f4xx_hal.h"
 
 //extern uint32_t us;
@@ -41,7 +42,17 @@ extern "C" {
 
 /* USER CODE END Private defines */
 
+typedef struct {
+    uint8_t century;  // 世紀部分 (e.g., 20)
+    uint8_t year;     // 年份部分 (e.g., 25)
+} YearComponents;
+
+
 void Delay_us(uint32_t us);
+uint8_t calculate_checksum(const char *data_str, size_t len);
+void Process_Time_String(const char *time_str);
+YearComponents split_year(uint16_t full_year);
+uint16_t combine_year(YearComponents y);
 
 
 /* USER CODE BEGIN Prototypes */

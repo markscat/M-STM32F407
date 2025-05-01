@@ -48,21 +48,12 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <I2C_Peripherals.h>
 #include "main.h"
-#include "i2c.h"
-#include "spi.h"
-#include "usart.h"
-#include "gpio.h"
+#include "I2C_Peripherals.h"//ok
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include <string.h>
-#include "uart_io.h"
-#include "ssd1306.h"
-#include "Tools.h"
-#include "error_handler.h"
 
 /**
  * @defgroup Function_selete Function_selete
@@ -78,12 +69,9 @@
 //#define PrintfScanfTestCode
 //#define RTC_Read
 #define RTC_Write
-
-
-
-
 #define MAX_INPUT_LEN 32 // 输入字符串最大长度
 uint8_t rx_data;
+
 
 
 #ifdef EEPROM
@@ -98,9 +86,6 @@ uint8_t rx_data;
 #define DATA_WITH_CRC_SIZE(data_size) (data_size + 2)  // 16-bit CRC
 */
 #endif
-
-
-
 
 
 //#define oled
@@ -120,7 +105,8 @@ uint8_t rx_data;
 /**
  * @}
  */
-//確保 `Function_selete` 進入 `Function_selete` 群組
+
+
 
 /* USER CODE END Includes */
 
@@ -134,6 +120,8 @@ uint8_t rx_data;
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 //使用者自訂 #define（Private Define）
+
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -148,22 +136,23 @@ uint8_t rx_data;
 /* USER CODE BEGIN PV */
 //使用者自訂變數（Private Variables）
 
+
+// 來自 uart_io.c 的外部變數 (根據您的專案定義)
+extern volatile uint16_t RxCounter;
+extern volatile uint8_t RxFinishFlag;
+
+/* USER CODE END PV */
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+
 /* USER CODE BEGIN PFP */
 //使用者自訂「函式原型（Private Function Prototypes）
 
-/*
- * @brife EEPROM函式宣告*/
-/*
- HAL_StatusTypeDef EEPROM_Write(uint16_t memAddr, uint8_t *data, uint16_t size) ;
- HAL_StatusTypeDef EEPROM_WaitForWriteComplete(void) ;
- HAL_StatusTypeDef EEPROM_Read(uint16_t memAddr, uint8_t *data, uint16_t size);
- HAL_StatusTypeDef EEPROM_ReadWithCRC(uint16_t addr, uint8_t* data, uint16_t size);
- HAL_StatusTypeDef EEPROM_WriteWithCRC(uint16_t addr, uint8_t* data, uint16_t size);
-*/
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -258,6 +247,7 @@ int main(void)
   //
 
   I2C_Status status = I2C_Init_Devices();
+
     if (status != I2C_OK) {
       printf("[错误] I2C设备初始化失败! 错误码: %d\n", status);
       Error_Handler();  // 需自定义错误处理函数
@@ -267,119 +257,80 @@ int main(void)
     printf("I2C device init ok!yy \n\n");
 
     printf("System Ready. Enter a string:\r\n");
-/*
-    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-
-    	    scanf("%32s", input_str);
-    	    printf("Received: %s\r\n",input_str);
-    	    while(1){
-
-    	    }
-*/
-
-
-#ifdef RTC_Read
-      // 初始化成功后的操作
-      DS1307_Time current_time;
-      status = DS1307_GetTime(&current_time);
-
-        printf("当前RTC时间:\n");
-        printf("--------------------------------\n");
-        printf("日期: 20%02d-%02d-%02d\n",   // 假设年份为两位表示(00-99)
-               current_time.year,
-               current_time.month,
-               current_time.date);
-        printf("时间: %02d:%02d:%02d\n",
-               current_time.hours,
-               current_time.minutes,
-               current_time.seconds);
-        printf("星期: 周%d\n", current_time.day);  // 根据DS1307规范(1=周日,7=周六)
-        printf("--------------------------------\n\n");
-
-
-        while (1)
-        {
-
-        	printf("Time: %02d:%02d:%02d\n",
-        	               current_time.hours,
-        	               current_time.minutes,
-        	               current_time.seconds);
-        	        printf("星期: 周%d\n", current_time.day);  // 根据DS1307规范(1=周日,7=周六)
-        	        printf("--------------------------------\n\n");
-               	 HAL_Delay(100);
-
-        }
-
-#endif
-
-
 
 
 #ifdef RTC_Write
-        //<讀取階段>
 
-    //char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-    //scanf("%32s", input_str);
-    //printf("Received: %s\r\n",input_str);
-    //DateAndTime dt = Parse_TimeString(input_str);
-    //dt 接收到的時間
-	//printf("從電腦取得時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",dt.year, dt.month, dt.date, dt.day,dt.hour, dt.minute, dt.second);
+     //<讀取階段>
+    DS1307_Time dt = {0};
+	HAL_StatusTypeDef DT_status;
+#define SetupTime
 
-     /* 轉換為DS1307時間結構 */
-	/*
-    DS1307_Time ds_time; 			//RTC的時間,讀取和寫入共用
-    ds_time.date    = dt.date;       // 日期中的日
-    ds_time.month   = dt.month;     // 月份
-    ds_time.year    = dt.year % 100;// 年份後兩位
-    ds_time.hours   = dt.hour;      // 小時
-    ds_time.minutes = dt.minute;    // 分鐘
-    ds_time.seconds = dt.second;    // 秒數
-    ds_time.day     = dt.day;       //星期
+#ifdef SetupTime
+    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+
+    scanf("%32s", input_str);
+    printf("Received_time : %s\r\n",input_str);
+
+    //分析input_str的資料,存到 dt
+    dt.year = 0xFF;
+    dt = Parse_TimeString(input_str);
 
     //寫入階段
 
-    HAL_StatusTypeDef DT_status = DS1307_SetTime(&ds_time);
-
-    if (DT_status == HAL_OK) {
-
-    	printf("時間設定成功: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    			dt.year, dt.month, dt.date, dt.day,
-				dt.hour, dt.minute, dt.second);
-    } else {
-        printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    if(dt.year==0xFF){
+    	DT_status = DS1307_SetTime(&dt);
+    	printf("set time");
+    	if (DT_status == HAL_OK) {
+    		printf("時間設定成功: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year, dt.month, dt.date, dt.day,
+					dt.hours , dt.minutes, dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
+    	memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+    }else{
+    	printf("不需要校正時間:");
+    	DT_status = DS1307_GetTime(&dt);
+    	if (DT_status == HAL_OK) {
+    		printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
     }
-    memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-    */
 
-//讀取階段
-        DS1307_Time ds_time;
-        HAL_StatusTypeDef DT_status;
+
+	DT_status = DS1307_GetTime(&dt);
+	if (DT_status == HAL_OK) {
+		printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+	} else {
+		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+	}
+	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+
+	       	HAL_Delay(1000);
+#endif
+
 
     while(1){
-
-    	 DT_status = DS1307_GetTime(&ds_time);
-
-    	    if (DT_status == HAL_OK) {
-
-    	        printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    	               			ds_time.year, ds_time.month,ds_time.date ,ds_time.day,
-    	        				ds_time.hours, ds_time.minutes, ds_time.seconds);
-    	        } else {
-    	            printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-    	        }
+#ifdef showtime
+    	DT_status = DS1307_GetTime(&dt);
+    	if (DT_status == HAL_OK) {
+    		printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
     	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
 
     	       	HAL_Delay(1000);
 
-/*
-       	printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-       			ds_time.year, ds_time.month,ds_time.date ,ds_time.day,
-				ds_time.hours, ds_time.minutes, ds_time.seconds);
-       	HAL_Delay(1000);
-       	*/
+#endif
+#endif
        }
 
-#endif
 
 
 #ifdef RTC_Read

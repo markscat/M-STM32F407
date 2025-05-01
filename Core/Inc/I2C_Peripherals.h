@@ -16,7 +16,6 @@
 #include "stm32f4xx_hal.h"       // 核心HAL库
 #include "stm32f4xx_hal_i2c.h"   // I2C外设支持
 #include "stdbool.h"
-
 // 通过外部声明引用全局变量
 extern I2C_HandleTypeDef hi2c1;  // I2C实例（在main.c中定义）
 
@@ -83,13 +82,13 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
 
 // 时间结构体定义（与DS1307寄存器对应）
 typedef struct {
-    uint8_t seconds;
-    uint8_t minutes;
-    uint8_t hours;
-    uint8_t day;
-    uint8_t date;
+	uint8_t year;
     uint8_t month;
-    uint8_t year;
+    uint8_t date;
+    uint8_t hours;
+    uint8_t minutes;
+	uint8_t seconds;
+    uint8_t day;
 } DS1307_Time;
 
 
@@ -176,7 +175,7 @@ HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time);
 uint8_t dec_to_bcd(uint8_t val);
 uint8_t bcd_to_dec(uint8_t val);
 
-DateAndTime Parse_TimeString(const char *str);
+DS1307_Time Parse_TimeString(const char *str);
 uint8_t calculate_day_of_week(uint16_t year, uint8_t month, uint8_t day) ;
 
 

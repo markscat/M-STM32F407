@@ -12,6 +12,9 @@
 #include "stm32f4xx_hal.h"
 #include <stdbool.h>
 
+#define BUFFER_SIZE 100
+
+
 extern UART_HandleTypeDef huart2;  // CubeMX生成的UART2控制代碼
 
 // 初始化UART輸入輸出

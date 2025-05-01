@@ -31,6 +31,8 @@
 #include "stdlib.h"
 #include "stdbool.h"
 #include "stdio.h"
+#include "Tools.h"
+
 #define MAX_EEPROM_WRITE_SIZE 32
 #define DS1307_Driver
 
@@ -54,13 +56,13 @@ I2C_HandleTypeDef* hi2c_main = &I2C_HANDLE;  // [MOD] 统一I2C句柄名称
 /* 私有函数原型 --------------------------------------------------------------*/
 
 
-uint16_t received_crc;          // 儲存從緩衝區提取的 CRC 值
-uint16_t computed_crc;          // 儲存即時計算的 CRC 值
-extern uint8_t* buffer;         // 外部宣告的數據緩衝區指標（需在其他檔案定義）
-extern uint16_t size;           // 外部宣告的數據長度（需在其他檔案定義）
-static uint32_t error_counter = 0; // 錯誤計數器（僅當前檔案可見）
-#define MAX_RETRIES 3           // 最大容許錯誤次數
-#define EEPROM_PAGE_SIZE 32  // 定义页大小
+uint16_t received_crc;         		// 儲存從緩衝區提取的 CRC 值
+uint16_t computed_crc;          	// 儲存即時計算的 CRC 值
+extern uint8_t* buffer;         	// 外部宣告的數據緩衝區指標（需在其他檔案定義）
+extern uint16_t size;           	// 外部宣告的數據長度（需在其他檔案定義）
+static uint32_t error_counter = 0; 	// 錯誤計數器（僅當前檔案可見）
+#define MAX_RETRIES 3           	// 最大容許錯誤次數
+#define EEPROM_PAGE_SIZE 32   		// 定义页大小
 
 
 
@@ -99,9 +101,6 @@ HAL_StatusTypeDef I2C_device_Init(void){
 	  	  printf("I2C Device is ready \n");
 	  return EEPROM_OK;
 
-
-
-
 	}
 #endif
 
@@ -111,61 +110,6 @@ HAL_StatusTypeDef I2C_device_Init(void){
 
 #ifdef test2
 
-
-DateAndTime Parse_TimeString(const char *str) {
-    // 示例字符串格式："2023,12,31,23,59,30"
-    //int year, month, day, hour, minute, second;
-
-    DateAndTime DT = {0};
-    char *copy = strdup(str);  // 修改3：避免修改原始字串
-    char *token = NULL;
-
-    // 分段解析
-    ////char *token = strtok(str, ",");
-    ////if(!token) return;
-    //year = atoi(token);
-    ////DT.year= atoi(token);
-
-    token = strtok(copy, ",");
-
-    //年
-    if(!token) goto cleanup;
-    DT.year = atoi(token);
-    //月
-    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
-    DT.month = atoi(token);
-    //日
-    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
-    DT.date = atoi(token);  // 修正錯誤
-    //時
-    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
-    DT.hour = atoi(token);
-    //分
-    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
-    DT.minute = atoi(token);
-    //秒
-    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
-    DT.second = atoi(token);
-
-    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
-    DT.day = atoi(token);
-
-
-    cleanup:
-    free(copy);
-    return DT;  // 修改4：回傳結構體
-}
-
-
-/* 計算Zeller公式求星期幾 */
-uint8_t calculate_day_of_week(uint16_t year, uint8_t month, uint8_t day) {
-    if (month < 3) {
-        month += 12;
-        year--;
-    }
-    uint16_t h = (day + (13 * (month + 1)) / 5 + year + year / 4 - year / 100 + year / 400) % 7;
-    return (h + 6) % 7 + 1; // 轉換為1-7格式(1=週日,7=週六)
-}
 
 /* 设备初始化配置结构体 */
 
@@ -295,20 +239,6 @@ I2C_Status I2C_Init_Devices(void) {
 }
 
 
-/*
- * typedef enum {
-  I2C_OK = 0,
-  I2C_ERR_INIT,		//I2C initialization failed
-  I2C_ERR_COMM,		//I2C communication failed
-  I2C_ERR_CRC,		//I2C CRC failed
-  I2C_ERR_ADDR,		//I2C Address failed
-  I2C_ERR_POWER,  	//Power Control failed
-  I2C_ERR_TIMEOUT,	//I2C communication Time out failed
-  I2C_ERR_BUS_BUSY,	//I2C BUS BUSY
-  I2C_ERR_Size		//over EEPROM Size
-} I2C_Status;
- * */
-
 const char* I2C_Status_ToString(I2C_Status status) {
   switch(status) {
     case I2C_OK:          	return "Success";
@@ -325,42 +255,9 @@ const char* I2C_Status_ToString(I2C_Status status) {
 }
 #endif
 
+/*====================RTC段====================*/
 
 
-#ifdef test1
-/* [新增] DS1307 初始化函数 ----------------------------------------------------*/
-/**
-  * @brief 初始化 DS1307 时钟模块
-  * @retval HAL状态 (HAL_OK/HAL_ERROR)
-  */
-HAL_StatusTypeDef DS1307_Init(void) {
-    /* 检查设备是否就绪 */
-    if(HAL_I2C_IsDeviceReady(hi2c_main, DS1307_I2C_ADDR << 1, 3, 100) != HAL_OK) {
-        return HAL_ERROR;
-    }
-
-    /* 启用时钟振荡器（确保未处于停止模式）*/
-    uint8_t sec_reg = 0;
-    HAL_I2C_Mem_Read(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
-                    I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100);
-    if(sec_reg & 0x80) {  // 如果时钟停止
-        sec_reg &= ~0x80; // 清除停止位
-        HAL_I2C_Mem_Write(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
-                         I2C_MEMADD_SIZE_8BIT, &sec_reg, 1, 100);
-    }
-    return HAL_OK;
-}
-#endif
-
-
-/* [共用工具函数] BCD/十进制转换 ------------------------------------------------*/
-// [MOD] 新增以下两个转换函数
-uint8_t dec_to_bcd(uint8_t val) {
-    return ((val / 10) << 4) | (val % 10);
-}
-uint8_t bcd_to_dec(uint8_t val) {
-    return ((val >> 4) * 10) + (val & 0x0F);
-}
 
 /* [新增] DS1307 时间写入函数 ---------------------------------------------------*/
 /**
@@ -411,6 +308,60 @@ HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time) {
     return HAL_OK;
 }
 
+
+DS1307_Time Parse_TimeString(const char *str) {
+    // 示例字符串格式："2023,12,31,23,59,30"
+    //int year, month, day, hour, minute, second;
+
+	DS1307_Time DT = {0};
+    char *copy = strdup(str);  // 修改3：避免修改原始字串
+    char *token = NULL;
+
+    // 分段解析
+    ////char *token = strtok(str, ",");
+    ////if(!token) return;
+    //year = atoi(token);
+    ////DT.year= atoi(token);
+
+    token = strtok(copy, ",");
+    //年
+    if(!token) goto cleanup;
+    DT.year = atoi(token) % 100;
+    //月
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.month = atoi(token);
+    //日
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.date = atoi(token);  // 修正錯誤
+    //時
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.hours = atoi(token);
+    //分
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.minutes = atoi(token);
+    //秒
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.seconds = atoi(token);
+
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.day = atoi(token);
+
+
+    cleanup:
+    free(copy);
+    return DT;  // 修改4：回傳結構體
+}
+
+
+/* [共用工具函数] BCD/十进制转换 ------------------------------------------------*/
+// [MOD] 新增以下两个转换函数
+uint8_t dec_to_bcd(uint8_t val) {
+    return ((val / 10) << 4) | (val % 10);
+}
+uint8_t bcd_to_dec(uint8_t val) {
+    return ((val >> 4) * 10) + (val & 0x0F);
+}
+
 /* [新增] 使用示例 ------------------------------------------------------------
 void Sample_Usage(void) {
     // 初始化共用I2C总线
@@ -440,10 +391,7 @@ void Sample_Usage(void) {
 #endif
 
 
-
-
-
-
+/*====================EEPROM段====================*/
 
 /**
   * @brief 初始化EEPROM模块
