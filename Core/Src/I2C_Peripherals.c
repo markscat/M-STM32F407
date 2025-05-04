@@ -33,7 +33,10 @@
 #include "stdio.h"
 #include "Tools.h"
 
+#define EEPROM_SIZE 4096  // AT24C32容量
+#define MAX_READ_LEN 32   // 推荐单次读取长度
 #define MAX_EEPROM_WRITE_SIZE 32
+
 #define DS1307_Driver
 
 /* 私有变量 ------------------------------------------------------------------*/
@@ -106,10 +109,6 @@ HAL_StatusTypeDef I2C_device_Init(void){
 
 
 #ifdef DS1307_Driver
-
-
-#ifdef test2
-
 
 /* 设备初始化配置结构体 */
 
@@ -362,34 +361,6 @@ uint8_t bcd_to_dec(uint8_t val) {
     return ((val >> 4) * 10) + (val & 0x0F);
 }
 
-/* [新增] 使用示例 ------------------------------------------------------------
-void Sample_Usage(void) {
-    // 初始化共用I2C总线
-    EEPROM_Init();  // 此函数已包含I2C初始化
-
-    // 初始化DS1307
-    if(DS1307_Init() == HAL_OK) {
-        // 设置时间示例
-        DS1307_Time new_time = {
-            .seconds = 30,
-            .minutes = 59,
-            .hours = 23,
-            .day = 5,       // 星期五
-            .date = 31,
-            .month = 12,
-            .year = 25      // 2025年
-        };
-        DS1307_SetTime(&new_time);
-
-        // 读取并存储到EEPROM
-        DS1307_Time current_time;
-        if(DS1307_GetTime(&current_time) == HAL_OK) {
-            EEPROM_Write(0x100, (uint8_t*)&current_time, sizeof(DS1307_Time));
-        }
-    }
-}*/
-#endif
-
 
 /*====================EEPROM段====================*/
 
@@ -439,17 +410,16 @@ EEPROM_Status EEPROM_Write(uint16_t addr, const uint8_t* data, uint16_t size) {
 
   /* 添加CRC校验码 */
   uint16_t crc = Compute_CRC(data, size);
+  printf("\nw_crc = %d \n",crc);
   uint8_t* buffer = (uint8_t*)malloc(size + 2);
 
 
   if(!buffer) {
+	  printf("I2C Write communication failed\n");
 	  return EEPROM_ERR_COMM;
-	  //printf("I2C Write communication failed\n");
-
   }else{
-	  //printf("I2C Write communication pass\n");
+	  printf("I2C Write communication pass\n");
   }
-
 
   memcpy(buffer, data, size);
   memcpy(buffer + size, &crc, 2);
@@ -458,12 +428,9 @@ EEPROM_Status EEPROM_Write(uint16_t addr, const uint8_t* data, uint16_t size) {
   /* 执行带错误恢复的写入 */
 
   EEPROM_Status status = Internal_Write(addr, buffer, size + 2);
-  //printf("\n in EEPROM_Write() , after Internal_Write() , status = %d\n",status);
 
   free(buffer);
-  //printf("Free buff \n");
-  //printf("\n in EEPROM_Write() , before Update_Health() , status = %d\n",status);
-  Update_Health(status == EEPROM_OK);
+   Update_Health(status == EEPROM_OK);
 
   return status;
 }
@@ -481,19 +448,45 @@ EEPROM_Status EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size) {
   if(addr_status != EEPROM_OK) {
     return addr_status;
   }
+  //printf("Read from EEPROM: %s\n", data);
 
-  /* 读取数据+CRC */
+
+  /* 读取数据+CRC（嚴格限制長度） */
+  uint8_t* buffer = (uint8_t*)malloc(size + 2);
+  if(!buffer) {
+    printf("Memory allocation failed\n");
+    return EEPROM_ERR_COMM;
+  }
+
+  /* 读取数据+CRC
   uint8_t* buffer = (uint8_t*)malloc(size + 2);
   if(!buffer){
 	  printf("I2C Read communication failed\n");
 	  return EEPROM_ERR_COMM;
   }
+  */
 
+  // 只讀取需要的部分（數據 + CRC）
   EEPROM_Status status = Internal_Read(addr, buffer, size + 2);
+
   if(status != EEPROM_OK) {
     free(buffer);
     return status;
   }
+
+  /* ========== 新增：打印原始數據 ==========*/
+  printf("\n\n");
+  printf("Raw Data from EEPROM (%d bytes):\n", size);
+  for(int i = 0; i < size ; i++) {
+    printf("%02X ", buffer[i]);
+    if((i+1) % 16 == 0) printf("\n");  // 每16字節換行
+  }
+  printf("\n\n");
+  printf("buffer = %s ",buffer);
+
+  printf("\n\n");
+
+   /* ========== 新增部分結束 ========== */
 
   /** CRC校验
    *
@@ -504,15 +497,42 @@ EEPROM_Status EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size) {
    *  */
   /* CRC 驗證區塊 */
   // 安全複製 CRC 值（避免記憶體對齊問題）
-  memcpy(&received_crc, buffer + size, sizeof(received_crc));
+
+  /* 提取 CRC（大端序） */
+  uint16_t received_crc = (buffer[size] << 8) | buffer[size + 1];  // 高位在前
+
+  uint16_t computed_crc = Compute_CRC(buffer, size);
+
+  printf("Computed CRC: 0x%04X, Received CRC: 0x%04X\n", computed_crc, received_crc);
+
+
+
+ // memcpy(&received_crc, buffer + size, sizeof(received_crc));
 
   // 計算當前數據的 CRC
-  computed_crc = Compute_CRC(buffer, size);  // 假設 Compute_CRC() 已正確定義
+  //computed_crc = Compute_CRC(buffer, size);  // 假設 Compute_CRC() 已正確定義
+
+
+  //uint16_t received_crc;
+  //memcpy(&received_crc, buffer + size, 2);
+
+
+  /*
+  printf("<CRC test> \n");
+
+
+  printf("Computed CRC: 0x%04X, Received CRC: 0x%04X \n",
+         computed_crc, received_crc);
+  printf("Received CRC (swapped): 0x%04X \n",
+         (received_crc << 8) | (received_crc >> 8));
+
+  printf("</CRC test> \n\n");
+*/
 
   /* 錯誤處理區塊 */
   if (computed_crc != received_crc) {
       // 輸出詳細錯誤資訊
-      printf("[ERROR] CRC Mismatch! Computed: 0x%04X, Received: 0x%04X\n",
+      printf("[ERROR] CRC Mismatch! Computed: 0x%04X, Received: 0x%04X \n",
              computed_crc, received_crc);
 
       // 安全釋放緩衝區（需確保 buffer 是動態分配）
@@ -546,12 +566,16 @@ EEPROM_Status EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size) {
   */
 uint16_t Compute_CRC(const uint8_t* data, uint16_t len) {
   uint16_t crc = 0xFFFF;
+  //uint16_t poly = 0x1021; // CCITT 多項式（確認是否與 EEPROM 一致）
+
   for(uint16_t i=0; i<len; i++) {
     crc ^= (uint16_t)data[i] << 8;
     for(uint8_t j=0; j<8; j++) {
       crc = (crc & 0x8000) ? (crc << 1) ^ crc_poly : (crc << 1);
+      //printf("data[%d]=%d, crc=%d \n",i,data[i],crc);
     }
   }
+  //printf("crc=%d \n",crc);
   return crc;
 }
 
@@ -592,13 +616,7 @@ static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size) 
   const uint8_t max_retries = 3;
 
   for(uint8_t retry=0; retry<max_retries; retry++) {
-    HAL_StatusTypeDef hal_status = HAL_I2C_Mem_Read(hi2c_eeprom,
-                                                   EEPROM_I2C_ADDR << 1,
-                                                   addr,
-                                                   I2C_MEMADD_SIZE_16BIT,
-                                                   data,
-                                                   size,
-                                                   100);
+    HAL_StatusTypeDef hal_status = HAL_I2C_Mem_Read(hi2c_eeprom,EEPROM_I2C_ADDR << 1,addr,I2C_MEMADD_SIZE_16BIT,data,size,100);
     if(hal_status == HAL_OK) {
       return EEPROM_OK;
     }
@@ -629,13 +647,20 @@ static void Hardware_Reset(void) {
 }
 
 /**
-  * @brief 地址有效性验证
+  * @brief 地址有效性驗證 (AT24C32專用)
+  * @param addr  起始地址 (0x0000-0x0FFF)
+  * @param size  數據長度 (單位: byte)
+  * @retval EEPROM_Status 驗證結果
   */
+
 static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size) {
   const uint16_t max_addr = 0x0FFF;  // AT24C32最大地址
+  const uint16_t PAGE_SIZE = 32;     // 頁寫入限制
+
 
   if(addr > max_addr){
-	  printf("I2C Address failed");
+	  printf("[ERROR] Address range 0x%04X-0x%04X out of bounds\n",
+	                addr, addr + size - 1);
 	  return EEPROM_ERR_ADDR;
   }
   if((addr + size) > max_addr)
@@ -643,6 +668,14 @@ static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size) {
   	  printf("I2C Address failed\n");
   	  return EEPROM_ERR_ADDR;
    }
+
+  // 檢查是否跨頁寫入 (僅在Write函數中需要，Read可選)
+  if((addr % PAGE_SIZE) + size > PAGE_SIZE) {
+      printf("[WARNING] Operation crosses page boundary (addr=0x%04X, size=%d)\n",
+             addr, size);
+      // 不返回錯誤，僅警告
+  }
+
   return EEPROM_OK;
 }
 
@@ -664,6 +697,19 @@ static void Update_Health(bool success) {
     }
   }
 }
+
+
+
+void EEPROM_EraseAll(void) {
+    uint8_t blank[32];
+    memset(blank, 0xFF, sizeof(blank)); // 填充0xFF
+
+    for(uint16_t addr = 0; addr < EEPROM_SIZE; addr += 32) {
+        HAL_I2C_Mem_Write(&hi2c1, 0xA0, addr, I2C_MEMADD_SIZE_16BIT, blank, 32, 100);
+        HAL_Delay(5); // 必须延时！
+    }
+}
+
 
 /* 公开辅助函数 --------------------------------------------------------------*/
 
