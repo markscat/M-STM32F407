@@ -231,13 +231,14 @@ HAL_StatusTypeDef DS1307_SetTime(DS1307_Time* time) {
     uint8_t buffer[7];
 
     // 转换十进制到BCD格式
-    buffer[0] = dec_to_bcd(time->seconds);
-    buffer[1] = dec_to_bcd(time->minutes);
-    buffer[2] = dec_to_bcd(time->hours);
-    buffer[3] = dec_to_bcd(time->day);
-    buffer[4] = dec_to_bcd(time->date);
-    buffer[5] = dec_to_bcd(time->month);
-    buffer[6] = dec_to_bcd(time->year);
+    time->COMMAND_ID = 1;
+    buffer[0] = dec_to_bcd(time->seconds);//秒
+    buffer[1] = dec_to_bcd(time->minutes);//分
+    buffer[2] = dec_to_bcd(time->hours);//時
+    buffer[3] = dec_to_bcd(time->day);//星期
+    buffer[4] = dec_to_bcd(time->date);//日期
+    buffer[5] = dec_to_bcd(time->month);//月
+    buffer[6] = dec_to_bcd(time->year);//年
 
     // 写入时间寄存器
     return HAL_I2C_Mem_Write(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
