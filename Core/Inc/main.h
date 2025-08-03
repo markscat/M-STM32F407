@@ -53,6 +53,8 @@ extern "C" {
 #include "gpio.h"
 #include "crc.h"
 #include <ctype.h>
+#include "I2C_OLED_SH110.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

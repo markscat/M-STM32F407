@@ -133,23 +133,6 @@ void Write_Global_Version(uint32_t version) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 bool Handle_Data_Corruption(uint16_t addr, uint8_t* data, uint16_t size) {
     BackupBlock* backups[REDUNDANT_COPIES];

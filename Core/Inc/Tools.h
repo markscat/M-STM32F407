@@ -60,7 +60,8 @@ uint16_t combine_year(YearComponents y);
 char* ParseCommand(const char* command_line, int* command_id_ptr);
 bool CheckTimeStruct (const DS1307_Time* time_to_check );
 void HandleUartCommands(void);
-
+//掃描所有Ｉ２Ｃ設備
+void Scan_I2C_Address(void);
 
 //ring Buffer
 void ProcessUartRingBuffer(void);

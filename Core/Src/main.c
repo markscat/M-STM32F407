@@ -82,6 +82,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 #define MAX_INPUT_LEN_MINIMAL 32
 #define MAX_COMMAND_LEN_MAIN 32                         // UART 命令行的最大允許字符數 (不包括 '\0')
 #define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
+//static uint8_t SH1106_Buffer_in_main[SH1106_WIDTH * SH1106_HEIGHT / 8];
 
 
 bool CheckTimeStruct (const DS1307_Time* time_to_check );
@@ -110,10 +111,10 @@ uint8_t rx_data;
 //#define oled
 /**  @brief 設定宣告OLED */
 #ifdef oled
-	#include "SH1106.h"
-	#include "fonts.h"
+	#include <SH110_h>
+	#include <I2C_OLED_fonts.h>
 	#include "bitmap.h"
-	#include "horse_anim.h"
+	#include <I2C_OLED_horse_anim.h>
 #endif
 
 
@@ -277,6 +278,214 @@ int main(void)
 
     printf("System Ready. Enter a string:\r\n");
 
+
+#ifdef I2C_ADDR_Scan
+printf("\n\n");
+	Scan_I2C_Address();
+
+#endif
+
+//#define SH1106
+//#define BruteForceFill
+
+
+
+
+	  /* USER CODE BEGIN 2 */
+	  printf("Attempting final initialization...\n");
+
+	  // 呼叫我們全新的 Init 函式
+	  SH1106_Init();
+
+	  printf("Init sequence sent. Now filling screen with WHITE.\n");
+
+	  // 將 STM32 的 RAM 緩衝區填滿白色
+	  SH1106_Fill(SH1106_COLOR_WHITE);
+
+	  // 呼叫我們全新的 UpdateScreen 函式，將緩衝區內容顯示出來
+	  SH1106_UpdateScreen();
+
+	  printf("Update command sent. Check the screen!\n");
+
+ #ifdef BruteForceFill
+
+	  SH1106_WRITECOMMAND(0x8D); // 開啟電荷泵
+	  SH1106_WRITECOMMAND(0x14);
+	  SH1106_WRITECOMMAND(0xAF); // 開啟顯示
+
+	  // 步驟二：進入暴力填充測試
+	  printf("Starting Brute-Force Fill Test...\n");
+
+	  // --- 測試圖案 1: 全亮 (0xFF) ---
+	      printf("Writing 0xFF to all pages...\n");
+	      for (uint8_t page = 0; page < 8; page++) {
+	          SH1106_WRITECOMMAND(0xB0 + page); // 設置頁
+	          SH1106_WRITECOMMAND(0x02);        // 固定使用偏移 2 (最常見)
+	          SH1106_WRITECOMMAND(0x10);
+
+	          // 準備一個填滿 0xFF 的數據緩衝區
+	          uint8_t page_data[128];
+	          memset(page_data, 0xff, 128);
+
+	          // 用最原始的 I2C 多位元組寫入函式發送
+	          SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, page_data, 128);
+	      }
+	      HAL_Delay(2000); // 觀察 2 秒
+#endif
+
+
+
+#ifdef SH1106
+	 printf("Initializing display...\n");
+	  if (SH1106_Init() != 1) { // 這裡會使用您在 .c 檔中啟用的那組序列
+	      printf("Init FAILED.\n");
+	      while(1){}
+
+	  } else {
+	      printf("Init OK.\n");
+	  }
+
+
+	  // 在 RAM 的 buffer 中先畫好一個固定的測試圖案
+	    //SH1106_Fill(SH1106_COLOR_BLACK);
+	    // 畫一條從左上到右下的粗線，這樣比較容易看到
+	    /*n
+	  for(int i=0; i<SH1106_HEIGHT; i++) {
+		  SH1106_DrawPixel(i*2, i, SH1106_COLOR_WHITE);
+		  SH1106_DrawPixel(i*2+1, i, SH1106_COLOR_WHITE);
+	    }
+
+	  */
+#endif
+
+	   // uint8_t column_start_address = 0;
+
+while(1){
+
+#ifdef BruteForceFill
+
+	  // 我們只嘗試更新第 4 頁 (螢幕正中央)
+	    printf("Attempting to write to Page 4 ONLY...\n");
+	    SH1106_WRITECOMMAND(0xB0 + 4);    // 明確指定頁面 4
+	    SH1106_WRITECOMMAND(0x02);        // 列起始位址 低位
+	    SH1106_WRITECOMMAND(0x10);        // 列起始位址 高位
+
+	    // 準備一個可辨識的圖案 (全亮)
+	    uint8_t page_data[128];
+	    memset(page_data, 0x00, 128);
+
+	    // 發送數據
+	    SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, page_data, 128);
+
+	    // 在這裡不做任何事，只持續觀察
+	    HAL_Delay(1000); // 延遲一秒，避免 I2C 總線過於繁忙
+
+
+/*
+    // --- 測試圖案 1: 全亮 (0xFF) ---
+    printf("Writing 0xFF to all pages...\n");
+    for (uint8_t page = 0; page < 8; page++) {
+        SH1106_WRITECOMMAND(0xB0 + page); // 設置頁
+        SH1106_WRITECOMMAND(0x02);        // 固定使用偏移 2 (最常見)
+        SH1106_WRITECOMMAND(0x10);
+
+        // 準備一個填滿 0xFF 的數據緩衝區
+        uint8_t page_data[128];
+        memset(page_data, 0xFF, 128);
+
+        // 用最原始的 I2C 多位元組寫入函式發送
+        SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, page_data, 128);
+    }
+    HAL_Delay(2000); // 觀察 2 秒
+*/
+/*
+    // --- 測試圖案 2: 全黑 (0x00) ---
+    printf("Writing 0x00 to all pages...\n");
+    for (uint8_t page = 0; page < 8; page++) {
+        SH1106_WRITECOMMAND(0xB0 + page); // 設置頁
+        SH1106_WRITECOMMAND(0x02);        // 固定使用偏移 2
+        SH1106_WRITECOMMAND(0x10);
+
+        // 準備一個填滿 0x00 的數據緩衝區
+        uint8_t page_data[128];
+        memset(page_data, 0x00, 128);
+
+        // 用最原始的 I2C 多位元組寫入函式發送
+        SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, page_data, 128);
+    }
+    HAL_Delay(2000); // 觀察 2 秒
+
+    */
+/*
+    // --- 測試圖案 3: 交錯線條 (0xAA) ---
+    printf("Writing 0xAA to all pages...\n");
+    for (uint8_t page = 0; page < 8; page++) {
+        SH1106_WRITECOMMAND(0xB0 + page); // 設置頁
+        SH1106_WRITECOMMAND(0x02);        // 固定使用偏移 2
+        SH1106_WRITECOMMAND(0x10);
+
+        // 準備一個填滿 0xAA (二進制 10101010) 的數據緩衝區
+        uint8_t page_data[128];
+        memset(page_data, 0xAA, 128);
+
+        // 用最原始的 I2C 多位元組寫入函式發送
+        SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, page_data, 128);
+    }
+    HAL_Delay(2000); // 觀察 2 秒
+
+*/
+#endif
+
+
+#ifdef  SH1106__
+
+	printf("Testing Column Start Address: %d\n", column_start_address);
+
+	    // 核心測試：用不同的起始位址來更新螢幕
+	    for (uint8_t m = 0; m < 8; m++) {
+	        SH1106_WRITECOMMAND(0xB0 + m);                  // 設置頁
+	        SH1106_WRITECOMMAND(column_start_address & 0x0F); // 設置列起始位址 (低4位)
+	        SH1106_WRITECOMMAND(0x10 | (column_start_address >> 4)); // 設置列起始位址 (高4位)
+	        SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, &SH1106_Buffer_in_main[SH1106_WIDTH * m], SH1106_WIDTH);
+	    }
+
+	    // 每次測試完，增加位址，準備下一次測試
+	    column_start_address++;
+	    if (column_start_address > 131) { // SH1106 的內部記憶體寬度是 132
+	        column_start_address = 0;
+	    }
+
+	    HAL_Delay(500); // 每半秒換一個位址
+#endif
+
+
+#ifdef SH1106_
+
+
+	  // 步驟 2: 開啟顯示 (Display ON)
+	  printf("Step 2: Sending Display ON (0xAF)...\n");
+	  SH1106_WRITECOMMAND(0xAF);
+
+	  // 此時螢幕應該是清晰的雪花屏或全亮
+	  HAL_Delay(3000); // 等待 3 秒觀察
+
+	  /********************* 關閉序列 *********************/
+	  printf("--- Shutdown Sequence START ---\n");
+
+	  // 步驟 3: 關閉顯示 (Display OFF)
+	  // 如果點火成功，這一步應該能讓螢幕變黑
+	  printf("Step 3: Sending Display OFF (0xAE)...\n");
+	  SH1106_WRITECOMMAND(0xAE);
+
+	  // 此時螢幕應該完全變黑
+	  HAL_Delay(3000); // 等待 3 秒觀察
+#endif
+
+}
+
+
+#ifdef time_setting
+
     //<讀取階段>
     DS1307_Time dt = {0};
 	//HAL_StatusTypeDef DT_status;
@@ -322,7 +531,7 @@ int main(void)
 
 
 
-#define loop
+//#define loop
 
 #ifdef loop
     while(1){
@@ -337,7 +546,7 @@ int main(void)
         // 讀取時間
     	DT_status = DS1307_GetTime(&dt);
 
-    	//顯示時間
+    	//顯示時間 as
     	if (DT_status == HAL_OK) {
     		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
     				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
@@ -348,8 +557,8 @@ int main(void)
     	HAL_Delay(1000);
 
     }
-#endif
-
+#endif //loop
+#endif //time_setting
 
 
 

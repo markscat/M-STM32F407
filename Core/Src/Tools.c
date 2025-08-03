@@ -256,6 +256,39 @@ uint8_t calculate_checksum(const char *data_str, size_t len) {
 }
 
 
+#include <stdio.h>
+
+// 假設 hi2c1 是你的 I2C Handle
+// extern I2C_HandleTypeDef hi2c1;
+
+void Scan_I2C_Address(void) {
+    printf("--- Starting I2C Bus Scan ---\n");
+    HAL_StatusTypeDef status;
+    uint8_t found_count = 0;
+
+    // I2C 的 7 位地址範圍是 1 到 127
+    for (uint8_t i = 1; i < 128; i++) {
+        // HAL 庫的函數需要一個左移一位的 8 位地址
+        uint16_t device_address = (uint16_t)(i << 1);
+
+        // 嘗試與該地址進行一次簡短的通訊，超時設定得很短
+        // `Trials` 設為 1，`Timeout` 設為 10ms
+        status = HAL_I2C_IsDeviceReady(&hi2c1, device_address, 1, 10);
+
+        // 如果返回 HAL_OK，說明這個地址上有設備在回應
+        if (status == HAL_OK) {
+            printf("SUCCESS: Found device at I2C address 0x%02X\n", i);
+            found_count++;
+        }
+    }
+
+    if (found_count == 0) {
+        printf("RESULT: No I2C devices found on the bus.\n");
+    } else {
+        printf("--- Scan Finished. Found %u device(s). ---\n", found_count);
+    }
+}
+
 
 
 

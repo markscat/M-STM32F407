@@ -27,6 +27,7 @@
 
 
 #include <I2C_Peripherals.h>
+#include "I2C_OLED_SH110.h"
 #include <string.h>
 #include "stdlib.h"
 #include "stdbool.h"
@@ -164,6 +165,12 @@ I2C_Status I2C_Init_Devices(void) {
       .dev_name  = "DS1307 RTC"
     },
     // 可在此添加更多设备...
+/*	{
+	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
+       .init_fn   = SH1106_Init,
+       .dev_name  = "SH1106 OLED"
+	}
+*/
   };
   //end I2C_DeviceConfig dev_config[]
 
@@ -190,7 +197,7 @@ I2C_Status I2C_Init_Devices(void) {
     I2C_Status status = dev_config[i].init_fn();
     if (status != I2C_OK) {
       // 输出调试信息（需实现printf）
-      printf("[I2C Init] Device %s initialization failed! Error: %d\n",
+      printf("[I2C Init] Device %s initialization failed! Error: %d\n\n",
             dev_config[i].dev_name, status);
       return status; // 严格模式：遇到错误立即返回
     }

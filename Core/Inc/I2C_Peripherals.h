@@ -16,6 +16,9 @@
 #include "stm32f4xx_hal.h"       // 核心HAL库
 #include "stm32f4xx_hal_i2c.h"   // I2C外设支持
 #include "stdbool.h"
+
+
+
 // 通过外部声明引用全局变量
 extern I2C_HandleTypeDef hi2c1;  // I2C实例（在main.c中定义）
 
@@ -45,7 +48,6 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
  *| 1  | 1  | 1  | `1010111`          |  0x57   |
  *
  */
-#define DS1307Backup
 
 #define EEPROM_I2C_ADDR         0x50       // 设备7位地址
 #define EEPROM_MAX_ADDR        	0x0FFF
@@ -58,7 +60,8 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
   #define EEPROM_PWR_PIN         GPIO_PIN_12
 #endif
 
-
+//RTC
+#define DS1307Backup
 #define DS1307_I2C_ADDR    0x68        // DS1307 的 I2C 地址
 #define DS1307_TIME_REG    0x00        // 时间寄存器起始地址
 #define DS1307_CTRL_REG    0x07        // 控制寄存器地址
@@ -79,6 +82,12 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
 #define DS1307_REG_RAM   	0x11	// [自定義] RAM 起始位置（DS1307有56 bytes SRAM）
 #define DS1307_TIMEOUT		1000	// I2C timeout 時間（毫秒）
 #endif
+
+
+
+/**
+ * RTC 相關參數設定
+ * */
 
 // 时间结构体定义（与DS1307寄存器对应）
 typedef struct {
