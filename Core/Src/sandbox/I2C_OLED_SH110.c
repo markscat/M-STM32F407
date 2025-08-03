@@ -23,21 +23,12 @@
 #include <I2C_OLED_fonts.h>
 #include <string.h>
 #include <I2C_OLED_SH110.h>
+#include <main.h>
 
 extern I2C_HandleTypeDef hi2c1;
 #define SH1106_I2C &hi2c1
 
 
-
-
-/* Write command */
-#define SH1106_WRITECOMMAND(command)      SH1106_I2C_Write(SH1106_I2C_ADDR, 0x00, (command))
-/* Write data */
-#define SH1106_WRITEDATA(data)            SH1106_I2C_Write(SH1106_I2C_ADDR, 0x40, (data))
-/* Absolute value */
-#define ABS(x)   ((x) > 0 ? (x) : -(x))
-                //(條件) ? (條件為真時的值) : (條件為假時的值)
-/* SH1106 data buffer */
 static uint8_t SH1106_Buffer[SH1106_WIDTH * SH1106_HEIGHT / 8];
 
 /* Private SH1106 structure */
@@ -54,8 +45,73 @@ static SH1106_t SH1106;
 #define SH1106_NORMALDISPLAY       0xA6
 #define SH1106_INVERTDISPLAY       0xA7
 
+
 uint8_t SH1106_Init(void) {
+
+		HAL_Delay(100); // 等待電源穩定
+
+		/* Check if LCD connected to I2C */
+		if (HAL_I2C_IsDeviceReady(SH1106_I2C, SH1106_I2C_ADDR, 1, 20000) != HAL_OK) {
+			printf("\n\n OLED Display init. fail \n\n");
+			return 0;
+		}
+
+		// --- 標準水平定址模式 初始化序列 ---
+	    SH1106_WRITECOMMAND(0xAE); // 關閉顯示
+
+	    SH1106_WRITECOMMAND(0xD5); // 設置顯示時鐘分頻
+	    SH1106_WRITECOMMAND(0x80); // 預設值
+
+	    SH1106_WRITECOMMAND(0xA8); // 設置 Multiplex Ratio
+	    SH1106_WRITECOMMAND(0x3F); // 適用於 64 行
+
+	    SH1106_WRITECOMMAND(0xD3); // 設置顯示偏移
+	    SH1106_WRITECOMMAND(0x00); // 無偏移
+
+	    SH1106_WRITECOMMAND(0x40); // 設置顯示起始行 (0)
+
+	    SH1106_WRITECOMMAND(0x8D); // --- 開啟電荷泵 ---
+	    SH1106_WRITECOMMAND(0x14); // --- 啟用 ---
+
+	    SH1106_WRITECOMMAND(0x20); // --- 設置記憶體定址模式 ---
+	    SH1106_WRITECOMMAND(0x00); // --- 0x00 = 水平定址模式 ---
+
+	    SH1106_WRITECOMMAND(0xA1); // 設置 Segment Re-map (A1 = 列位址 127 對應 SEG0)
+	    SH1106_WRITECOMMAND(0xC8); // 設置 COM 掃描方向 (C8 = 從上到下)
+
+	    SH1106_WRITECOMMAND(0xDA); // 設置 COM 引腳硬體配置
+	    SH1106_WRITECOMMAND(0x12);
+
+	    SH1106_WRITECOMMAND(0x81); // 設置對比度
+	    SH1106_WRITECOMMAND(0xCF);
+
+	    SH1106_WRITECOMMAND(0xD9); // 設置預充電週期
+	    SH1106_WRITECOMMAND(0xF1);
+
+	    SH1106_WRITECOMMAND(0xDB); // 設置 VCOMH
+	    SH1106_WRITECOMMAND(0x40);
+
+	    SH1106_WRITECOMMAND(0xA4); // 恢復到 RAM 內容顯示
+	    SH1106_WRITECOMMAND(0xA6); // 正常顯示 (非反白)
+
+	    SH1106_WRITECOMMAND(0xAF); // --- 開啟顯示 ---
+
+		/* 初始化後清屏 */
+		SH1106_Fill(SH1106_COLOR_BLACK);
+		SH1106_UpdateScreen();
+
+		/* 設定預設值 */
+		SH1106.CurrentX = 0;
+		SH1106.CurrentY = 0;
+		SH1106.Initialized = 1;
+
+		return 1;
 	
+}
+
+
+uint8_t SH1106_Init_org(void) {
+
 	/* Check if LCD connected to I2C */
 	if (HAL_I2C_IsDeviceReady(SH1106_I2C, SH1106_I2C_ADDR, 1, 20000) != HAL_OK) {
 		/* Return false */
@@ -68,39 +124,135 @@ uint8_t SH1106_Init(void) {
 	while(p>0)
 		p--;
 	
-	  // Initialize the display
-	printf("start disply off \n\n ");
-	SH1106_WRITECOMMAND(0xAE); //display off
-	SH1106_WRITECOMMAND(0xB0|0x00); //Set Page Start Address for Page Addressing Mode,0-7
-	SH1106_WRITECOMMAND(0x81); //--set contrast control register
-	SH1106_WRITECOMMAND(0xFF); // contrast value
-	SH1106_WRITECOMMAND(0xA1); //--set segment re-map 0 to 127
-	SH1106_WRITECOMMAND(0xA6); //--set normal display
-	SH1106_WRITECOMMAND(0xA8); //--set multiplex ratio(1 to 64)
-	SH1106_WRITECOMMAND(0x3F); // multiplex value
-	SH1106_WRITECOMMAND(0xAD); // Set Pump Mode
-	SH1106_WRITECOMMAND(0x8B); // Pump ON
-	SH1106_WRITECOMMAND(0x30|0x02); // Set Pump Voltage 8.0
-	SH1106_WRITECOMMAND(0xC8); //Set COM Output Scan Direction
-	SH1106_WRITECOMMAND(0xD3); //-set display offset
-	SH1106_WRITECOMMAND(0x00); //-not offset
-	SH1106_WRITECOMMAND(0xD5); //--set display clock divide ratio/oscillator frequency
-	SH1106_WRITECOMMAND(0x80); //--set divide ratio
-	SH1106_WRITECOMMAND(0xD9); //--set pre-charge period
-	SH1106_WRITECOMMAND(0x1F); //
-	SH1106_WRITECOMMAND(0xDA); //--set com pins hardware configuration
-	SH1106_WRITECOMMAND(0x12);
-	SH1106_WRITECOMMAND(0xDB); //--set vcomh
-	SH1106_WRITECOMMAND(0x40); //
-	SH1106_WRITECOMMAND(0xAF); //--turn on SH1106 panel
+//#define SH1106_command
+#define SSD1306_command
+//#define oled
 
+
+	  // Initialize the display
+#ifdef SH1106_command
+	printf("WRITECOMMAND=AE \n\n ");
+	SH1106_WRITECOMMAND(0xAE); //display off
+	printf("WRITECOMMAND=0x02 \n\n ");
+	//SH1106_WRITECOMMAND(0xB0|0x00); //Set Page Start Address for Page Addressing Mode,0-7
+	SH1106_WRITECOMMAND(0x02);
+	printf("WRITECOMMAND=81 \n\n ");
+	SH1106_WRITECOMMAND(0x81); //--set contrast control register
+	printf("WRITECOMMAND =FF\n\n");
+	SH1106_WRITECOMMAND(0xFF); // contrast value
+	printf("WRITECOMMAND =A1\n\n");
+	SH1106_WRITECOMMAND(0xA1); //--set segment re-map 0 to 127
+	printf("WRITECOMMAND =A6\n\n");
+	SH1106_WRITECOMMAND(0xA6); //--set normal display
+	printf("WRITECOMMAND =A8\n\n");
+	SH1106_WRITECOMMAND(0xA8); //--set multiplex ratio(1 to 64)
+	printf("WRITECOMMAND =3F\n\n");
+	SH1106_WRITECOMMAND(0x3F); // multiplex value
+	printf("WRITECOMMAND =AD\n\n ");
+	SH1106_WRITECOMMAND(0xAD); // Set Pump Mode
+	printf("WRITECOMMAND =88\n\n");
+	SH1106_WRITECOMMAND(0x8B); // Pump ON
+	printf("WRITECOMMAND =30|20\n\n");
+	SH1106_WRITECOMMAND(0x30|0x02); // Set Pump Voltage 8.0
+	printf("WRITECOMMAND =C8\n\n");
+	SH1106_WRITECOMMAND(0xC8); //Set COM Output Scan Direction
+	printf("WRITECOMMAND =D3\n\n");
+	SH1106_WRITECOMMAND(0xD3); //-set display offset
+	printf("WRITECOMMAND =00\n\n");
+	SH1106_WRITECOMMAND(0x00); //-not offset
+	printf("WRITECOMMAND =D5\n\n");
+	SH1106_WRITECOMMAND(0xD5); //--set display clock divide ratio/oscillator frequency
+	printf("WRITECOMMAND =80\n\n");
+	SH1106_WRITECOMMAND(0x80); //--set divide ratio
+	printf("WRITECOMMAND =D9\n\n");
+	SH1106_WRITECOMMAND(0xD9); //--set pre-charge period
+	printf("WRITECOMMAND =1F\n\n");
+	SH1106_WRITECOMMAND(0x1F); //
+	printf("WRITECOMMAND =DA\n\n");
+	SH1106_WRITECOMMAND(0xDA); //--set com pins hardware configuration
+	printf("WRITECOMMAND =12\n\n");
+	SH1106_WRITECOMMAND(0x12);
+	printf("WRITECOMMAND =DB\n\n");
+	SH1106_WRITECOMMAND(0xDB); //--set vcomh
+	printf("WRITECOMMAND =40\n\n");
+	SH1106_WRITECOMMAND(0x40); //
+	printf("WRITECOMMAND =AF\n\n");
+	SH1106_WRITECOMMAND(0xAF); //--turn on SH1106 panel
+#endif
+
+
+#ifdef SSD1306_command
+
+    SH1106_WRITECOMMAND(0xAE); /*display off*/
+    SH1106_WRITECOMMAND(0x02); /*set lower column address*/
+    //SH1106_WRITECOMMAND(0x10); /*set higher column address*/
+    SH1106_WRITECOMMAND(0x01); /*set higher column address*/
+    SH1106_WRITECOMMAND(0x40); /*set display start line*/
+    SH1106_WRITECOMMAND(0xB0); /*set page address*/
+    SH1106_WRITECOMMAND(0x81); /*contract control*/
+    SH1106_WRITECOMMAND(0xFF); /*128*/
+    SH1106_WRITECOMMAND(0xA1); /*set segment remap*/
+    SH1106_WRITECOMMAND(0xA6); /*normal / reverse*/
+    SH1106_WRITECOMMAND(0xA8); /*multiplex ratio*/
+    SH1106_WRITECOMMAND(0x3F); /*duty = 1/64*/
+    SH1106_WRITECOMMAND(0xC8); /*Com scan direction*/
+    SH1106_WRITECOMMAND(0xD3); /*set display offset*/
+    SH1106_WRITECOMMAND(0x00);
+    SH1106_WRITECOMMAND(0xD5); /*set osc division*/
+    SH1106_WRITECOMMAND(0x80);
+    SH1106_WRITECOMMAND(0xD9); /*set pre-charge period*/
+    SH1106_WRITECOMMAND(0x1F);
+    SH1106_WRITECOMMAND(0xDA); /*set COM pins*/
+    SH1106_WRITECOMMAND(0x12);
+    SH1106_WRITECOMMAND(0xDB); /*set vcomh*/
+    SH1106_WRITECOMMAND(0x30);
+    SH1106_WRITECOMMAND(0x8D); /*set charge pump enable*/
+    SH1106_WRITECOMMAND(0x14); /*enabled*/
+    SH1106_WRITECOMMAND(0xAF); /*display ON*/
+
+#endif
+
+#ifdef oled
+
+    	SH1106_WRITECOMMAND(0xAE); //display off
+    	SH1106_WRITECOMMAND(0x20);	//Set Memory Addressing Mode
+    	SH1106_WRITECOMMAND(0x10);	//00,Horizontal Addressing Mode;01,Vertical Addressing Mode;10,Page Addressing Mode (RESET);11,Invalid
+    	SH1106_WRITECOMMAND(0xb0);	//Set Page Start Address for Page Addressing Mode,0-7
+    	SH1106_WRITECOMMAND(0xc8);	//Set COM Output Scan Direction
+    	SH1106_WRITECOMMAND(0x00); //---set low column address
+    	SH1106_WRITECOMMAND(0x10); //---set high column address
+    	SH1106_WRITECOMMAND(0x40); //--set start line address
+    	SH1106_WRITECOMMAND(0x81); //--set contrast control register
+    	SH1106_WRITECOMMAND(0xff); //亮度调节 0x00~0xff
+    	SH1106_WRITECOMMAND(0xa1); //--set segment re-map 0 to 127
+    	SH1106_WRITECOMMAND(0xa6); //--set normal display
+    	SH1106_WRITECOMMAND(0xa8); //--set multiplex ratio(1 to 64)
+    	SH1106_WRITECOMMAND(0x3F); //
+    	SH1106_WRITECOMMAND(0xa4); //0xa4,Output follows RAM content;0xa5,Output ignores RAM content
+    	SH1106_WRITECOMMAND(0xd3); //-set display offset
+    	SH1106_WRITECOMMAND(0x00); //-not offset
+    	SH1106_WRITECOMMAND(0xd5); //--set display clock divide ratio/oscillator frequency
+    	SH1106_WRITECOMMAND(0xf0); //--set divide ratio
+    	SH1106_WRITECOMMAND(0xd9); //--set pre-charge period
+    	SH1106_WRITECOMMAND(0x22); //
+    	SH1106_WRITECOMMAND(0xda); //--set com pins hardware configuration
+    	SH1106_WRITECOMMAND(0x12);
+    	SH1106_WRITECOMMAND(0xdb); //--set vcomh
+    	SH1106_WRITECOMMAND(0x20); //0x20,0.77xVcc
+    	SH1106_WRITECOMMAND(0x8d); //--set DC-DC enable
+    	SH1106_WRITECOMMAND(0x14); //
+    	SH1106_WRITECOMMAND(0xaf); //--turn on oled panel
+#endif
+
+	printf("write command is ok\n\n");
 
 	/* Clear screen */
 	SH1106_Fill(SH1106_COLOR_BLACK);
-	
+
 	/* Update screen */
 	SH1106_UpdateScreen();
 	
+
 	/* Set default values */
 	SH1106.CurrentX = 0;
 	SH1106.CurrentY = 0;
@@ -112,12 +264,69 @@ uint8_t SH1106_Init(void) {
 	return 1;
 }
 
+// --- 發送數據的輔助函式 (用來更新畫面) ---
+void OLED_Write_Data(uint8_t* data, uint16_t size)
+{
+    uint8_t* temp_buf = malloc(size + 1);
+    temp_buf[0] = 0x40; // 0x40 代表接下來是 Data
+    memcpy(temp_buf+1, data, size);
+    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, temp_buf, size + 1, HAL_MAX_DELAY);
+    free(temp_buf);
+}
+
+
+
+// --- 發送命令的輔助函式 ---
+void OLED_Write_CMD(uint8_t cmd)
+{
+    uint8_t data_to_send[2] = {0x00, cmd}; // 0x00 代表接下來是 Command
+    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, data_to_send, 2, HAL_MAX_DELAY);
+}
+
+
+
+void RunDisplayTest(void)
+{
+    // 1. 清除螢幕緩衝區
+    SH1106_Fill(SH1106_COLOR_BLACK);
+
+    // 2. 在左上角畫一個 10x10 的方塊
+    SH1106_DrawFilledRectangle(0, 0, 10, 10, SH1106_COLOR_WHITE);
+
+    // 3. 在右下角畫一個 10x10 的方塊
+    SH1106_DrawFilledRectangle(SH1106_WIDTH - 10, SH1106_HEIGHT - 10, 10, 10, SH1106_COLOR_WHITE);
+
+    // 4. 在螢幕頂部寫字
+    //SH1106_GotoXY(15, 5); // 設定文字起始位置
+    //SH1106_Puts("TEST OK", &Font_7x10, SH1106_COLOR_WHITE);
+
+    // 5. 將緩衝區內容更新到螢幕
+    SH1106_UpdateScreen();
+}
+
 void SH1106_UpdateScreen(void) {
+    // 1. 告訴晶片我們要更新的範圍
+    SH1106_WRITECOMMAND(0x21); // 設置列位址
+    SH1106_WRITECOMMAND(0);    // 起始列 0
+    SH1106_WRITECOMMAND(127);  // 結束列 127
+
+    SH1106_WRITECOMMAND(0x22); // 設置頁位址
+    SH1106_WRITECOMMAND(0);    // 起始頁 0
+    SH1106_WRITECOMMAND(7);    // 結束頁 7 (對應 64 行)
+
+    // 2. 一次性將整個 1024 位元組的緩衝區數據，透過 I2C 發送出去
+    SH1106_I2C_WriteMulti(SH1106_I2C_ADDR, 0x40, SH1106_Buffer, sizeof(SH1106_Buffer));
+}
+
+
+
+
+void SH1106_UpdateScreen_org(void) {
 	uint8_t m;
 	
 	for (m = 0; m < 8; m++) {
 		SH1106_WRITECOMMAND(0xB0 + m);
-		SH1106_WRITECOMMAND(0x00);
+		SH1106_WRITECOMMAND(0x02);
 		SH1106_WRITECOMMAND(0x10);
 		
 		/* Write multi data */
@@ -512,12 +721,12 @@ HAL_I2C_Master_Transmit(SH1106_I2C, address, dt, count+1, 10);
 }
 
 
-void SH1106_I2C_Write(uint8_t address, uint8_t reg, uint8_t data) {
-	uint8_t dt[2];
-	dt[0] = reg;
-	dt[1] = data;
-	HAL_I2C_Master_Transmit(SH1106_I2C, address, dt, 2, 10);
-}
+	void SH1106_I2C_Write(uint8_t address, uint8_t reg, uint8_t data) {
+		uint8_t dt[2];
+		dt[0] = reg;
+		dt[1] = data;
+		HAL_I2C_Master_Transmit(SH1106_I2C, address, dt, 2, 10);
+	}
 
 void SH1106_InvertDisplay (int i)
 {
@@ -548,5 +757,24 @@ void SH1106_DrawBitmap(int16_t x, int16_t y, const unsigned char* bitmap, int16_
             }
             if(byte & 0x80) SH1106_DrawPixel(x+i, y, color);
         }
+    }
+}
+
+/**
+ * @brief  Reads status byte from the SH1106
+ * @param  None
+ * @retval Status byte. 0xFF if read error.
+ */
+uint8_t SH1106_ReadStatus(void) {
+    uint8_t status_byte;
+
+    // 使用 STM32 HAL 函式庫從 OLED 讀取一個位元組的資料
+    // HAL_I2C_Master_Receive 會發送設備位址並請求數據
+    // 注意：這裡不需要先發送 "register address"，因為狀態暫存器是預設的讀取目標
+    if (HAL_I2C_Master_Receive(SH1106_I2C, SH1106_I2C_ADDR, &status_byte, 1, HAL_MAX_DELAY) == HAL_OK) {
+        return status_byte;
+    } else {
+        // 如果 I2C 讀取失敗 (例如，設備沒有回應 ACK)，返回 0xFF 作為錯誤碼
+        return 0xFF;
     }
 }
