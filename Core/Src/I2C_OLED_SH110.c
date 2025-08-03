@@ -26,8 +26,12 @@
 #include <main.h>
 
 extern I2C_HandleTypeDef hi2c1;
-#define SH1106_I2C &hi2c1
 
+//<250803 新增>
+#define OLED_COL_OFFSET 2
+//</250803 新增>
+
+#define SH1106_I2C &hi2c1
 
 static uint8_t SH1106_Buffer[SH1106_WIDTH * SH1106_HEIGHT / 8];
 
@@ -44,6 +48,71 @@ static SH1106_t SH1106;
 
 #define SH1106_NORMALDISPLAY       0xA6
 #define SH1106_INVERTDISPLAY       0xA7
+
+//<250803 新增>
+
+static const uint8_t OLED_InitCmd[] = {
+    0xAE,
+    0xD5, 0x80,
+    0xA8, 0x3F,
+    0xD3, 0x00,
+    0x40,
+    0xAD, 0x8B,
+    0xA1,
+    0xC8,
+    0xDA, 0x12,
+    0x81, 0x7F,
+    0xD9, 0x22,
+    0xDB, 0x20,
+    0xA4,
+    0xA6,
+    0xAF
+};
+
+void SH1106_OLED_WriteCommand(uint8_t cmd) {
+    HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_CMD, 1, &cmd, 1, HAL_MAX_DELAY);
+}
+
+void SH1106_OLED_Init(void) {
+    HAL_Delay(100);
+    for (uint8_t i = 0; i < sizeof(OLED_InitCmd); i++) {
+    	SH1106_OLED_WriteCommand(OLED_InitCmd[i]);
+    }
+}
+
+void SH1106_OLED_SetPos(uint8_t x, uint8_t page) {
+    x += OLED_COL_OFFSET;
+    SH1106_OLED_WriteCommand(0xB0 + page);
+    SH1106_OLED_WriteCommand(0x00 + (x & 0x0F));
+    SH1106_OLED_WriteCommand(0x10 + ((x >> 4) & 0x0F));
+}
+
+void SH1106_OLED_Clear(void) {
+    uint8_t zero[128] = {0};
+    for (uint8_t page = 0; page < 8; page++) {
+    	SH1106_OLED_SetPos(0, page);
+        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_DATA, 1, zero, 128, HAL_MAX_DELAY);
+    }
+}
+
+void SH1106_OLED_UpdateScreen(uint8_t *buffer) {
+    for (uint8_t page = 0; page < 8; page++) {
+    	SH1106_OLED_SetPos(0, page);
+        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_DATA, 1, &buffer[page * 128], 128, HAL_MAX_DELAY);
+    }
+}
+
+void SH1106_OLED_DrawPixel(uint8_t *buffer, uint8_t x, uint8_t y, uint8_t color) {
+    if (x >= 128 || y >= 64) return;
+    uint16_t byteIndex = x + (y / 8) * 128;
+    if (color)
+        buffer[byteIndex] |=  (1 << (y % 8));
+    else
+        buffer[byteIndex] &= ~(1 << (y % 8));
+}
+
+
+//</250803 新增>
 
 
 uint8_t SH1106_Init(void) {

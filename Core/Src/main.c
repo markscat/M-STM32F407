@@ -279,6 +279,26 @@ int main(void)
     printf("System Ready. Enter a string:\r\n");
 
 
+
+    uint8_t oled_buffer[1024] = {0}; // 128 * 64 / 8
+
+    SH1106_OLED_Init();
+    SH1106_OLED_Clear();
+
+
+    for (uint8_t x = 0; x < 128; x++) {
+    	SH1106_OLED_DrawPixel(oled_buffer, x, x / 2, 1);
+    	SH1106_OLED_DrawPixel(oled_buffer, x, 63 - x / 2, 1);
+       }
+
+    SH1106_OLED_UpdateScreen(oled_buffer);
+
+    while(1){
+
+    }
+
+
+
 #ifdef I2C_ADDR_Scan
 printf("\n\n");
 	Scan_I2C_Address();
@@ -290,7 +310,7 @@ printf("\n\n");
 
 
 
-
+#ifdef temp_sh1106
 	  /* USER CODE BEGIN 2 */
 	  printf("Attempting final initialization...\n");
 
@@ -306,6 +326,8 @@ printf("\n\n");
 	  SH1106_UpdateScreen();
 
 	  printf("Update command sent. Check the screen!\n");
+
+#endif
 
  #ifdef BruteForceFill
 
@@ -360,9 +382,15 @@ printf("\n\n");
 
 	   // uint8_t column_start_address = 0;
 
-while(1){
+
+
+
+
 
 #ifdef BruteForceFill
+while(1){
+
+
 
 	  // 我們只嘗試更新第 4 頁 (螢幕正中央)
 	    printf("Attempting to write to Page 4 ONLY...\n");
@@ -479,9 +507,9 @@ while(1){
 
 	  // 此時螢幕應該完全變黑
 	  HAL_Delay(3000); // 等待 3 秒觀察
-#endif
 
 }
+#endif
 
 
 #ifdef time_setting
