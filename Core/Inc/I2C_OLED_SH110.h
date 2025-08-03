@@ -59,6 +59,9 @@ SDA        |PB7          |Serial data line
 //#define SH1106_I2C_ADDR         0x78<<1
 
 
+#define OLED_CMD  0x00
+#define OLED_DATA 0x40
+
 
 #ifndef SH1106_WIDTH
 #define SH1106_WIDTH            128
@@ -76,10 +79,16 @@ typedef enum {
 	SH1106_COLOR_WHITE = 0x01  /*!< Pixel is set. Color depends on LCD */
 } SH1106_COLOR_t;
 
+
+//<250803 新增>
+void SH1106_OLED_Init(void);
+void SH1106_OLED_Clear(void);
+void SH1106_OLED_UpdateScreen(uint8_t *buffer);
+void SH1106_OLED_DrawPixel(uint8_t *buffer, uint8_t x, uint8_t y, uint8_t color);
+
 void OLED_Write_Data(uint8_t* data, uint16_t size);
 void OLED_Write_CMD(uint8_t cmd);
-
-
+//</250803 新增>
 
 /* Write command */
 #define SH1106_WRITECOMMAND(command)      SH1106_I2C_Write(SH1106_I2C_ADDR, 0x00, (command))
