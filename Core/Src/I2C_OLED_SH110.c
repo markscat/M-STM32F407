@@ -68,6 +68,18 @@ static const uint8_t OLED_InitCmd[] = {
     0xA6,
     0xAF
 };
+//<0805新增,待測>
+void OLED_WriteCommand_V2(uint8_t cmd) {
+    uint8_t buf[2] = {0x00, cmd}; // Control byte (0x00) + Command
+    HAL_I2C_Master_Transmit(&hi2c1, OLED_ADDRESS, buf, 2, HAL_MAX_DELAY);
+}
+
+void OLED_WriteData_V2(uint8_t data) {
+    uint8_t buf[2] = {0x40, data}; // Control byte (0x40) + Data
+    HAL_I2C_Master_Transmit(&hi2c1, OLED_ADDRESS, buf, 2, HAL_MAX_DELAY);
+}
+//</0805新增,待測>
+
 
 void SH1106_OLED_WriteCommand(uint8_t cmd) {
     HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_CMD, 1, &cmd, 1, HAL_MAX_DELAY);
