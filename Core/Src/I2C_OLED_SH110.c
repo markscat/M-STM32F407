@@ -52,21 +52,21 @@ static SH1106_t SH1106;
 //<250803 新增>
 
 static const uint8_t OLED_InitCmd[] = {
-    0xAE,
-    0xD5, 0x80,
-    0xA8, 0x3F,
-    0xD3, 0x00,
-    0x40,
-    0xAD, 0x8B,
-    0xA1,
-    0xC8,
-    0xDA, 0x12,
-    0x81, 0x7F,
-    0xD9, 0x22,
-    0xDB, 0x20,
-    0xA4,
-    0xA6,
-    0xAF
+    0xAE,		// Display OFF
+    0xD5, 0x80,		// Set display clock divide ratio/oscillator frequency
+    0xA8, 0x3F,		// Multiplex ratio: 1/64
+    0xD3, 0x00,		// Display offset
+    0x40,		// Start line = 0
+    0xAD, 0x8B,		// DC-DC ON (0x8A = off)
+    0xA1,		// Segment remap
+    0xC8,		// COM scan direction: remapped
+    0xDA, 0x12,		// COM pins hardware config
+    0x81, 0x7F,		// Contrast
+    0xD9, 0x22,		// Pre-charge period
+    0xDB, 0x20,		// VCOMH deselect
+    0xA4,		// Resume to RAM content display
+    0xA6,		// Normal display
+    0xAF		// Display ON
 };
 //<0805新增,待測>
 void OLED_WriteCommand_V2(uint8_t cmd) {
