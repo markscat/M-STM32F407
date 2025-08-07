@@ -70,7 +70,7 @@ static const uint8_t OLED_InitCmd[] = {
 };
 
 
-//#define sample_code
+//#define Mem_Write
 #define 0805_OLED_Write
 	
 //<0805新增,待測>
@@ -87,10 +87,11 @@ void OLED_WriteData(uint8_t data) {
 #endif
 //</0805新增,待測>
 
-#ifdef sample_code
+#ifdef Mem_Write
 void SH1106_OLED_WriteCommand(uint8_t cmd) {
     HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_CMD, 1, &cmd, 1, HAL_MAX_DELAY);
 }
+#endif
 
 void SH1106_OLED_Init(void) {
     HAL_Delay(100);
@@ -98,7 +99,7 @@ void SH1106_OLED_Init(void) {
     	SH1106_OLED_WriteCommand(OLED_InitCmd[i]);
     }
 }
-#endif
+
 
 void SH1106_OLED_SetPos(uint8_t x, uint8_t page) {
     x += OLED_COL_OFFSET;
