@@ -43,14 +43,102 @@ typedef struct {
 	uint8_t Initialized;
 } SH1106_t;
 
+
+
 /* Private variable */
 static SH1106_t SH1106;
 
 #define SH1106_NORMALDISPLAY       0xA6
 #define SH1106_INVERTDISPLAY       0xA7
 
-//<250803 新增>
 
+
+// SH1106 固定指令碼
+
+//#define OLED_DISPLAY_OFF        0xAE
+//#define OLED_DISPLAY_ON         0xAF
+
+//#define OLED_SET_PAGE_ADDR      0xB0  // 基底，需搭配 | page_num
+//#define OLED_SET_CONTRAST       0x81
+//#define OLED_SEG_REMAP_0        0xA0
+//#define OLED_SEG_REMAP_127      0xA1
+//#define OLED_NORMAL_DISPLAY     0xA6
+//#define OLED_INVERT_DISPLAY     0xA7
+//#define OLED_SET_MUX_RATIO      0xA8
+#define OLED_SET_DC_DC_MODE      0xAD
+#define OLED_PUMP_ON            0x8B
+
+//#define OLED_SET_PUMP_VOLTAGE   0x30  // 需搭配 | val
+//#define OLED_SCAN_DIR_NORMAL    0xC0
+//#define OLED_SCAN_DIR_REMAP     0xC8
+//#define OLED_SET_DISPLAY_OFFSET 0xD3
+//#define OLED_SET_CLK_DIV        0xD5
+//#define OLED_SET_PRECHARGE      0xD9
+//#define OLED_SET_COM_CONFIG     0xDA
+//#define OLED_SET_VCOMH          0xDB
+
+#ifndef __SH1106_H__
+#define __SH1106_H__
+
+
+// ===== 基本顯示控制 =====
+#define OLED_DISPLAY_OFF        0xAE // 顯示關閉
+#define OLED_DISPLAY_ON         0xAF // 顯示開啟
+#define OLED_NORMAL_DISPLAY     0xA6 // 正常顯示模式
+#define OLED_INVERT_DISPLAY     0xA7 // 反相顯示模式
+#define OLED_NOP                0xE3 // 無操作（空指令）
+
+// ===== 記憶體位址設定 =====
+#define OLED_SET_LOWER_COLUMN   0x00 // 設定 Column 位址低位元 (0x00~0x0F)
+#define OLED_SET_HIGHER_COLUMN  0x10 // 設定 Column 位址高位元 (0x10~0x1F)
+#define OLED_SET_PAGE_ADDR      0xB0 // 設定 Page 位址 (0xB0~0xB7)
+
+// ===== 滾動設定 =====
+#define OLED_SCROLL_SETUP       0x26 // 水平滾動設定（後續需給方向與間隔）
+#define OLED_SCROLL_OFF         0x2E // 停止滾動
+#define OLED_SCROLL_ON          0x2F // 啟動滾動
+
+// ===== 硬體設定 =====
+#define OLED_SET_CONTRAST       0x81 // 對比度設定（後需給值 0x00~0xFF）
+#define OLED_SEG_REMAP_0        0xA0 // 段驅動輸出正常順序 (column 0 → column max)
+#define OLED_SEG_REMAP_127      0xA1 // 段驅動輸出反轉順序 (column max → column 0)
+#define OLED_SET_MUX_RATIO      0xA8 // 多工比設定（後需給 0x1F~0x3F）
+#define OLED_SET_DC_DC_MODE     0xAD // 設定內部 DC-DC 開關
+#define OLED_DC_DC_OFF          0x8A
+#define OLED_DC_DC_ON           0x8B
+
+#define OLED_SET_DC_DC_MODE      0xAD
+#define OLED_PUMP_ON            0x8B
+
+#define OLED_SET_PUMP_VOLTAGE   0x30 // 設定電壓（後需給 0x00~0x03）
+
+#define OLED_SCAN_DIR_NORMAL    0xC0 // COM 輸出掃描方向：正常（0 → max）
+#define OLED_SCAN_DIR_REMAP     0xC8 // COM 輸出掃描方向：反轉（max → 0）
+#define OLED_SET_DISPLAY_OFFSET 0xD3 // 顯示偏移設定（後需給 0x00~0x3F）
+#define OLED_SET_CLK_DIV        0xD5 // 顯示時鐘分頻與振盪頻率
+#define OLED_SET_PRECHARGE      0xD9 // 預充電期設定（後需給值）
+#define OLED_SET_COM_CONFIG     0xDA // COM 硬體配置
+#define OLED_SET_VCOMH          0xDB // VCOMH 電壓等級（後需給值）
+
+// ===== 高級控制 =====
+#define OLED_READ_MODIFY_WRITE  0xE0 // 讀-改-寫模式啟動
+#define OLED_END                0xEE // 結束讀-改-寫模式
+
+#endif
+
+// 初始化參數設定
+#define INIT_CONTRAST_VALUE    0xFF
+#define INIT_MUX_RATIO         0x3F
+#define INIT_PUMP_VOLTAGE      0x02  // 0~3 對應不同電壓
+#define INIT_DISPLAY_OFFSET    0x00
+#define INIT_CLK_DIV           0x80
+#define INIT_PRECHARGE         0x1F
+#define INIT_COM_CONFIG        0x12
+#define INIT_VCOMH             0x40
+
+
+//<250803 新增>
+/*
 static const uint8_t OLED_InitCmd[] = {
     0xAE,		// Display OFF
     0xD5, 0x80,		// Set display clock divide ratio/oscillator frequency
@@ -68,14 +156,13 @@ static const uint8_t OLED_InitCmd[] = {
     0xA6,		// Normal display
     0xAF		// Display ON
 };
-
+*/
 
 //#define Mem_Write
-#define 0805_OLED_Write
+#define OLED_Write_0805_
+
 	
-//<0805新增,待測>
-#ifdef 0805_OLED_Write
-void OLED_WriteCommand(uint8_t cmd) {
+void SH1106_OLED_WriteCommand(uint8_t cmd) {
     uint8_t buf[2] = {0x00, cmd}; // Control byte (0x00) + Command
     HAL_I2C_Master_Transmit(&hi2c1, OLED_ADDRESS, buf, 2, HAL_MAX_DELAY);
 }
@@ -84,14 +171,136 @@ void OLED_WriteData(uint8_t data) {
     uint8_t buf[2] = {0x40, data}; // Control byte (0x40) + Data
     HAL_I2C_Master_Transmit(&hi2c1, OLED_ADDRESS, buf, 2, HAL_MAX_DELAY);
 }
-#endif
-//</0805新增,待測>
+//</0805新增>
 
-#ifdef Mem_Write
-void SH1106_OLED_WriteCommand(uint8_t cmd) {
-    HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_CMD, 1, &cmd, 1, HAL_MAX_DELAY);
+// --- 發送數據的輔助函式 (用來更新畫面) ---
+void OLED_Write_Data(uint8_t* data, uint16_t size)
+{
+    uint8_t* temp_buf = malloc(size + 1);
+    temp_buf[0] = 0x40; // 0x40 代表接下來是 Data
+    memcpy(temp_buf+1, data, size);
+    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, temp_buf, size + 1, HAL_MAX_DELAY);
+    free(temp_buf);
 }
-#endif
+/**
+ * OLED 驅動 IC 在初始化時，必須照 datasheet 的上電順序，尤其是：
+ * Display OFF
+ * Clock / Multiplex / Offset / Segment remap / COM scan
+ * Contrast / Precharge / VCOM
+ * Charge Pump
+ * Display ON
+ *
+ *
+ *+---------------------+
+ *|       Start         |
+ *+----------+----------+
+ *         |
+ *         v
+*+---------------------+
+*|  Display OFF (0xAE) |
+*+----------+----------+
+*           |
+*           v
+*+-----------------------------+
+*|  Set Charge Pump (0x8D)     |
+*|  Enable Charge Pump (0x14)  |
+*+----------+------------------+
+*           |
+*           v
+*+-----------------------------+
+*|  Set Contrast (0x81) + val  |
+*+----------+------------------+
+*           |
+*           v
+*+-----------------------------+
+*|  Set Multiplex Ratio (0xA8) |
+*+----------+------------------+
+*           |
+*           v
+*+-----------------------------+
+*|  Set Display Offset (0xD3)  |
+*+----------+------------------+
+*           |
+*           v
+*+-------------------------------+
+*|  Set Display Clock (0xD5)      |
+*+----------+--------------------+
+*           |
+*           v
+*+-------------------------------+
+*|  Set Pre-charge Period (0xD9)  |
+*+----------+--------------------+
+*           |
+*           v
+*+----------------------------+
+*|  Set VCOM Detect (0xDB)    |
+*+----------+-----------------+
+*           |
+*           v
+*+----------------------------+
+*|  Set Segment Re-map (0xA0/1)|
+*+----------+-----------------+
+*           |
+*           v
+*+--------------------------------+
+*| Set COM Scan Direction (0xC0/8)|
+*+----------+---------------------+
+*           |
+*           v
+*+-----------------------+
+*|  Set Start Line (0x40)|
+*+----------+------------+
+*           |
+*           v
+*+---------------------+
+*|  Clear Display RAM  |
+*+----------+----------+
+*           |
+*           v
+*+---------------------+
+*|  Display ON (0xAF)  |
+*+----------+----------+
+*           |
+*           v
+*+---------------------+
+*|        End          |
+*+---------------------+
+*
+ *
+ * **/
+
+void SH1106_OLED_Init(void) {
+    HAL_Delay(100);
+
+    SH1106_WRITECOMMAND(OLED_DISPLAY_OFF);
+    SH1106_WRITECOMMAND(0x02); // 這個是特殊用途，SH1106 Column Offset
+    SH1106_WRITECOMMAND(OLED_SET_CONTRAST);
+    SH1106_WRITECOMMAND(INIT_CONTRAST_VALUE);
+    SH1106_WRITECOMMAND(OLED_SEG_REMAP_127);
+    SH1106_WRITECOMMAND(OLED_NORMAL_DISPLAY);
+    SH1106_WRITECOMMAND(OLED_SET_MUX_RATIO);
+    SH1106_WRITECOMMAND(INIT_MUX_RATIO);
+    SH1106_WRITECOMMAND(OLED_SET_DC_DC_MODE);
+    SH1106_WRITECOMMAND(OLED_PUMP_ON);
+    SH1106_WRITECOMMAND(OLED_SET_PUMP_VOLTAGE | INIT_PUMP_VOLTAGE);
+    SH1106_WRITECOMMAND(OLED_SCAN_DIR_REMAP);
+    SH1106_WRITECOMMAND(OLED_SET_DISPLAY_OFFSET);
+    SH1106_WRITECOMMAND(INIT_DISPLAY_OFFSET);
+    SH1106_WRITECOMMAND(OLED_SET_CLK_DIV);
+    SH1106_WRITECOMMAND(INIT_CLK_DIV);
+    SH1106_WRITECOMMAND(OLED_SET_PRECHARGE);
+    SH1106_WRITECOMMAND(INIT_PRECHARGE);
+    SH1106_WRITECOMMAND(OLED_SET_COM_CONFIG);
+    SH1106_WRITECOMMAND(INIT_COM_CONFIG);
+    SH1106_WRITECOMMAND(OLED_SET_VCOMH);
+    SH1106_WRITECOMMAND(INIT_VCOMH);
+    SH1106_WRITECOMMAND(OLED_DISPLAY_ON);
+}
+
+
+
+
+#ifdef V2_with_array
 
 void SH1106_OLED_Init(void) {
     HAL_Delay(100);
@@ -99,43 +308,11 @@ void SH1106_OLED_Init(void) {
     	SH1106_OLED_WriteCommand(OLED_InitCmd[i]);
     }
 }
+#endif
 
 
-void SH1106_OLED_SetPos(uint8_t x, uint8_t page) {
-    x += OLED_COL_OFFSET;
-    SH1106_OLED_WriteCommand(0xB0 + page);
-    SH1106_OLED_WriteCommand(0x00 + (x & 0x0F));
-    SH1106_OLED_WriteCommand(0x10 + ((x >> 4) & 0x0F));
-}
 
-void SH1106_OLED_Clear(void) {
-    uint8_t zero[128] = {0};
-    for (uint8_t page = 0; page < 8; page++) {
-    	SH1106_OLED_SetPos(0, page);
-        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_DATA, 1, zero, 128, HAL_MAX_DELAY);
-    }
-}
-
-void SH1106_OLED_UpdateScreen(uint8_t *buffer) {
-    for (uint8_t page = 0; page < 8; page++) {
-    	SH1106_OLED_SetPos(0, page);
-        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_DATA, 1, &buffer[page * 128], 128, HAL_MAX_DELAY);
-    }
-}
-
-void SH1106_OLED_DrawPixel(uint8_t *buffer, uint8_t x, uint8_t y, uint8_t color) {
-    if (x >= 128 || y >= 64) return;
-    uint16_t byteIndex = x + (y / 8) * 128;
-    if (color)
-        buffer[byteIndex] |=  (1 << (y % 8));
-    else
-        buffer[byteIndex] &= ~(1 << (y % 8));
-}
-
-
-//</250803 新增>
-
-
+#ifdef V2_Sample_code_2
 uint8_t SH1106_Init(void) {
 
 		HAL_Delay(100); // 等待電源穩定
@@ -198,7 +375,9 @@ uint8_t SH1106_Init(void) {
 		return 1;
 	
 }
+#endif
 
+#ifdef V1_Sample_code
 
 uint8_t SH1106_Init_org(void) {
 
@@ -353,16 +532,44 @@ uint8_t SH1106_Init_org(void) {
 	/* Return OK */
 	return 1;
 }
+#endif
 
-// --- 發送數據的輔助函式 (用來更新畫面) ---
-void OLED_Write_Data(uint8_t* data, uint16_t size)
-{
-    uint8_t* temp_buf = malloc(size + 1);
-    temp_buf[0] = 0x40; // 0x40 代表接下來是 Data
-    memcpy(temp_buf+1, data, size);
-    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, temp_buf, size + 1, HAL_MAX_DELAY);
-    free(temp_buf);
+
+void SH1106_OLED_SetPos(uint8_t x, uint8_t page) {
+    x += OLED_COL_OFFSET;
+    SH1106_OLED_WriteCommand(0xB0 + page);
+    SH1106_OLED_WriteCommand(0x00 + (x & 0x0F));
+    SH1106_OLED_WriteCommand(0x10 + ((x >> 4) & 0x0F));
 }
+
+void SH1106_OLED_Clear(void) {
+    uint8_t zero[128] = {0};
+    for (uint8_t page = 0; page < 8; page++) {
+    	SH1106_OLED_SetPos(0, page);
+        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_DATA, 1, zero, 128, HAL_MAX_DELAY);
+    }
+}
+
+void SH1106_OLED_UpdateScreen(uint8_t *buffer) {
+    for (uint8_t page = 0; page < 8; page++) {
+    	SH1106_OLED_SetPos(0, page);
+        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, OLED_DATA, 1, &buffer[page * 128], 128, HAL_MAX_DELAY);
+    }
+}
+
+void SH1106_OLED_DrawPixel(uint8_t *buffer, uint8_t x, uint8_t y, uint8_t color) {
+    if (x >= 128 || y >= 64) return;
+    uint16_t byteIndex = x + (y / 8) * 128;
+    if (color)
+        buffer[byteIndex] |=  (1 << (y % 8));
+    else
+        buffer[byteIndex] &= ~(1 << (y % 8));
+}
+
+
+//</250803 新增>
+
+
 
 
 
@@ -817,6 +1024,8 @@ HAL_I2C_Master_Transmit(SH1106_I2C, address, dt, count+1, 10);
 		dt[1] = data;
 		HAL_I2C_Master_Transmit(SH1106_I2C, address, dt, 2, 10);
 	}
+
+
 
 void SH1106_InvertDisplay (int i)
 {
