@@ -40,6 +40,8 @@ extern C {
  */
 #include "stm32f4xx_hal.h"
 #include "string.h"
+#include <I2C_OLED_fonts.h>
+
 
 /**
  * @defgroup LIB_Typedefs
@@ -54,7 +56,7 @@ typedef struct {
 	uint8_t FontWidth;    /*!< Font width in pixels */
 	uint8_t FontHeight;   /*!< Font height in pixels */
 	const uint16_t *data; /*!< Pointer to data font data array */
-} FontDef_t;
+} FontDef_t;//<<
 
 /** 
  * @brief  String length and height 

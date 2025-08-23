@@ -41,8 +41,10 @@ extern "C" {
 #include <stdio.h>//ok
 #include <string.h>//ok
 #include <stdlib.h>//ok
+#include <stdint.h>
+
 #include "uart_io.h"//ok
-#include "ssd1306.h"
+#include <I2C_OLED_SSD1306>
 #include "Tools.h"
 #include "error_handler.h"
 #include "ring_buffer.h"
@@ -53,7 +55,8 @@ extern "C" {
 #include "gpio.h"
 #include "crc.h"
 #include <ctype.h>
-#include "I2C_OLED_SH110.h"
+#include <I2C_OLED_SH1106.h>
+#include <I2C_OLED_horse_anim.h>
 
 /* USER CODE END Includes */
 
