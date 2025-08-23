@@ -51,7 +51,6 @@
 #include "main.h"
 #include "I2C_Peripherals.h"//ok
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -66,33 +65,18 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define uartPrintfloop
 //#define EEPROM
 //#define PrintfScanfTestCode
-//#define RTCSet
-//#define  RTC_Write_interr
-
+#define RTC_Read
 //#define RTC_Write
-
 
 //#define clear_EEPROM
 //#define EEPROM_write
 //#define EEPROM_read
-#define time_setting
 
 
 
 #define MAX_INPUT_LEN 32 // 输入字符串最大长度
-#define MAX_INPUT_LEN_MINIMAL 32
-#define MAX_COMMAND_LEN_MAIN 32                         // UART 命令行的最大允許字符數 (不包括 '\0')
-#define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
-//static uint8_t SH1106_Buffer_in_main[SH1106_WIDTH * SH1106_HEIGHT / 8];
-
-
-bool CheckTimeStruct (const DS1307_Time* time_to_check );
-
-
-char line_buffer_main[LINE_BUFFER_SIZE_MAIN];
-volatile uint16_t line_buffer_index_main = 0;
-
 uint8_t rx_data;
+
 
 
 #ifdef EEPROM
@@ -108,6 +92,15 @@ uint8_t rx_data;
 */
 #endif
 
+
+//#define oled
+/**  @brief 設定宣告OLED */
+#ifdef oled
+	#include "SH1106.h"
+	#include "fonts.h"
+	#include "bitmap.h"
+	#include "horse_anim.h"
+#endif
 
 
 /**  @brief 設定只執行TCA555的程式 */
@@ -258,15 +251,6 @@ int main(void)
 
   //
 
-
-
-
-  printf("\n************************************************\n");
-  Scan_I2C_Address();
-  printf("\n************************************************\n");
-  printf("\n");
-  printf("\n**************I2C init. Device *****************\n");
-
   I2C_Status status = I2C_Init_Devices();
 
     if (status != I2C_OK) {
@@ -274,346 +258,10 @@ int main(void)
       Error_Handler();  // 需自定义错误处理函数
       return status;
     }
+
     printf("I2C device init ok!yy \n\n");
-    printf("\n************System Ready.**************************\n");
 
-    printf("init oled \n");
-
-    if(SH1106_OLED_Init() == 1){
-        printf("init oled ok \n");
-    };
-    //uint8_t oled_buffer[128*64/8] = {0};  // SH1106 的完整缓冲区（128x64位）
-
-    //memset(oled_buffer, 0x00, sizeof(oled_buffer)); // 全白
-    SH1106_Fill(1);
-    SH1106_UpdateScreen();
-
- 	HAL_Delay(3000);
- 	SH1106_Fill(0);
- 	SH1106_UpdateScreen();
-
-
- 	HAL_Delay(3000);
- 	SH1106_Fill(1);
- 	SH1106_UpdateScreen();
-
-
-    while(1);
-
-
-    for (uint8_t x = 0; x < 128; x++) {
-         for (uint8_t y = 0; y < 64; y++) {
-         	//SH1106_OLED_DrawPixel(x, y, 1);
-         	SH1106_DrawPixel(x,y,1);
-            SH1106_UpdateScreen();
-
-         }
-     }
-    //SH1106_UpdateScreen();
-    //SH1106_UpdateScreen_org();
- 	HAL_Delay(3000);
- 	SH1106_Fill(1);
-    while (1);
-
-
-   /* const unsigned char* horse_anim[10] = {
-        horse1, horse2, horse3, horse4, horse5,
-        horse6, horse7, horse8, horse9, horse10
-    };*/
-
-    // horse_anim.h 中声明
-
-    // 假设 horse1 是 128x32 的位图（水平扫描，MSB优先）
-//    SH1106_DrawBitmap(0, 2, horse1, 128, 32, 1); // 在(0,2)位置绘制白色图像
-//    SH1106_UpdateScreen();
-
-
-    // 显示 128x32 水平扫描图像（居中）
-  //  SH1106_DrawImageDirect(horse1, 0, 2, 128, 32, 0);
-  //  SH1106_UpdateScreen();
-
-
-
-
-
-//#define oled_test
-
-#ifdef oled_test
-    #define Fill_OLED_Display_at_1
-    //#define Fill_OLED_Display_at_0
-
-#ifdef squr
-    for (uint8_t x = 50; x < 60; x++) {
-        for (uint8_t y = 10; y < 20; y++) {
-            SH1106_OLED_DrawPixel(oled_buffer, x, y, 1);
-    	    SH1106_OLED_UpdateScreen(oled_buffer);
-
-        }
-    }
-
-
-    while (1);
-#endif
-
-
-#ifdef Fill_OLED_Display_at_1
-
-    //uint8_t oled_buffer[1024] = {0}; // 128 * 64 / 8
-
-    SH1106_OLED_Init();
-    SH1106_OLED_Clear();
-
-    for (uint8_t x = 0; x < 128; x++) {
-        for (uint8_t y = 0; y < 64; y++) {
-        	SH1106_OLED_DrawPixel(oled_buffer, x, y, 1);
-        }
-    }
-    SH1106_OLED_UpdateScreen(oled_buffer);
-    //SH1106_UpdateScreen();
-
-	HAL_Delay(1000);
-
-#endif
-#ifdef Fill_OLED_Display_at_0
-
-    //uint8_t oled_buffer[1024] = {0}; // 128 * 64 / 8
-
-    SH1106_OLED_Init();
-    SH1106_OLED_Clear();
-
-    for (uint8_t x = 0; x < 128; x++) {
-        for (uint8_t y = 0; y < 64; y++) {
-        	SH1106_OLED_DrawPixel(oled_buffer, x, y, 0);
-        }
-    }
-
-    SH1106_OLED_UpdateScreen(oled_buffer);
-
-    while(0){}
-
-#endif
-
-#endif
-
-
-#ifdef time_setting
-
-    //<讀取階段>
-    DS1307_Time dt = {0};
-	//HAL_StatusTypeDef DT_status;
-
-    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-
-    char YandN;
-    HAL_StatusTypeDef DT_status;
-
-    printf("need setup time ? [Y]/[N] \n");
-    scanf(" %c",&YandN);
-
-    if(YandN =='Y' || YandN =='y'){
-    	printf("\n input time :\n");
-        scanf("%32s", input_str);
-        printf("Received_time : %s\r\n\n",input_str);
-        dt = Parse_TimeString(input_str);
-
-        if (CheckTimeStruct(&dt)){
-        	printf("set time... \n");
-        	DT_status = DS1307_SetTime(&dt);
-        	if (DT_status == HAL_OK) {
-        		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-        				dt.year, dt.month, dt.date, dt.day,
-						dt.hours , dt.minutes, dt.seconds);
-        	} else {
-        		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-        	}
-
-        }else{
-        	printf("No calibration command, do not calibrate the time, display the time \n\n");
-        }
-    }else if(YandN =='N' || YandN =='n'){
-    	printf("show Time \n\n");
-    }else{
-    	printf("No input, no time correction, display time\n\n");
-    }
-
-#define loop
-
-#ifdef loop
-    while(1){
-
-
-        // 任務 1: 不斷地、非阻塞地從 UART 數據流中組裝命令
-        ProcessUartRingBuffer();
-
-        // 任務 2: 呼叫我們新的命令處理中心，讓它去檢查旗標並執行命令
-        HandleUartCommands();
-
-        // 讀取時間
-    	DT_status = DS1307_GetTime(&dt);
-
-    	//顯示時間 as
-    	if (DT_status == HAL_OK) {
-    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-    	} else {
-    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-    	}
-    	//memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-    	HAL_Delay(1000);
-
-    }
-#endif //loop
-#endif //time_setting
-
-
-
-#ifdef RTC_Write
-
-
-
-	    while(1){}
-
-    if(dt.date<30 || dt.day<8 ){
-     	printf("set time... /n");
-     	DT_status = DS1307_SetTime(&dt);
-
-     	if (DT_status == HAL_OK) {
-     		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-     				dt.year, dt.month, dt.date, dt.day,
- 					dt.hours , dt.minutes, dt.seconds);
-     	} else {
-     		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-     	}
-     	memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-     }else{
-     	printf("不需要校正時間:");
-     	DT_status = DS1307_GetTime(&dt);
-     	if (DT_status == HAL_OK) {
-     		printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-     				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-     	} else {
-     		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-     	}
-     }
-
-
-
-    while(1){
-
-    	DT_status = DS1307_GetTime(&dt);
-    	if (DT_status == HAL_OK) {
-    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-    	} else {
-    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-    	}
-    	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-
-    	       	HAL_Delay(1000);
-       }
-#endif
-
-#ifdef RTCSet
-
-    //DS1307_Time dt={0};
-    //HAL_StatusTypeDef uart_status;
-
-    //宣告一個uart_common_id,讓每次uart中斷後,判斷是什麼樣的命令
-	//int UART_common_id = 0;
-
-    // 為了實現非阻塞的週期性任務，我們需要一個時間戳變數
-        uint32_t last_periodic_task_tick = 0;
-
-
-    while(1){
-        ProcessUartRingBuffer();
-        if (g_command_line_ready) {
-        	// --- 只有在收到完整命令時，才進入此處理區 ---
-        	printf("CMD RX: %s\n", g_command_line_buffer);
-        	// 3. 解析命令，分離出 ID 和 Payload
-        	int cmd_id;
-        	const char* payload = ParseCommand(g_command_line_buffer, &cmd_id);
-        	if (payload != NULL) { // 確保格式正確 (找到了逗號)
-        		// 4. 使用從 UART 解析出的 cmd_id 進行分派
-        		switch (cmd_id) {
-        			case 1: // 設定時間
-        				{
-        					// A. 從 payload 解析時間，這需要一個【新的】時間變數
-        					DS1307_Time time_to_set = Parse_TimeString(payload);
-        					// 檢查解析是否成功
-        					if (time_to_set.year != 0xFF) {// B. 設定 RTC，並檢查返回值
-        						HAL_StatusTypeDef status = DS1307_SetTime(&time_to_set);
-        						if (status == HAL_OK) {
-        							printf("OK: Time set successfully.\n");
-        							// =======================================================
-        							//        ↓↓↓ 【新增的回讀驗證步驟】 ↓↓↓
-        							// =======================================================
-        							printf("Verifying time by reading back from RTC...\n");
-        							DS1307_Time verified_time;
-        							HAL_Delay(5); // 給 RTC 一點點反應時間（可選，但有時有好處）
-        							if (DS1307_GetTime(&verified_time) == HAL_OK) {
-        								printf("Verification successful. Current RTC Time: 20%02u-%02u-%02u %02u:%02u:%02u\n",
-        										verified_time.year, verified_time.month, verified_time.date,
-												verified_time.hours, verified_time.minutes, verified_time.seconds);
-        							} else {
-        								printf("WARN: Time set, but verification read failed!\n");
-        							}
-        							// =======================================================
-        							//        ↑↑↑ 【新增的回讀驗證步驟】 ↑↑↑
-        							// =======================================================
-        						} else {
-        							printf("ERR: Failed to set time (HAL Status: %d).\n", status);
-        						}
-        					} else {
-        						printf("ERR: Invalid time data in payload for command 1.\n");
-        					}
-        				}
-        				break;
-        			case 2: // 獲取時間
-        				{
-        					// A. 宣告一個【新的】時間變數來存放讀取結果
-        					DS1307_Time current_time;
-        					HAL_StatusTypeDef status = DS1307_GetTime(&current_time);
-        					if (status == HAL_OK) {
-        						printf("OK: Current time is 20%02u-%02u-%02u %02u:%02u:%02u\n",
-        								current_time.year, current_time.month, current_time.date,
-										current_time.hours, current_time.minutes, current_time.seconds);
-        					} else {
-        						printf("ERR: Failed to get time (HAL Status: %d).\n", status);
-        					}
-        				}
-        				break;
-        				// 在這裡添加 case 3, 4, 5...
-        				default: // 未知的命令 ID
-        					printf("ERR: Unknown Command ID %d received.\n", cmd_id);
-        					break;
-        	                }
-        	            } else { // 格式錯誤，連逗號都沒有
-        	                printf("ERR: Invalid command format. Expected 'ID,Payload'.\n");
-        	            }
-        	// 5. 【非常重要】處理完畢，放下旗子，重置緩衝區，準備接收下一條命令
-        	g_command_line_index = 0;
-        	 memset(g_command_line_buffer, 0, sizeof(g_command_line_buffer)); // 推薦清空
-        	g_command_line_ready = false;
-        	// --- 命令處理區結束 ---
-        }
-
-        // 3. [低頻率執行] 在這裡處理其他週期性任務，而不是用 HAL_Delay() 阻塞所有事
-        if (HAL_GetTick() - last_periodic_task_tick >= 1000) {
-            last_periodic_task_tick = HAL_GetTick(); // 更新時間戳
-
-            // 在這裡可以放你希望每秒執行一次的任務
-            // 比如，打印一個心跳信息，或者更新一個不重要的顯示
-            printf("Heartbeat: System is running.\n");
-        }
-
-        // 你的主迴圈現在可以飛速運行，既能即時響應命令，又能處理週期性任務
-
-    	HAL_Delay(1000);
-    }
-
-
-#endif
+    printf("System Ready. Enter a string:\r\n");
 
 
 
@@ -626,10 +274,9 @@ int main(void)
 #ifdef EEPROM_write
     uint8_t Write_data[MAX_INPUT_LEN]="Hello Stm32f407"; //crc = 0xB965
 
-    //uint16_t W_data_len = strlen((char *)Write_data); // 实际长度=14（不含\0）
+    uint16_t W_data_len = strlen((char *)Write_data); // 实际长度=14（不含\0）
 
-    printf("EEPROM Write ...... \n\n");
-/*
+
     printf("原始数据 (Hex): ");
     for (int i = 0; i < W_data_len; i++) {
         printf("%02X ", Write_data[i]);
@@ -637,11 +284,11 @@ int main(void)
     printf("\n");
 
 	printf("read eeprom \n");
-*/
+
 
     //EEPROM_Status W_status = EEPROM_Write(0x10, test_data, sizeof(test_data));
 
-	EEPROM_Status W_status = EEPROM_Write_NoCRC(0x0, Write_data, strlen((char *)Write_data));
+	EEPROM_Status W_status = EEPROM_Write(0x0, Write_data, strlen((char *)Write_data));
 
     HAL_Delay(5);
 
@@ -656,7 +303,6 @@ int main(void)
     uint8_t read_data[MAX_INPUT_LEN]={0};
     uint16_t R_data_len ;
 
-/*
     for(int i = 0; i < MAX_INPUT_LEN ; i++) {
         printf("%02X ", read_data[i]);
         if((i+1) % 16 == 0){
@@ -664,10 +310,11 @@ int main(void)
         }
       }
       printf("\n\n");
-*/
+
+    EEPROM_Status E_status = EEPROM_Read(0x00, read_data,16);
 
 
-    EEPROM_Status E_status = EEPROM_Read_NoCRC(0x00, read_data,16);
+    //printf("read data 2ed= %s\n",read_data);
 
     if(E_status == EEPROM_OK) {
         // 確保讀取的數據以 null 結尾
@@ -687,15 +334,122 @@ int main(void)
     }
 /*
     printf("prog end......\n\n");
-*/
+
     while(1)
     {
 
     }
+*/
+#endif
+
+#ifdef RTC_Write
+	#define SetupTime
+    //#define showtime
+
+     //<讀取階段>
+    DS1307_Time dt = {0};
+	HAL_StatusTypeDef DT_status;
+
+
+	#ifdef SetupTime
+    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+
+    //分析input_str的資料,存到 dt
+    dt.year = 0xFF;
+
+
+    printf("input time :\n");
+    scanf("%32s", input_str);
+    printf("Received_time : %s\r\n\n",input_str);
+    dt = Parse_TimeString(input_str);
+
+
+
+    //寫入階段
+    printf("dt.year = %d",dt.year);
+
+    if(dt.year==0xFF){
+    	DT_status = DS1307_SetTime(&dt);
+    	printf("set time");
+    	if (DT_status == HAL_OK) {
+    		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year, dt.month, dt.date, dt.day,
+					dt.hours , dt.minutes, dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
+    	memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+    }else{
+    	printf("不需要校正時間:");
+    	DT_status = DS1307_GetTime(&dt);
+    	if (DT_status == HAL_OK) {
+    		printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
+    }
+
+
+	DT_status = DS1307_GetTime(&dt);
+	if (DT_status == HAL_OK) {
+		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+	} else {
+		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+	}
+	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+
+//	       	HAL_Delay(1000);
+	#endif
+
+#ifdef showtime
+    while(1){
+
+    	DT_status = DS1307_GetTime(&dt);
+    	if (DT_status == HAL_OK) {
+    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
+    	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+
+    	       	HAL_Delay(1000);
+       }
+#endif
 
 #endif
 
 
+
+
+#ifdef RTC_Read
+      // 初始化成功后的操作
+    DS1307_Time current_time;
+
+    while (1)
+    {
+      status = DS1307_GetTime(&current_time);
+
+        printf("当前RTC时间:\n");
+        printf("--------------------------------\n");
+        printf("日期: 20%02d-%02d-%02d\n",   // 假设年份为两位表示(00-99)
+               current_time.year,
+               current_time.month,
+               current_time.date);
+        printf("时间: %02d:%02d:%02d\n",
+               current_time.hours,
+               current_time.minutes,
+               current_time.seconds);
+        printf("星期: 周%d\n", current_time.day);  // 根据DS1307规范(1=周日,7=周六)
+
+        	        printf("--------------------------------\n\n");
+               	 HAL_Delay(1000);
+
+        }
+
+#endif
 
 #ifdef PrintfScanfTestCode
 
@@ -709,6 +463,11 @@ int main(void)
 	    printf("Parsed time: %04d-%02d-%02d %02d:%02d:%02d\n",
 	               result.year, result.month, result.day,
 	               result.hour, result.minute, result.second);
+
+
+
+
+
 
 		   while(1){
 
@@ -901,8 +660,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-
 
 /* USER CODE END 4 */
 

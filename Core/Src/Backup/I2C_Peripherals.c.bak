@@ -32,7 +32,6 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "Tools.h"
-#include <I2C_OLED_SH1106-1>
 
 #define EEPROM_SIZE 4096  // AT24C32容量
 #define MAX_READ_LEN 32   // 推荐单次读取长度
@@ -165,12 +164,6 @@ I2C_Status I2C_Init_Devices(void) {
       .dev_name  = "DS1307 RTC"
     },
     // 可在此添加更多设备...
-	/*{
-	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
-       .init_fn   = SH1106_OLED_Init,
-       .dev_name  = "SH1106 OLED"
-	}*/
-
   };
   //end I2C_DeviceConfig dev_config[]
 
@@ -193,12 +186,11 @@ I2C_Status I2C_Init_Devices(void) {
   }
 
   // 步骤2: 遍历所有设备进行初始化
-
   for (uint8_t i = 0; i < sizeof(dev_config)/sizeof(dev_config[0]); i++) {
     I2C_Status status = dev_config[i].init_fn();
     if (status != I2C_OK) {
       // 输出调试信息（需实现printf）
-      printf("[I2C Init] Device %s initialization failed! Error: %d\n\n",
+      printf("[I2C Init] Device %s initialization failed! Error: %d\n",
             dev_config[i].dev_name, status);
       return status; // 严格模式：遇到错误立即返回
     }
@@ -235,20 +227,17 @@ const char* I2C_Status_ToString(I2C_Status status) {
   * @param time: 时间结构体指针
   * @retval HAL状态
   */
-
 HAL_StatusTypeDef DS1307_SetTime(DS1307_Time* time) {
     uint8_t buffer[7];
 
     // 转换十进制到BCD格式
-    //time->COMMAND_ID = 1;
-    buffer[0] = dec_to_bcd(time->seconds);//秒
-    buffer[0] &= 0x7F; // 強制清除秒暫存器的最高位(CH位)，確保時鐘運行
-    buffer[1] = dec_to_bcd(time->minutes);//分
-    buffer[2] = dec_to_bcd(time->hours);//時
-    buffer[3] = dec_to_bcd(time->day);//星期
-    buffer[4] = dec_to_bcd(time->date);//日期
-    buffer[5] = dec_to_bcd(time->month);//月
-    buffer[6] = dec_to_bcd(time->year);//年
+    buffer[0] = dec_to_bcd(time->seconds);
+    buffer[1] = dec_to_bcd(time->minutes);
+    buffer[2] = dec_to_bcd(time->hours);
+    buffer[3] = dec_to_bcd(time->day);
+    buffer[4] = dec_to_bcd(time->date);
+    buffer[5] = dec_to_bcd(time->month);
+    buffer[6] = dec_to_bcd(time->year);
 
     // 写入时间寄存器
     return HAL_I2C_Mem_Write(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
@@ -261,8 +250,6 @@ HAL_StatusTypeDef DS1307_SetTime(DS1307_Time* time) {
   * @param time: 时间结构体指针
   * @retval HAL状态
   */
-
-
 HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time) {
     uint8_t buffer[7];
     HAL_StatusTypeDef status;
@@ -270,11 +257,6 @@ HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time) {
     status = HAL_I2C_Mem_Read(hi2c_main, DS1307_I2C_ADDR << 1, DS1307_TIME_REG,
                              I2C_MEMADD_SIZE_8BIT, buffer, 7, 100);
     if(status != HAL_OK) return status;
-
-    //這個旗標代表這是RTC的旗標；在『從DS1307讀取資料』這個狀態之下，沒有任何意義
-    //這個旗標主要是用來判斷當上位機用各種不同的連線方式,下達命令的時候,可以有一個旗標可以用來
-    //說明『這次是用來做RTC校正時間的命令』;為了結構上的完整,所以才寫下這一行
-    //time->COMMAND_ID = 1;
 
     // 转换BCD到十进制并处理停止位
     time->seconds = bcd_to_dec(buffer[0] & 0x7F); // 忽略停止位
@@ -289,85 +271,45 @@ HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time) {
 }
 
 
-
 DS1307_Time Parse_TimeString(const char *str) {
+    // 示例字符串格式："2023,12,31,23,59,30"
+    //int year, month, day, hour, minute, second;
 
-	 printf("DEBUG: Parse_TimeString received the raw string: --->%s<---\n", str);
-    DS1307_Time DT = {0};
+	DS1307_Time DT = {0};
+    char *copy = strdup(str);  // 修改3：避免修改原始字串
     char *token = NULL;
 
-    // 示例字符串格式："2023,12,31,23,59,30,checksum,command_ID"
-    //int year, month, day, hour, minute, second;
-    // 如果傳入的字串是空的，直接返回一個空的結構體，防止崩潰
+    // 分段解析
+    ////char *token = strtok(str, ",");
+    ////if(!token) return;
+    //year = atoi(token);
+    ////DT.year= atoi(token);
 
-    if (str == NULL || *str == '\0') {
-        printf("ERR: Input string is NULL.\n");
-        return DT;
-	    }
-
-    char *copy = strdup(str);  // 修改3：避免修改原始字串
-    if (copy == NULL) {
-        printf("ERR: Memory allocation failed (strdup).\n");
-        // 內存分配失敗
-        return DT; // 內存分配失敗也返回空結構體
-    }
-
-    // 1. 解析 Year
     token = strtok(copy, ",");
-    if (token == NULL) { printf("ERR: Parsing Year failed.\n"); goto cleanup; }
-    DT.year = atoi(token)% 100;
-    //printf("OK: Parsed Year = %u\n", DT.year);
-
-    // 2. 解析 Month
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Month failed.\n"); goto cleanup; }
+    //年
+    if(!token) goto cleanup;
+    DT.year = atoi(token) % 100;
+    //月
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
     DT.month = atoi(token);
-    //printf("OK: Parsed Month = %u\n", DT.month);
-
-    //3. 日
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Date failed.\n"); goto cleanup; }
-    DT.date = atoi(token);
-    //printf("OK: Parsed Date = %u\n", DT.date);
-
-    //4. 時
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Hours failed.\n"); goto cleanup; }
+    //日
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
+    DT.date = atoi(token);  // 修正錯誤
+    //時
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
     DT.hours = atoi(token);
-    //printf("OK: Parsed Hours = %u\n", DT.hours);
-
-    //5. 分
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Minutes failed.\n"); goto cleanup; }
+    //分
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
     DT.minutes = atoi(token);
-    //printf("OK: Parsed Minutes = %u\n", DT.minutes);
-
-    //6. 秒
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Seconds failed.\n"); goto cleanup; }
+    //秒
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
     DT.seconds = atoi(token);
-    //printf("OK: Parsed Seconds = %u\n", DT.seconds);
 
-    //7. 星期
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing date failed.\n"); goto cleanup; }
+    if((token = strtok(NULL, ",")) == NULL) goto cleanup;
     DT.day = atoi(token);
-    //printf("OK: Parsed Seconds = %u\n", DT.seconds);
-
-    //7. 解析 COMMAND_ID
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Command_ID failed.\n"); goto cleanup; }
-    DT.Command_ID = atoi(token);
-    //printf("OK: Parsed Command_ID = %u\n", DT.Command_ID);
-
-    //8. 解析 checksum
-    token = strtok(NULL, ",");
-    if (token == NULL) { printf("ERR: Parsing Checksum failed.\n"); goto cleanup; }
-    DT.checksum = atoi(token); // 假設你的結構體有 checksum
-    //printf("OK: Parsed Checksum = %u\n", DT.checksum);
 
 
-cleanup:
+    cleanup:
     free(copy);
     return DT;  // 修改4：回傳結構體
 }
@@ -409,100 +351,6 @@ EEPROM_Status EEPROM_Init(void) {
   EEPROM_ResetHealth();
   	  printf("I2C Device is ready \n");
   return EEPROM_OK;
-}
-
-
-/**
- * EEPROM_Write_NoCRC (uint16_t addr, uint8_t* data, uint16_t size)
- *
- * @brief 写入数据到EEPROM(無CRC)
- * @param addr: 起始地址 (0x0000-0x0FFF)
- * @param data: 数据指针
- * @param size: 数据长度
- * @retval 操作状态
- */
-
-EEPROM_Status EEPROM_Write_NoCRC (uint16_t addr, uint8_t* data, uint16_t size) {
-	/* 步驟 1: 地址有效性檢查 */
-	EEPROM_Status addr_status = Validate_Address(addr, size);
-	if(addr_status != EEPROM_OK) {
-		printf("EEPROM_Write Error: Invalid address or size.\n");
-		return addr_status;
-	}
-	/*
-	 * 步驟 2: 寫入數據 (無 CRC 模式)
-	 * 我們只寫入用戶提供的 'data'，長度為 'size'。
-	 */
-	printf("EEPROM_Write: Writing %u bytes to address 0x%04X...\n", size, addr);
-	// 直接將 'data' 緩衝區的內容寫入 EEPROM
-	EEPROM_Status status = Internal_Write(addr, data, size);
-	// 檢查底層寫入操作是否成功
-	if(status != EEPROM_OK) {
-		printf("EEPROM_Write Error: Internal_Write failed.\n");
-		return status;
-	}
-	// 更新健康狀態
-	  Update_Health(true);
-
-	  // 操作成功完成
-	  return EEPROM_OK;
-
-}
-
-
-/**
- * EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size)
- *
-  * @brief 从EEPROM读取数据(無CRC)
-  * @param addr: 起始地址
-  * @param data: 数据缓存指针
-  * @param size: 读取数据长度
-  * @retval 操作状态
-  */
-
-EEPROM_Status EEPROM_Read_NoCRC (uint16_t addr, uint8_t* data, uint16_t size) {
-	/* 步驟 1: 地址有效性檢查 */
-	EEPROM_Status addr_status = Validate_Address(addr, size);
-	if(addr_status != EEPROM_OK) {
-		// 如果地址無效，直接返回錯誤，不做任何操作
-		printf("EEPROM_Read Error: Invalid address or size.\n");
-		return addr_status;
-	  }
-
-	  /*
-	   * 步驟 2: 讀取數據 (無 CRC 模式)
-	   * 由於我們現在不關心 CRC，所以只需要讀取用戶請求的 'size' 個字節即可。
-	   * 我們可以直接將數據讀入用戶提供的 'data' 緩衝區，省去 malloc/free 的開銷和風險。
-	   */
-	  printf("EEPROM_Read: Reading %u bytes from address 0x%04X...\n", size, addr);
-
-	  // 直接將數據讀取到目標緩衝區 'data' 中
-	  EEPROM_Status status = Internal_Read(addr, data, size);
-
-	  // 檢查底層讀取操作是否成功
-	  if(status != EEPROM_OK) {
-	      printf("EEPROM_Read Error: Internal_Read failed.\n");
-	      return status; // 如果底層I2C讀取失敗，直接返回錯誤
-	  }
-
-	  // 打印讀取到的原始數據，用於除錯
-	#ifdef EEPROM_Read_debug
-	  printf("EEPROM_Read: Successfully read data:\n");
-	  for(int i = 0; i < size ; i++) {
-	    // 同時打印十六進制和可打印字符
-	    printf("%02X ", data[i]);
-	    if(isprint(data[i])) {
-	        printf("('%c') ", data[i]);
-	    }
-	  }
-	  printf("\n\n");
-	#endif
-
-	  // 更新健康狀態 (如果需要的話)
-	  Update_Health(true);
-
-	  // 操作成功完成
-	  return EEPROM_OK;
 }
 
 /**
@@ -548,8 +396,6 @@ EEPROM_Status EEPROM_Write(uint16_t addr, const uint8_t* data, uint16_t size) {
 
   return status;
 }
-
-
 
 /**
  * EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size)
@@ -714,7 +560,7 @@ static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size) 
   for(uint8_t retry=0; retry<max_retries; retry++) {
     HAL_StatusTypeDef hal_status = HAL_I2C_Mem_Read(hi2c_eeprom,EEPROM_I2C_ADDR << 1,addr,I2C_MEMADD_SIZE_16BIT,data,size,100);
     if(hal_status == HAL_OK) {
-    	printf("\n\n in Internal_Read...... \n EEPROM_Read ok \n\n");
+    	printf("\n\n in Internal_Read...... \n EEPROM_Read ok ");
       return EEPROM_OK;
     }
     /* 错误恢复策略 */
