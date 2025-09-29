@@ -268,6 +268,7 @@ int main(void)
   printf("\n**************I2C init. Device *****************\n");
 
   I2C_Status status = I2C_Init_Devices();
+  //while(1);
 
     if (status != I2C_OK) {
       printf("[错误] I2C设备初始化失败! 错误码: %d\n", status);
@@ -277,11 +278,48 @@ int main(void)
     printf("I2C device init ok!yy \n\n");
     printf("\n************System Ready.**************************\n");
 
+
+    //while(1);
+
+#ifdef oled
     printf("init oled \n");
 
-    if(SH1106_OLED_Init() == 1){
-        printf("init oled ok \n");
-    };
+    SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
+    oled_status = SH1106_Init();     // 调用初始化函数
+
+     // --- 【关键】检查初始化结果 ---
+     if (oled_status == SH1106_OK)
+     {
+       // --- 初始化成功 ---
+       printf("OLED SH1106 Initialized successfully!\r\n");
+
+       // 在这里可以执行一些开机画面或测试
+       SH1106_Fill(SH1106_COLOR_WHITE); // 将屏幕填充为白色
+       SH1106_UpdateScreen();          // 刷新屏幕
+       HAL_Delay(1000);                // 等待1秒
+
+       SH1106_Fill(SH1106_COLOR_BLACK); // 再填充为黑色
+       SH1106_UpdateScreen();
+       HAL_Delay(500);
+     }
+     else
+     {
+       // --- 初始化失败 ---
+       printf("OLED SH1106 Initialization FAILED! Error Code: %d\r\n", oled_status);
+
+       // 失败后可以采取一些措施，例如：
+       // 1. 点亮一个红色 LED 指示错误
+       //HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
+
+       // 2. 进入一个死循环，防止程序继续执行错误的操作
+       while(1)
+       {
+         // 系统处于错误状态
+       }
+     }
+
+
+
     //uint8_t oled_buffer[128*64/8] = {0};  // SH1106 的完整缓冲区（128x64位）
 
     //memset(oled_buffer, 0x00, sizeof(oled_buffer)); // 全白
@@ -334,7 +372,7 @@ int main(void)
 
 
 
-
+#endif
 
 //#define oled_test
 

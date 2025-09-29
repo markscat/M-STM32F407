@@ -49,7 +49,20 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
  *
  */
 
-#define EEPROM_I2C_ADDR         0x50       // 设备7位地址
+//#define EEPROM_with_ds1370
+#define EEPROM_with_DS3231
+
+
+#ifdef EEPROM_with_ds1370
+#define EEPROM_I2C_ADDR        0x50       // 设备7位地址
+#endif
+
+#ifdef EEPROM_with_DS3231
+#define EEPROM_I2C_ADDR        0x57       // 设备7位地址
+#endif
+
+
+
 #define EEPROM_MAX_ADDR        	0x0FFF
 #define I2C_HANDLE        		hi2c1      // 使用的I2C实例
 #define EEPROM_PAGE_SIZE        32         // 设备页大小
@@ -62,9 +75,15 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
 
 //RTC
 #define DS1307Backup
-#define DS1307_I2C_ADDR    0x68        // DS1307 的 I2C 地址
-#define DS1307_TIME_REG    0x00        // 时间寄存器起始地址
-#define DS1307_CTRL_REG    0x07        // 控制寄存器地址
+#define DS1307_I2C_ADDR    0x68     // DS1307 的 I2C 地址
+#define DS1307_TIME_REG    0x00     // 时间寄存器起始地址
+
+#ifdef EEPROM_with_DS3231
+#define DS3231_TEMP_MSB_REG  0x11	// MSB (0x11) 包含整數部分和小數點前兩位
+#define DS3231_TEMP_LSB_REG  0x12	// LSB (0x12) 包含小數點後兩位 (0.25°C 的解析度)
+#endif
+
+#define DS1307_CTRL_REG    0x07     // 控制寄存器地址
 
 #ifdef DS1307Backup
 #define DS1307_REG_SECOND 	0x00 	// 秒（BCD格式，bit7 = CH，1 表示停止振盪器）
@@ -102,6 +121,10 @@ typedef struct {
     uint8_t checksum;
 } DS1307_Time;
 
+typedef struct {
+	int8_t Integer;   // 整數部分
+	float Fraction;   // 小數部分 (0.00, 0.25, 0.50, 0.75)
+}DS3231_Temp;
 
 typedef struct {
 	int year;
@@ -182,7 +205,7 @@ const char* I2C_Status_ToString(I2C_Status status);
 HAL_StatusTypeDef DS1307_SetTime(DS1307_Time* time);
 HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time);
 
-HAL_StatusTypeDef DS1307_SetTime(DS1307_Time* time);
+
 
 
 /**

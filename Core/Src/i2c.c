@@ -57,6 +57,7 @@ void MX_I2C1_Init(void)
 
 }
 /* I2C3 init function */
+#ifdef I2C_3
 void MX_I2C3_Init(void)
 {
 
@@ -85,6 +86,7 @@ void MX_I2C3_Init(void)
   /* USER CODE END I2C3_Init 2 */
 
 }
+#endif
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 {

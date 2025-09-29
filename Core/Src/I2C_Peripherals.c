@@ -290,6 +290,33 @@ HAL_StatusTypeDef DS1307_GetTime(DS1307_Time* time) {
 
 
 
+
+HAL_StatusTypeDef DS3231_GetTemp(DS3231_Temp* temp) {
+    uint8_t buffer[2];
+    HAL_StatusTypeDef status;
+
+    HAL_I2C_Mem_Read(hi2c, DS3231_I2C_ADDR << 1,
+                     DS3231_TEMP_MSB_REG, I2C_MEMADD_SIZE_8BIT,
+                     &buffer[0], 1, 100);
+    HAL_I2C_Mem_Read(hi2c, DS3231_I2C_ADDR << 1,
+                     DS3231_TEMP_LSB_REG, I2C_MEMADD_SIZE_8BIT,
+                     &buffer[1], 1, 100);
+
+    if(status != HAL_OK) return status;
+
+    // MSB 是有號數，直接轉換
+
+    temp->Integer = (int8_t)buffer[0];
+
+    // LSB 的 bit7 和 bit6
+    uint8_t fractionBits = buffer[1] >> 6;
+    temp->Fraction = fractionBits * 0.25f;
+
+    return HAL_OK;
+
+
+}
+
 DS1307_Time Parse_TimeString(const char *str) {
 
 	 printf("DEBUG: Parse_TimeString received the raw string: --->%s<---\n", str);
