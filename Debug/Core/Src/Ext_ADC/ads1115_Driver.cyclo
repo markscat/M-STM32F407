@@ -1,0 +1,2 @@
+../Core/Src/Ext_ADC/ads1115_Driver.c:105:19:ADS1115_Init	8
+../Core/Src/Ext_ADC/ads1115_Driver.c:152:19:ADS1115_readSingleEnded	7

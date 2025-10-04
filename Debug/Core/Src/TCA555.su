@@ -1,0 +1,4 @@
+../Core/Src/TCA555.c:66:6:TCA9555_Init	24	static
+../Core/Src/TCA555.c:84:6:TCA9555_WriteOutput	32	static
+../Core/Src/TCA555.c:98:10:TCA9555_ReadInput	24	static
+../Core/Src/TCA555.c:116:6:TCA9555_SetDirection	32	static

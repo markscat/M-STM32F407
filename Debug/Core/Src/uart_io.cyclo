@@ -1,0 +1,7 @@
+../Core/Src/uart_io.c:73:6:uart_io_init	1
+../Core/Src/uart_io.c:81:6:uart_data_available	1
+../Core/Src/uart_io.c:125:6:HAL_UART_TxCpltCallback	2
+../Core/Src/uart_io.c:132:5:_write	10
+../Core/Src/uart_io.c:182:5:_read	7
+../Core/Src/uart_io.c:238:6:HAL_UART_RxCpltCallback	5
+../Core/Src/uart_io.c:273:6:clear_input_buffer	3

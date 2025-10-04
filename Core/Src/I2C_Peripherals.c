@@ -317,7 +317,7 @@ HAL_StatusTypeDef DS3231_GetTemp(DS3231_Temp* temp) {
     temp->Integer = (int8_t)buffer[0];
 
     // LSB 的 bit7 和 bit6
-    uint8_t fractionBits = buffer[1] >> 6;
+    //uint8_t fractionBits = buffer[1] >> 6;
     //temp->Fraction = fractionBits;
 
     return HAL_OK;

@@ -1,0 +1,5 @@
+../Core/Src/ring_buffer.c:64:6:ring_buffer_init	4	static
+../Core/Src/ring_buffer.c:75:6:rx_buf_is_empty	4	static
+../Core/Src/ring_buffer.c:84:6:rx_buf_is_full	4	static
+../Core/Src/ring_buffer.c:95:6:rx_buf_put	32	static,ignoring_inline_asm
+../Core/Src/ring_buffer.c:115:9:rx_buf_get	24	static,ignoring_inline_asm

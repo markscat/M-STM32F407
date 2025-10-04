@@ -1,0 +1,6 @@
+../Core/Src/Tools.c:49:6:CheckTimeStruct	10
+../Core/Src/Tools.c:113:6:HandleUartCommands	7
+../Core/Src/Tools.c:186:6:ProcessUartRingBuffer	8
+../Core/Src/Tools.c:250:9:calculate_checksum	2
+../Core/Src/Tools.c:264:6:Scan_I2C_Address	4
+../Core/Src/Tools.c:434:6:Delay_us	4

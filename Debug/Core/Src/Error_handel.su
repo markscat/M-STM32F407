@@ -1,0 +1,2 @@
+../Core/Src/Error_handel.c:50:6:Handle_Error	104	static
+../Core/Src/Error_handel.c:69:6:Enter_Failsafe_Mode	8	static
