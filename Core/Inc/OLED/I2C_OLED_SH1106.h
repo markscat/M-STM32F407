@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 #include "main.h" // For HAL types like I2C_HandleTypeDef
-#include <I2C_OLED_fonts.h>
+#include <OLED/I2C_OLED_fonts.h>
 
 
 //==============================================================================

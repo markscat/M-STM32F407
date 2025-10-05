@@ -40,7 +40,7 @@ extern C {
  */
 #include "stm32f4xx_hal.h"
 #include "string.h"
-#include <I2C_OLED_fonts.h>
+#include <OLED/I2C_OLED_fonts.h>
 
 
 /**

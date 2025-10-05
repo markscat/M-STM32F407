@@ -12,6 +12,29 @@
  * 同時看看自己是否可以做一些修改，或是增加其他的功能。
  * 從這個版本看來，最多只有初始化，
  *
+ *Vdd = 3.3V
+ *|  PGA 設定	| FSR ±V | 每 bit 解析度 (mV/bit) 	| 實際最大可量測電壓  | 註解            			|
+ *| -------- 	| ------ | --------------------- 	| -----------------  | ------------------------ |
+ *|   2/3x   	| ±6.144 | 0.1875                	| 3.3                | 量程沒用到一半，解析度最粗	|
+ *|   1x     	| ±4.096 | 0.125                 	| 3.3                | 解析度比 2/3x 高   		|
+ *|   2x     	| ±2.048 | 0.0625                	| 3.3                | 適合低壓量測，解析度更好  	|
+ *|   4x     	| ±1.024 | 0.03125               	| 1.024              | 適合 1V 以下訊號量測  	|
+ *|   8x     	| ±0.512 | 0.015625              	| 0.512              | 適合小訊號精密量測     	|
+ *|   16x    	| ±0.256 | 0.0078125				| 0.256              | 超精密量測小訊號     	 	|
+ *
+ *Vdd = 5V
+ *|  PGA 設定	| FSR ±V | 每 bit 解析度 (mV/bit) 	| 實際最大可量測電壓  | 註解            			|
+ *| -------- 	| ------ | --------------------- 	| -----------------  | ------------------------ |
+ *|   2/3x   	| ±6.144 | 0.1875                	| 5                  | 量程沒用到一半，解析度最粗	|
+ *|   1x     	| ±4.096 | 0.125                 	| 4.96               | 最大量程安全可量測 4.096V	|
+ *|   2x     	| ±2.048 | 0.0625                	| 2.048              | 適合 2V 以下訊號量測  	|
+ *|   4x     	| ±1.024 | 0.03125               	| 1.024              | 精密量測 1V 以下訊號  	|
+ *|   8x     	| ±0.512 | 0.015625              	| 0.512              | 適合小訊號精密量測     	|
+ *|   16x    	| ±0.256 | 0.0078125				| 0.256              | 超精密量測小訊號     	 	| *
+ *
+ *
+ *
+ *
  * ##版權：<br/>
  * GNU GENERAL PUBLIC LICENSE<br/>
  * Version 3, 29 June 2007<br/>
@@ -62,7 +85,14 @@
  *	3) ADS1115_readSingleEnded(...) fonksiyonu ile single-shot okuma yapacağınız portu seçin ve float tipinde değişkeninizin adresini gönderin.
  *	4) Üçüncü adımdan sonra değişkeninizin içerisinde uygun katsayıyla çarpılmış gerilim değeri saklanacaktır.
  *
+ *
+ *
+ *	Bit15  Bit14-12   Bit11-9   Bit8   |  Bit7-5     Bit4       Bit3     Bit2        Bit1-0
+ *  OS     MUX[2:0]   PGA[2:0]  MODE   |  DR[2:0]  COMP_MODE  COMP_POL  COMP_LAT  COMP_QUE[1:0]
+ *
+ *
  *  */
+
 
 #include "stm32f4xx_hal.h" // Could be changed for a specific processor.
 #include "string.h"
@@ -176,16 +206,16 @@ HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage) {
 			 *     (int16_t)(ADS1115_rawValue[0] << 8 | ADS1115_rawValue[1])     // 乘上電壓換算係數，轉換成毫伏 (mV)
 			 *      ADS1115_voltCoef);
 			 *
-			 *      ADS1115_rawValue[0] << 8
-			 *      將高位元組左移 8 位，變成 16 位的高位部分
-			 *      | ADS1115_rawValue[1]
-			 *      把低位元組與高位元組做 OR，組成完整的 16-bit ADC 值
-			 *      (int16_t)(...)
-			 *      將組合後的無號數值轉成有號整數，因為 ADC 讀出來可能是負數（例如差分模式）
-			 *      * ADS1115_voltCoef
-			 *      每個 bit 對應多少電壓（mV/bit），把 ADC 原始值轉成實際電壓
-			 *      (float)(...)
-			 *      強制轉型成浮點數，因為 voltage 參數是 float*
+			 *      - ADS1115_rawValue[0] << 8
+			 *        將高位元組左移 8 位，變成 16 位的高位部分
+			 *      - | ADS1115_rawValue[1]
+			 *        把低位元組與高位元組做 OR，組成完整的 16-bit ADC 值
+			 *      - (int16_t)(...)
+			 *        將組合後的無號數值轉成有號整數，因為 ADC 讀出來可能是負數（例如差分模式）
+			 *      - ADS1115_voltCoef
+			 *        每個 bit 對應多少電壓（mV/bit），把 ADC 原始值轉成實際電壓
+			 *      - (float)(...)
+			 *        強制轉型成浮點數，因為 voltage 參數是 float*
 			 *
 			 * */
 			*voltage = (float) (((int16_t) (ADS1115_rawValue[0] << 8) | ADS1115_rawValue[1]) * ADS1115_voltCoef);
@@ -196,5 +226,56 @@ HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage) {
 	}
 
 	return HAL_ERROR;
-
 }
+
+HAL_StatusTypeDef ADS1115_readDifferential(uint16_t muxSetting, float *voltage) {
+
+    // 設定 Config Register，高位元組
+    ADS1115_config[0] = ADS1115_OS | muxSetting | ADS1115_pga | ADS1115_MODE;
+
+    // 設定 Config Register，低位元組
+    ADS1115_config[1] = ADS1115_dataRate | ADS1115_COMP_MODE |
+                        ADS1115_COMP_POL | ADS1115_COMP_LAT | ADS1115_COMP_QUE;
+
+    uint8_t waiting = 1;
+    uint16_t cnt = 0;
+
+    // 寫入設定，觸發轉換
+    if (HAL_I2C_Mem_Write(&ADS1115_I2C_Handler,
+                          (uint16_t)(ADS1115_devAddress << 1),
+                          ADS1115_CONFIG_REG,
+                          1, ADS1115_config, 2, ADS1115_TIMEOUT) == HAL_OK)
+    {
+        // 等待轉換完成
+        while (waiting) {
+            if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
+                                 (uint16_t)(ADS1115_devAddress << 1),
+                                 ADS1115_CONFIG_REG,
+                                 1, ADS1115_config, 2, ADS1115_TIMEOUT) == HAL_OK)
+            {
+                if (ADS1115_config[0] & ADS1115_OS) waiting = 0;
+            } else {
+                return HAL_ERROR;
+            }
+
+            if (++cnt == 100) return HAL_TIMEOUT; // 避免死循環
+        }
+
+        // 讀取轉換結果
+        if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
+                             (uint16_t)(ADS1115_devAddress << 1),
+                             ADS1115_CONVER_REG,
+                             1, ADS1115_rawValue, 2, ADS1115_TIMEOUT) == HAL_OK)
+        {
+            // 注意：差動輸入會有正負號，所以用 int16_t
+            int16_t raw = (int16_t)(ADS1115_rawValue[0] << 8 | ADS1115_rawValue[1]);
+
+            *voltage = (float)raw * ADS1115_voltCoef; // 轉換成電壓
+
+            return HAL_OK;
+        }
+    }
+
+    return HAL_ERROR;
+}
+

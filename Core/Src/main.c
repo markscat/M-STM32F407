@@ -87,6 +87,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define EEPROM_write
 //#define EEPROM_read
 #define time_setting
+#define ADS1115
 
 
 
@@ -278,7 +279,10 @@ int main(void)
   printf("\n");
   printf("\n**************I2C init. Device *****************\n");
 
-  float voltage;
+
+#ifdef ADS1115
+
+  float voltage_A0,voltage_A1,voltage_diff_01;
 
   // 初始化 ADS1115
       if (ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE) == HAL_OK) {
@@ -295,27 +299,34 @@ int main(void)
        * R3 = 3000 ohm
        *
        * */
-      int32_t Vth = 2;
+      int32_t Vth = 1;
 
 
       printf("adc read ........... \n");
       while(1) {
-          if (ADS1115_readSingleEnded(ADS1115_MUX_AIN0, &voltage) == HAL_OK) {
-              printf("A0 voltage: %.3f V\n", ((voltage*Vth)/(1000)));
+          if (ADS1115_readSingleEnded(ADS1115_MUX_AIN0, &voltage_A0) == HAL_OK) {
+              printf("A0 voltage    = %.3f V\n", ((voltage_A0*Vth)/(1000)));
           } else {
               printf("Read failed\n");
           }
 
-          if (ADS1115_readSingleEnded(ADS1115_MUX_AIN1, &voltage) == HAL_OK) {
-        	  printf("A1 voltage: %.3f V\n", ((voltage*Vth)/(1000)));
+          if (ADS1115_readSingleEnded(ADS1115_MUX_AIN1, &voltage_A1) == HAL_OK) {
+        	  printf("A1 voltage    = %.3f V\n", ((voltage_A1*Vth)/(1000)));
+          } else {
+        	  printf("Read failed\n");
+          }
+          if (ADS1115_readSingleEnded(ADS1115_MUX_DIFF_0_1, &voltage_diff_01) == HAL_OK) {
+        	  printf("diff_1 voltage = %.3f V\n", ((voltage_diff_01*Vth)/(1000)));
+        	  printf("A0-A1          = %.3f V\n",((voltage_A0-voltage_A1)/1000));
           } else {
         	  printf("Read failed\n");
           }
           printf("\n");
+
           HAL_Delay(1000);
       }
 
-
+#endif
 
 
   I2C_Status status = I2C_Init_Devices();

@@ -32,6 +32,12 @@
 #define ADS1115_MUX_AIN2 (0b110 << 4)		// Analog input 3
 #define ADS1115_MUX_AIN3 (0b111 << 4)		// Analog input 4
 
+/*Differential Multiplexer Register */
+#define ADS1115_MUX_DIFF_0_1   0x0000  // AIN0 - AIN1
+#define ADS1115_MUX_DIFF_0_3   0x1000  // AIN0 - AIN3
+#define ADS1115_MUX_DIFF_1_3   0x2000  // AIN1 - AIN3
+#define ADS1115_MUX_DIFF_2_3   0x3000  // AIN2 - AIN3
+
 #define ADS1115_PGA_TWOTHIRDS 	(0b000 << 1) 		// 2/3x Gain	-- 0.1875 mV by one bit		MAX: +- VDD + 0.3V
 #define ADS1115_PGA_ONE			(0b001 << 1) 		// 1x Gain		-- 0.125 mV by one bit		MAX: +- VDD + 0.3V
 #define ADS1115_PGA_TWO			(0b010 << 1) 		// 2x Gain		-- 0.0625 mV by one bit		MAX: +- 2.048 V
@@ -65,3 +71,4 @@
 /* Function prototypes. */
 HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA);
 HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage);
+HAL_StatusTypeDef ADS1115_readDifferential(uint16_t muxSetting, float *voltage);

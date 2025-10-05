@@ -22,8 +22,8 @@
  */
 #include <string.h>
 #include <main.h>
-#include <I2C_OLED_fonts.h>
-#include <I2C_OLED_SH1106.h>
+#include <OLED/I2C_OLED_fonts.h>
+#include <OLED/I2C_OLED_SH1106.h>
 #include <stdlib.h> // <--- 【添加這一行】
 #include "log.h"
 extern I2C_HandleTypeDef hi2c1;

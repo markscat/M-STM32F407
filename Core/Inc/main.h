@@ -56,8 +56,8 @@ extern "C" {
 #include "gpio.h"
 #include "crc.h"
 #include <ctype.h>
-#include <I2C_OLED_SH1106.h>
-#include <I2C_OLED_horse_anim.h>
+#include <OLED/I2C_OLED_SH1106.h>
+#include <OLED/I2C_OLED_horse_anim.h>
 #include "EXT_ADC/ads1115.h"
 
 /* USER CODE END Includes */

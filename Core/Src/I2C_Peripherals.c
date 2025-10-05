@@ -32,7 +32,6 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "Tools.h"
-#include <I2C_OLED_SH1106.h>
 
 #define EEPROM_SIZE 4096  // AT24C32容量
 #define MAX_READ_LEN 32   // 推荐单次读取长度
@@ -68,14 +67,9 @@ static uint32_t error_counter = 0; 	// 錯誤計數器（僅當前檔案可見�
 #define MAX_RETRIES 3           	// 最大容許錯誤次數
 #define EEPROM_PAGE_SIZE 32   		// 定义页大小
 
-
-
 //#define init_I2C_Driver
 //#define DS1307_Driver
 #define test2
-
-
-
 
 
 /*====================初始化設備====================*/

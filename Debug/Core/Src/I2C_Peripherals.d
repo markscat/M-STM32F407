@@ -30,15 +30,7 @@ Core/Src/I2C_Peripherals.o: ../Core/Src/I2C_Peripherals.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/Tools.h ../Core/Inc/ring_buffer.h \
- C:/Ethan/workshop/mcu/STM32-2/Markscat_prj01_git/M-STM32F407/Core/Inc/OLED/I2C_OLED_SH1106.h \
- ../Core/Inc/main.h ../Core/Inc/uart_io.h ../Core/Inc/Tools.h \
- ../Core/Inc/error_handler.h ../Core/Inc/gpio.h ../Core/Inc/main.h \
- ../Core/Inc/i2c.h ../Core/Inc/spi.h ../Core/Inc/usart.h \
- ../Core/Inc/crc.h \
- C:/Ethan/workshop/mcu/STM32-2/Markscat_prj01_git/M-STM32F407/Core/Inc/OLED/I2C_OLED_horse_anim.h \
- ../Core/Inc/EXT_ADC/ads1115.h \
- C:/Ethan/workshop/mcu/STM32-2/Markscat_prj01_git/M-STM32F407/Core/Inc/OLED/I2C_OLED_fonts.h
+ ../Core/Inc/Tools.h ../Core/Inc/ring_buffer.h
 ../Core/Inc/I2C_Peripherals.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -72,17 +64,3 @@ Core/Src/I2C_Peripherals.o: ../Core/Src/I2C_Peripherals.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Inc/Tools.h:
 ../Core/Inc/ring_buffer.h:
-C:/Ethan/workshop/mcu/STM32-2/Markscat_prj01_git/M-STM32F407/Core/Inc/OLED/I2C_OLED_SH1106.h:
-../Core/Inc/main.h:
-../Core/Inc/uart_io.h:
-../Core/Inc/Tools.h:
-../Core/Inc/error_handler.h:
-../Core/Inc/gpio.h:
-../Core/Inc/main.h:
-../Core/Inc/i2c.h:
-../Core/Inc/spi.h:
-../Core/Inc/usart.h:
-../Core/Inc/crc.h:
-C:/Ethan/workshop/mcu/STM32-2/Markscat_prj01_git/M-STM32F407/Core/Inc/OLED/I2C_OLED_horse_anim.h:
-../Core/Inc/EXT_ADC/ads1115.h:
-C:/Ethan/workshop/mcu/STM32-2/Markscat_prj01_git/M-STM32F407/Core/Inc/OLED/I2C_OLED_fonts.h:
