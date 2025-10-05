@@ -12,6 +12,8 @@
  * 同時看看自己是否可以做一些修改，或是增加其他的功能。
  * 從這個版本看來，最多只有初始化，
  *
+ * --決定PGA的方法
+ *
  *Vdd = 3.3V
  *|  PGA 設定	| FSR ±V | 每 bit 解析度 (mV/bit) 	| 實際最大可量測電壓  | 註解            			|
  *| -------- 	| ------ | --------------------- 	| -----------------  | ------------------------ |
@@ -33,7 +35,12 @@
  *|   16x    	| ±0.256 | 0.0078125				| 0.256              | 超精密量測小訊號     	 	| *
  *
  *
- *
+ *　config暫存器
+ *　+------+--------------+--------------+-------+-----------+---------+--------+---------+--------------------+
+ *	|Bit15 |   Bit14-12   |    Bit11-9   | Bit8  |  Bit7-5   |  Bit4   |  Bit3  | Bit2    |      Bit1-0        |
+ *	+------+----+----+----+----+----+----+-------+---+---+---+---------+--------+---------+---------+----------+
+ *  |OS    |MUX2|MUX1|MUX0|PGA2|PGA1|PGA0| MODE  |DR2|DR1|DR0|COMP_MODE|COMP_POL|COMP_LAT |COMP_QUE1|COMP_QUE0 |
+ *	+------+----+----+----+----+----+----+-------+---+---+---+---------+--------+---------+---------+----------+
  *
  * ##版權：<br/>
  * GNU GENERAL PUBLIC LICENSE<br/>
@@ -87,9 +94,6 @@
  *
  *
  *
- *	Bit15  Bit14-12   Bit11-9   Bit8   |  Bit7-5     Bit4       Bit3     Bit2        Bit1-0
- *  OS     MUX[2:0]   PGA[2:0]  MODE   |  DR[2:0]  COMP_MODE  COMP_POL  COMP_LAT  COMP_QUE[1:0]
- *
  *
  *  */
 
@@ -107,7 +111,7 @@ I2C_HandleTypeDef ADS1115_I2C_Handler;	// HAL I2C handler store variable.
 uint16_t ADS1115_dataRate = ADS1115_DATA_RATE_128; // Default
 uint16_t ADS1115_pga = ADS1115_PGA_TWO; // Default
 uint16_t ADS1115_port = ADS1115_MUX_AIN0; // Default
-
+//1 xxx 100
 
 /**
  * @param ADS1115_config[2]
@@ -179,7 +183,7 @@ HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate,
 
 }
 
-HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage) {
+HAL_StatusTypeDef ADS1115_readOneShont(uint16_t muxPort, float *voltage) {
 
 	ADS1115_config[0] = ADS1115_OS | muxPort | ADS1115_pga | ADS1115_MODE;
 	ADS1115_config[1] = ADS1115_dataRate | ADS1115_COMP_MODE | ADS1115_COMP_POL | ADS1115_COMP_LAT| ADS1115_COMP_QUE;
@@ -198,26 +202,26 @@ HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage) {
 			if(++cnt==100) return HAL_ERROR;
 		}
 
+		/**
+		 * *voltage = (float)(   											 // 把兩個 uint8_t 組成一個 int16_t 原始 ADC 值
+		 *     (int16_t)(ADS1115_rawValue[0] << 8 | ADS1115_rawValue[1])     // 乘上電壓換算係數，轉換成毫伏 (mV)
+		 *      ADS1115_voltCoef);
+		 *
+		 *      - ADS1115_rawValue[0] << 8
+		 *        將高位元組左移 8 位，變成 16 位的高位部分
+		 *      - | ADS1115_rawValue[1]
+		 *        把低位元組與高位元組做 OR，組成完整的 16-bit ADC 值
+		 *      - (int16_t)(...)
+		 *        將組合後的無號數值轉成有號整數，因為 ADC 讀出來可能是負數（例如差分模式）
+		 *      - ADS1115_voltCoef
+		 *        每個 bit 對應多少電壓（mV/bit），把 ADC 原始值轉成實際電壓
+		 *      - (float)(...)
+		 *        強制轉型成浮點數，因為 voltage 參數是 float*
+		 *
+		 * */
+
 		if(HAL_I2C_Mem_Read(&ADS1115_I2C_Handler, (uint16_t) ((ADS1115_devAddress << 1) | 0x1), ADS1115_CONVER_REG, 1, ADS1115_rawValue, 2, ADS1115_TIMEOUT) == HAL_OK)
 		{
-
-			/**
-			 * *voltage = (float)(   											 // 把兩個 uint8_t 組成一個 int16_t 原始 ADC 值
-			 *     (int16_t)(ADS1115_rawValue[0] << 8 | ADS1115_rawValue[1])     // 乘上電壓換算係數，轉換成毫伏 (mV)
-			 *      ADS1115_voltCoef);
-			 *
-			 *      - ADS1115_rawValue[0] << 8
-			 *        將高位元組左移 8 位，變成 16 位的高位部分
-			 *      - | ADS1115_rawValue[1]
-			 *        把低位元組與高位元組做 OR，組成完整的 16-bit ADC 值
-			 *      - (int16_t)(...)
-			 *        將組合後的無號數值轉成有號整數，因為 ADC 讀出來可能是負數（例如差分模式）
-			 *      - ADS1115_voltCoef
-			 *        每個 bit 對應多少電壓（mV/bit），把 ADC 原始值轉成實際電壓
-			 *      - (float)(...)
-			 *        強制轉型成浮點數，因為 voltage 參數是 float*
-			 *
-			 * */
 			*voltage = (float) (((int16_t) (ADS1115_rawValue[0] << 8) | ADS1115_rawValue[1]) * ADS1115_voltCoef);
 			return HAL_OK;
 
@@ -228,54 +232,32 @@ HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage) {
 	return HAL_ERROR;
 }
 
-HAL_StatusTypeDef ADS1115_readDifferential(uint16_t muxSetting, float *voltage) {
 
-    // 設定 Config Register，高位元組
-    ADS1115_config[0] = ADS1115_OS | muxSetting | ADS1115_pga | ADS1115_MODE;
+HAL_StatusTypeDef ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16_t dataRate) {
+    // 記錄 PGA / DataRate
+    ADS1115_pga = pga;
+    ADS1115_dataRate = dataRate;
 
-    // 設定 Config Register，低位元組
-    ADS1115_config[1] = ADS1115_dataRate | ADS1115_COMP_MODE |
-                        ADS1115_COMP_POL | ADS1115_COMP_LAT | ADS1115_COMP_QUE;
+    // 設定 Config Register
+    ADS1115_config[0] = ADS1115_OS | muxPort | ADS1115_pga | ADS1115_MODE_CONTINUOUS;
+    ADS1115_config[1] = ADS1115_dataRate | ADS1115_COMP_MODE | ADS1115_COMP_POL | ADS1115_COMP_LAT | ADS1115_COMP_QUE;
 
-    uint8_t waiting = 1;
-    uint16_t cnt = 0;
-
-    // 寫入設定，觸發轉換
-    if (HAL_I2C_Mem_Write(&ADS1115_I2C_Handler,
-                          (uint16_t)(ADS1115_devAddress << 1),
-                          ADS1115_CONFIG_REG,
-                          1, ADS1115_config, 2, ADS1115_TIMEOUT) == HAL_OK)
-    {
-        // 等待轉換完成
-        while (waiting) {
-            if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
-                                 (uint16_t)(ADS1115_devAddress << 1),
-                                 ADS1115_CONFIG_REG,
-                                 1, ADS1115_config, 2, ADS1115_TIMEOUT) == HAL_OK)
-            {
-                if (ADS1115_config[0] & ADS1115_OS) waiting = 0;
-            } else {
-                return HAL_ERROR;
-            }
-
-            if (++cnt == 100) return HAL_TIMEOUT; // 避免死循環
-        }
-
-        // 讀取轉換結果
-        if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
-                             (uint16_t)(ADS1115_devAddress << 1),
-                             ADS1115_CONVER_REG,
-                             1, ADS1115_rawValue, 2, ADS1115_TIMEOUT) == HAL_OK)
-        {
-            // 注意：差動輸入會有正負號，所以用 int16_t
-            int16_t raw = (int16_t)(ADS1115_rawValue[0] << 8 | ADS1115_rawValue[1]);
-
-            *voltage = (float)raw * ADS1115_voltCoef; // 轉換成電壓
-
-            return HAL_OK;
-        }
-    }
-
-    return HAL_ERROR;
+    // 寫入 I2C 啟動連續模式
+    return HAL_I2C_Mem_Write(&ADS1115_I2C_Handler, (uint16_t)(ADS1115_devAddress << 1),
+                             ADS1115_CONFIG_REG, 1, ADS1115_config, 2, ADS1115_TIMEOUT);
 }
+
+HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage){
+	// 直接讀暫存器，因為 ADC 持續更新
+	if(HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
+			(uint16_t)(ADS1115_devAddress << 1),
+			ADS1115_CONVER_REG, 1,
+			ADS1115_rawValue, 2, ADS1115_TIMEOUT) != HAL_OK) {
+		return HAL_ERROR;
+	}
+	// 計算電壓 (mV)
+	*voltage = (float)(((int16_t)(ADS1115_rawValue[0] << 8) | ADS1115_rawValue[1]) * ADS1115_voltCoef);
+	return HAL_OK;
+}
+
 

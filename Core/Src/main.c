@@ -303,19 +303,63 @@ int main(void)
 
 
       printf("adc read ........... \n");
+
+/**
+ * ADS1115 程式應用
+ * 	目前可以作到單端單次讀取,差動(AIN0-AIN1,AIN2-AIN3,AIN0-AIN3四種方式)單次讀取
+ * 	單端連續讀取,差動連續讀取
+ * 	Comparator mode 和 ALERT/RDY	還沒實作
+ * */
+
+      //決定單次還是連續
+      //#define OneShont
+      #define Continuous
+
+      //決定是單端還是差動
+      //#define singelend
+      #define Different
+
+	  #ifdef Continuous
+      #ifdef singelend
+      	  ADS1115_StartContinuous(ADS1115_MUX_AIN0,ADS1115_PGA_ONE,ADS1115_DATA_RATE_128);
+      #endif
+
+	#ifdef Different
+      	  ADS1115_StartContinuous(ADS1115_MUX_DIFF_0_1,ADS1115_PGA_ONE,ADS1115_DATA_RATE_128);
+	#endif
+
+      while(1){
+    	  #ifdef singelend
+    	   if( ADS1115_ReadContinuous(&voltage_A0)== HAL_OK){
+               printf("A0 voltage    = %.3f V\n", ((voltage_A0*Vth)/(1000)));
+    	   }
+    	  #endif
+
+		  #ifdef Different
+    	   if( ADS1115_ReadContinuous(&voltage_diff_01)== HAL_OK){
+               printf("A0 voltage    = %.3f V\n", ((voltage_diff_01*Vth)/(1000)));
+    	   }
+		  #endif
+
+           HAL_Delay(1000);
+      }
+
+#endif
+
+#ifdef OneShont
       while(1) {
-          if (ADS1115_readSingleEnded(ADS1115_MUX_AIN0, &voltage_A0) == HAL_OK) {
+          if (ADS1115_readOneShont(ADS1115_MUX_AIN0, &voltage_A0) == HAL_OK) {
               printf("A0 voltage    = %.3f V\n", ((voltage_A0*Vth)/(1000)));
           } else {
               printf("Read failed\n");
           }
 
-          if (ADS1115_readSingleEnded(ADS1115_MUX_AIN1, &voltage_A1) == HAL_OK) {
+          if (ADS1115_readOneShont(ADS1115_MUX_AIN1, &voltage_A1) == HAL_OK) {
         	  printf("A1 voltage    = %.3f V\n", ((voltage_A1*Vth)/(1000)));
           } else {
         	  printf("Read failed\n");
           }
-          if (ADS1115_readSingleEnded(ADS1115_MUX_DIFF_0_1, &voltage_diff_01) == HAL_OK) {
+          if (ADS1115_readOneShont(ADS1115_MUX_DIFF_0_1, &voltage_diff_01) == HAL_OK) {
         	  printf("diff_1 voltage = %.3f V\n", ((voltage_diff_01*Vth)/(1000)));
         	  printf("A0-A1          = %.3f V\n",((voltage_A0-voltage_A1)/1000));
           } else {
@@ -325,6 +369,7 @@ int main(void)
 
           HAL_Delay(1000);
       }
+#endif
 
 #endif
 

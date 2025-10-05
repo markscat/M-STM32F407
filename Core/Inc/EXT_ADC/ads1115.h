@@ -27,10 +27,12 @@
 /* Definitions */
 #define ADS1115_OS (0b1 << 7) // Default
 
-#define ADS1115_MUX_AIN0 (0b100 << 4)		// Analog input 1
-#define ADS1115_MUX_AIN1 (0b101 << 4)		// Analog input 2
-#define ADS1115_MUX_AIN2 (0b110 << 4)		// Analog input 3
-#define ADS1115_MUX_AIN3 (0b111 << 4)		// Analog input 4
+
+
+#define ADS1115_MUX_AIN0 (0b100 << 4)		// Analog input 1 0x40
+#define ADS1115_MUX_AIN1 (0b101 << 4)		// Analog input 2 0x50
+#define ADS1115_MUX_AIN2 (0b110 << 4)		// Analog input 3 0x60
+#define ADS1115_MUX_AIN3 (0b111 << 4)		// Analog input 4 0x70
 
 /*Differential Multiplexer Register */
 #define ADS1115_MUX_DIFF_0_1   0x0000  // AIN0 - AIN1
@@ -38,14 +40,16 @@
 #define ADS1115_MUX_DIFF_1_3   0x2000  // AIN1 - AIN3
 #define ADS1115_MUX_DIFF_2_3   0x3000  // AIN2 - AIN3
 
-#define ADS1115_PGA_TWOTHIRDS 	(0b000 << 1) 		// 2/3x Gain	-- 0.1875 mV by one bit		MAX: +- VDD + 0.3V
-#define ADS1115_PGA_ONE			(0b001 << 1) 		// 1x Gain		-- 0.125 mV by one bit		MAX: +- VDD + 0.3V
-#define ADS1115_PGA_TWO			(0b010 << 1) 		// 2x Gain		-- 0.0625 mV by one bit		MAX: +- 2.048 V
-#define ADS1115_PGA_FOUR		(0b011 << 1) 		// 4x Gain		-- 0.03125 mV by one bit	MAX: +- 1.024 V
-#define ADS1115_PGA_EIGHT		(0b100 << 1) 		// 8x Gain		-- 0.015625 mV by one bit	MAX: +- 0.512 V
-#define ADS1115_PGA_SIXTEEN		(0b111 << 1) 		// 16x Gain		-- 0.0078125 mV by one bit	MAX: +- 0.256 V
+#define ADS1115_PGA_TWOTHIRDS 	(0b000 << 1) 		// 2/3x Gain	-- 0.1875 mV by one bit		MAX: +- VDD + 0.3V  0x00
+#define ADS1115_PGA_ONE			(0b001 << 1) 		// 1x Gain		-- 0.125 mV by one bit		MAX: +- VDD + 0.3V  0x02
+#define ADS1115_PGA_TWO			(0b010 << 1) 		// 2x Gain		-- 0.0625 mV by one bit		MAX: +- 2.048 V		0x03
+#define ADS1115_PGA_FOUR		(0b011 << 1) 		// 4x Gain		-- 0.03125 mV by one bit	MAX: +- 1.024 V		0x04
+#define ADS1115_PGA_EIGHT		(0b100 << 1) 		// 8x Gain		-- 0.015625 mV by one bit	MAX: +- 0.512 V     0x05
+#define ADS1115_PGA_SIXTEEN		(0b111 << 1) 		// 16x Gain		-- 0.0078125 mV by one bit	MAX: +- 0.256 V     0x06
 
 #define ADS1115_MODE (0b1) // Default
+/**/
+#define ADS1115_MODE_CONTINUOUS 0x0  // 連續模式
 
 #define ADS1115_DATA_RATE_8		(0b000 << 5)			// 8SPS
 #define ADS1115_DATA_RATE_16	(0b001 << 5)			// 16SPS
@@ -70,5 +74,6 @@
 
 /* Function prototypes. */
 HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA);
-HAL_StatusTypeDef ADS1115_readSingleEnded(uint16_t muxPort, float *voltage);
-HAL_StatusTypeDef ADS1115_readDifferential(uint16_t muxSetting, float *voltage);
+HAL_StatusTypeDef ADS1115_readOneShont(uint16_t muxPort, float *voltage);
+HAL_StatusTypeDef ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16_t dataRate);
+HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage);
