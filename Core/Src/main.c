@@ -87,7 +87,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define EEPROM_write
 //#define EEPROM_read
 #define time_setting
-#define ADS1115
+//#define ADS1115
 
 
 
@@ -280,9 +280,10 @@ int main(void)
   printf("\n**************I2C init. Device *****************\n");
 
 
-#ifdef ADS1115
 
-  float voltage_A0,voltage_A1,voltage_diff_01;
+
+
+#ifdef ADS1115
 
   // 初始化 ADS1115
       if (ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE) == HAL_OK) {
@@ -321,10 +322,12 @@ int main(void)
 
 	  #ifdef Continuous
       #ifdef singelend
+      	  float voltage_A0;
       	  ADS1115_StartContinuous(ADS1115_MUX_AIN0,ADS1115_PGA_ONE,ADS1115_DATA_RATE_128);
       #endif
 
 	#ifdef Different
+      	  float voltage_diff_01;
       	  ADS1115_StartContinuous(ADS1115_MUX_DIFF_0_1,ADS1115_PGA_ONE,ADS1115_DATA_RATE_128);
 	#endif
 
@@ -347,6 +350,8 @@ int main(void)
 #endif
 
 #ifdef OneShont
+      float voltage_A0,voltage_A1,voltage_diff_01;
+
       while(1) {
           if (ADS1115_readOneShont(ADS1115_MUX_AIN0, &voltage_A0) == HAL_OK) {
               printf("A0 voltage    = %.3f V\n", ((voltage_A0*Vth)/(1000)));
@@ -375,7 +380,6 @@ int main(void)
 
 
   I2C_Status status = I2C_Init_Devices();
-  //while(1);
 
     if (status != I2C_OK) {
       printf("[错误] I2C设备初始化失败! 错误码: %d\n", status);
@@ -386,7 +390,6 @@ int main(void)
     printf("\n************System Ready.**************************\n");
 
 
-    //while(1);
 #define oled
 
 #ifdef oled
@@ -395,12 +398,13 @@ int main(void)
     SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
     oled_status = SH1106_Init();     // 调用初始化函数
 
+
+#ifdef on_off_screen
      // --- 【关键】检查初始化结果 ---
      if (oled_status == SH1106_OK)
      {
        // --- 初始化成功 ---
        printf("OLED SH1106 Initialized successfully!\r\n");
-
        // 在这里可以执行一些开机画面或测试
        SH1106_Fill(SH1106_COLOR_WHITE); // 将屏幕填充为白色
        SH1106_UpdateScreen();          // 刷新屏幕
@@ -419,11 +423,6 @@ int main(void)
        // 1. 点亮一个红色 LED 指示错误
        //HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
 
-       // 2. 进入一个死循环，防止程序继续执行错误的操作
-       while(1)
-       {
-         // 系统处于错误状态
-       }
      }
 
 
@@ -461,6 +460,48 @@ int main(void)
  	SH1106_Fill(1);
     while (1);
 
+#endif
+
+
+	#define HORSE_ANIM_WIDTH  128
+	#define HORSE_ANIM_HEIGHT 64
+
+	#define HORSE_ANIM_FRAME_COUNT (sizeof(horse_anim_frames) / sizeof(horse_anim_frames[0]))
+
+    const unsigned char* horse_anim_frames[10] = {
+            horse1, horse2, horse3, horse4, horse5,
+            horse6, horse7, horse8, horse9, horse10
+        };
+
+
+    SH1106_Fill(SH1106_COLOR_BLACK);
+	SH1106_UpdateScreen();
+
+
+    if(oled_status == SH1106_OK){
+    	while(1){
+    		for(int i=1;i< HORSE_ANIM_FRAME_COUNT;i++){// **修正：索引從 0 到 FRAME_COUNT-1**
+    			// 每繪製一幀前清屏，清除上一幀的殘影
+    			// 由於 DrawBitmap 會在畫圖前判斷像素是否為黑，所以通常只會在背景是靜態的情況下需要手動清屏
+                // 但對於動畫，通常是全屏重畫，所以每次清屏是正常的
+                SH1106_Fill(SH1106_COLOR_BLACK);
+
+                // 繪製當前幀的馬
+                SH1106_DrawBitmap(0, 0, horse_anim_frames[i], HORSE_ANIM_WIDTH, HORSE_ANIM_HEIGHT, SH1106_COLOR_WHITE);
+
+                // 更新螢幕，將緩衝區內容 (馬) 顯示出來
+                SH1106_UpdateScreen();
+
+                //HAL_Delay(100); // 調整這個值來控制速度，例如 50ms, 100ms, 200ms
+    		}
+		    //SH1106_Fill(SH1106_COLOR_BLACK);
+			//SH1106_UpdateScreen();
+    	}
+    }else{
+		printf("OLED SH1106 Initialization FAILED! Error Code: %d\r\n", oled_status);
+    }
+
+
 
    /* const unsigned char* horse_anim[10] = {
         horse1, horse2, horse3, horse4, horse5,
@@ -477,8 +518,6 @@ int main(void)
     // 显示 128x32 水平扫描图像（居中）
   //  SH1106_DrawImageDirect(horse1, 0, 2, 128, 32, 0);
   //  SH1106_UpdateScreen();
-
-
 
 #endif
 

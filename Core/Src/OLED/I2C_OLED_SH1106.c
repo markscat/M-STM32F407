@@ -22,8 +22,8 @@
  */
 #include <string.h>
 #include <main.h>
-#include <OLED/I2C_OLED_fonts.h>
-#include <OLED/I2C_OLED_SH1106.h>
+#include <OLED\I2C_OLED_fonts.h>
+#include <OLED\I2C_OLED_SH1106.h>
 #include <stdlib.h> // <--- 【添加這一行】
 #include "log.h"
 extern I2C_HandleTypeDef hi2c1;
@@ -46,13 +46,11 @@ typedef struct {
 //</250803 新增>
 
 #define SH1106_I2C &hi2c1
-
 static uint8_t SH1106_Buffer[SH1106_WIDTH * SH1106_HEIGHT / 8];
-
-//static void SH1106_WriteCommand(uint8_t command); // <--- [修改] 這是我們統一使用的內部命令發送函式
 static SH1106_StatusTypeDef SH1106_WriteCommand(uint8_t command);
 
-static void SH1106_WriteData(uint8_t* data, uint16_t size); // <--- [修改] 這是我們統一使用的內部數據發送函式
+//static void SH1106_WriteData(uint8_t* data, uint16_t size); // <--- [修改] 這是我們統一使用的內部數據發送函式
+SH1106_StatusTypeDef OLED_WriteData(uint8_t *data, uint16_t size);
 
 
 
@@ -85,14 +83,9 @@ static SH1106_StatusTypeDef SH1106_Translate_HAL_Status(HAL_StatusTypeDef hal_st
     }
 }
 
-
-
-
 /**
  * @brief  【統一】發送一個命令字節
  */
-
-
 
 static SH1106_StatusTypeDef SH1106_WriteCommand(uint8_t command) {
     HAL_StatusTypeDef status = HAL_I2C_Mem_Write(&hi2c1, OLED_ADDRESS, 0x00, 1, &command, 1, 100);
@@ -106,43 +99,24 @@ static SH1106_StatusTypeDef SH1106_WriteCommand(uint8_t command) {
 }
 
 
-
-#ifdef WriteCommand_without_HAL
-static void SH1106_WriteCommand(uint8_t command) // <--- [修改] 這是我們統一使用的內部命令發送函式
-{
-    // 使用 HAL_I2C_Mem_Write 更穩定，它會發送 START -> 地址 -> 記憶體地址(控制字節) -> 數據 -> STOP
-    HAL_I2C_Mem_Write(&hi2c1, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
-}
-#endif
-
 /**
  * @brief  【統一】發送一塊數據
  */
-static void SH1106_WriteData(uint8_t* data, uint16_t size) // <--- [修改] 這是我們統一使用的內部數據發送函式
-{
-    HAL_I2C_Mem_Write(&hi2c1, OLED_ADDRESS, 0x40, 1, data, size, HAL_MAX_DELAY);
-}
-	
-void SH1106_OLED_WriteCommand(uint8_t cmd) {
-    uint8_t buf[2] = {0x00, cmd}; // Control byte (0x00) + Command
-    HAL_I2C_Master_Transmit(&hi2c1, OLED_ADDRESS, buf, 2, HAL_MAX_DELAY);
+
+// 傳送資料（Data，可傳整個 buffer）
+SH1106_StatusTypeDef OLED_WriteData(uint8_t *data, uint16_t size) {
+    HAL_StatusTypeDef status = HAL_I2C_Mem_Write(SH1106_I2C, SH1106_I2C_ADDR, 0x40, 1, data, size, HAL_MAX_DELAY);
+    return SH1106_Translate_HAL_Status(status);
 }
 
-void OLED_WriteData(uint8_t data) {
-    uint8_t buf[2] = {0x40, data}; // Control byte (0x40) + Data
-    HAL_I2C_Master_Transmit(&hi2c1, OLED_ADDRESS, buf, 2, HAL_MAX_DELAY);
-}
-//</0805新增>
-
-// --- 發送數據的輔助函式 (用來更新畫面) ---
-void OLED_Write_Data(uint8_t* data, uint16_t size)
+// --- 發送命令的輔助函式 ---
+void OLED_Write_CMD(uint8_t cmd)
 {
-    uint8_t* temp_buf = malloc(size + 1);
-    temp_buf[0] = 0x40; // 0x40 代表接下來是 Data
-    memcpy(temp_buf+1, data, size);
-    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, temp_buf, size + 1, HAL_MAX_DELAY);
-    free(temp_buf);
+    uint8_t data_to_send[2] = {0x00, cmd}; // 0x00 代表接下來是 Command
+    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, data_to_send, 2, HAL_MAX_DELAY);
 }
+
+
 /**
  * OLED 驅動 IC 在初始化時，必須照 datasheet 的上電順序，尤其是：
  * Display OFF
@@ -298,83 +272,6 @@ SH1106_StatusTypeDef SH1106_Init(void) {
     LOG_INFO("Init sequence sent successfully.");
     return SH1106_OK;
 }
-
-
-
-#if WriteCommand_without_HAL
-
-uint8_t SH1106_OLED_Init(void) {
-	printf("SH1106_OLED_Init \n");
-
-	/* Check if LCD connected to I2C */
-	if (HAL_I2C_IsDeviceReady(SH1106_I2C, SH1106_I2C_ADDR, 1, 20000) != HAL_OK) {
-		/* Return false */
-		return 0;
-	}
-    HAL_Delay(100);
-
-    //SH1106_I2C_Write();
-
-    SH1106_WriteCommand(OLED_DISPLAY_OFF);
-    SH1106_WriteCommand(OLED_SET_CLK_DIV); // Set Display Clock Divide Ratio
-    SH1106_WriteCommand(INIT_CLK_DIV);
-    SH1106_WriteCommand(OLED_SET_MUX_RATIO); // Set Multiplex Ratio
-    SH1106_WriteCommand(INIT_MUX_RATIO); // 1/64 duty
-    SH1106_WriteCommand(OLED_SET_DISPLAY_OFFSET); // Set Display Offset
-    SH1106_WriteCommand(OLED_SET_LOWER_COLUMN);
-    SH1106_WriteCommand(0x40); // Set Start Line (0)
-    SH1106_WriteCommand(0xAD); // Set DC-DC
-    SH1106_WriteCommand(0x8B); // DC-DC ON
-    SH1106_WriteCommand(0xA1); // Segment Remap (column 127 is mapped to SEG0)
-    SH1106_WriteCommand(0xC8); // COM Output Scan Direction (remapped)
-    SH1106_WriteCommand(0xDA); // Set COM Pins Hardware Configuration
-    SH1106_WriteCommand(0x12);
-    SH1106_WriteCommand(0x81); // Set Contrast Control
-    SH1106_WriteCommand(0xAF); // 建議的對比度
-    SH1106_WriteCommand(0xD9); // Set Pre-charge Period
-    SH1106_WriteCommand(0x1F);
-    SH1106_WriteCommand(0xDB); // Set VCOMH Deselect Level
-    SH1106_WriteCommand(0x40);
-    SH1106_WriteCommand(0xA4); // Entire Display ON from RAM
-    SH1106_WriteCommand(0xA6); // Normal Display
-
-    SH1106_WriteCommand(0xAF); // Display ON
-
-    /*
-    SH1106_WRITECOMMAND(OLED_DISPLAY_OFF);
-    SH1106_WRITECOMMAND(0x02); // 這個是特殊用途，SH1106 Column Offset
-    SH1106_WRITECOMMAND(OLED_SET_CONTRAST);
-    SH1106_WRITECOMMAND(INIT_CONTRAST_VALUE);
-    SH1106_WRITECOMMAND(OLED_SEG_REMAP_127);
-    SH1106_WRITECOMMAND(OLED_NORMAL_DISPLAY);
-    SH1106_WRITECOMMAND(OLED_SET_MUX_RATIO);
-    SH1106_WRITECOMMAND(INIT_MUX_RATIO);
-    SH1106_WRITECOMMAND(OLED_SET_DC_DC_MODE);
-    SH1106_WRITECOMMAND(OLED_PUMP_ON);
-    SH1106_WRITECOMMAND(OLED_SET_PUMP_VOLTAGE | INIT_PUMP_VOLTAGE);
-    SH1106_WRITECOMMAND(OLED_SCAN_DIR_REMAP);
-    SH1106_WRITECOMMAND(OLED_SET_DISPLAY_OFFSET);
-    SH1106_WRITECOMMAND(INIT_DISPLAY_OFFSET);
-    SH1106_WRITECOMMAND(OLED_SET_CLK_DIV);
-    SH1106_WRITECOMMAND(INIT_CLK_DIV);
-    SH1106_WRITECOMMAND(OLED_SET_PRECHARGE);
-    SH1106_WRITECOMMAND(INIT_PRECHARGE);
-    SH1106_WRITECOMMAND(OLED_SET_COM_CONFIG);
-    SH1106_WRITECOMMAND(INIT_COM_CONFIG);
-    SH1106_WRITECOMMAND(OLED_SET_VCOMH);
-    SH1106_WRITECOMMAND(INIT_VCOMH);
-    SH1106_WRITECOMMAND(OLED_DISPLAY_ON);
-*/
-
-    SH1106.CurrentX = 0;
-    SH1106.CurrentY = 0;
-    SH1106.Initialized = 1;
-
-    printf("ready return\n");
-
-    return 1;
-}
-#endif
 #endif
 
 
@@ -389,7 +286,7 @@ void SH1106_UpdateScreen(void) {
         uint8_t col_addr = SH1106_COLUMN_OFFSET;
         SH1106_WriteCommand(0x00 | (col_addr & 0x0F));
         SH1106_WriteCommand(0x10 | ((col_addr >> 4) & 0x0F));
-        SH1106_WriteData(&SH1106_Buffer[SH1106_WIDTH * page], SH1106_WIDTH);
+        OLED_WriteData(&SH1106_Buffer[SH1106_WIDTH * page], SH1106_WIDTH);
     }
 }
 
@@ -571,14 +468,6 @@ void SH1106_DrawImageDirect(
 }
 
 
-// --- 發送命令的輔助函式 ---
-void OLED_Write_CMD(uint8_t cmd)
-{
-    uint8_t data_to_send[2] = {0x00, cmd}; // 0x00 代表接下來是 Command
-    HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, data_to_send, 2, HAL_MAX_DELAY);
-}
-
-
 
 void RunDisplayTest(void)
 {
@@ -684,6 +573,90 @@ uint8_t SH1106_ReadStatus(void) {
 }
 
 
+
+#ifdef WriteCommand_without_HAL
+static void SH1106_WriteCommand(uint8_t command) // <--- [修改] 這是我們統一使用的內部命令發送函式
+{
+    // 使用 HAL_I2C_Mem_Write 更穩定，它會發送 START -> 地址 -> 記憶體地址(控制字節) -> 數據 -> STOP
+    HAL_I2C_Mem_Write(&hi2c1, OLED_ADDRESS, 0x00, 1, &command, 1, HAL_MAX_DELAY);
+}
+#endif
+
+
+#if WriteCommand_without_HAL
+
+uint8_t SH1106_OLED_Init(void) {
+	printf("SH1106_OLED_Init \n");
+
+	/* Check if LCD connected to I2C */
+	if (HAL_I2C_IsDeviceReady(SH1106_I2C, SH1106_I2C_ADDR, 1, 20000) != HAL_OK) {
+		/* Return false */
+		return 0;
+	}
+    HAL_Delay(100);
+
+    //SH1106_I2C_Write();
+
+    SH1106_WriteCommand(OLED_DISPLAY_OFF);
+    SH1106_WriteCommand(OLED_SET_CLK_DIV); // Set Display Clock Divide Ratio
+    SH1106_WriteCommand(INIT_CLK_DIV);
+    SH1106_WriteCommand(OLED_SET_MUX_RATIO); // Set Multiplex Ratio
+    SH1106_WriteCommand(INIT_MUX_RATIO); // 1/64 duty
+    SH1106_WriteCommand(OLED_SET_DISPLAY_OFFSET); // Set Display Offset
+    SH1106_WriteCommand(OLED_SET_LOWER_COLUMN);
+    SH1106_WriteCommand(0x40); // Set Start Line (0)
+    SH1106_WriteCommand(0xAD); // Set DC-DC
+    SH1106_WriteCommand(0x8B); // DC-DC ON
+    SH1106_WriteCommand(0xA1); // Segment Remap (column 127 is mapped to SEG0)
+    SH1106_WriteCommand(0xC8); // COM Output Scan Direction (remapped)
+    SH1106_WriteCommand(0xDA); // Set COM Pins Hardware Configuration
+    SH1106_WriteCommand(0x12);
+    SH1106_WriteCommand(0x81); // Set Contrast Control
+    SH1106_WriteCommand(0xAF); // 建議的對比度
+    SH1106_WriteCommand(0xD9); // Set Pre-charge Period
+    SH1106_WriteCommand(0x1F);
+    SH1106_WriteCommand(0xDB); // Set VCOMH Deselect Level
+    SH1106_WriteCommand(0x40);
+    SH1106_WriteCommand(0xA4); // Entire Display ON from RAM
+    SH1106_WriteCommand(0xA6); // Normal Display
+
+    SH1106_WriteCommand(0xAF); // Display ON
+
+    /*
+    SH1106_WRITECOMMAND(OLED_DISPLAY_OFF);
+    SH1106_WRITECOMMAND(0x02); // 這個是特殊用途，SH1106 Column Offset
+    SH1106_WRITECOMMAND(OLED_SET_CONTRAST);
+    SH1106_WRITECOMMAND(INIT_CONTRAST_VALUE);
+    SH1106_WRITECOMMAND(OLED_SEG_REMAP_127);
+    SH1106_WRITECOMMAND(OLED_NORMAL_DISPLAY);
+    SH1106_WRITECOMMAND(OLED_SET_MUX_RATIO);
+    SH1106_WRITECOMMAND(INIT_MUX_RATIO);
+    SH1106_WRITECOMMAND(OLED_SET_DC_DC_MODE);
+    SH1106_WRITECOMMAND(OLED_PUMP_ON);
+    SH1106_WRITECOMMAND(OLED_SET_PUMP_VOLTAGE | INIT_PUMP_VOLTAGE);
+    SH1106_WRITECOMMAND(OLED_SCAN_DIR_REMAP);
+    SH1106_WRITECOMMAND(OLED_SET_DISPLAY_OFFSET);
+    SH1106_WRITECOMMAND(INIT_DISPLAY_OFFSET);
+    SH1106_WRITECOMMAND(OLED_SET_CLK_DIV);
+    SH1106_WRITECOMMAND(INIT_CLK_DIV);
+    SH1106_WRITECOMMAND(OLED_SET_PRECHARGE);
+    SH1106_WRITECOMMAND(INIT_PRECHARGE);
+    SH1106_WRITECOMMAND(OLED_SET_COM_CONFIG);
+    SH1106_WRITECOMMAND(INIT_COM_CONFIG);
+    SH1106_WRITECOMMAND(OLED_SET_VCOMH);
+    SH1106_WRITECOMMAND(INIT_VCOMH);
+    SH1106_WRITECOMMAND(OLED_DISPLAY_ON);
+*/
+
+    SH1106.CurrentX = 0;
+    SH1106.CurrentY = 0;
+    SH1106.Initialized = 1;
+
+    printf("ready return\n");
+
+    return 1;
+}
+#endif
 
 //#define Legacy_Code
 #ifdef Legacy_Code
@@ -960,11 +933,6 @@ void SH1106_DrawFilledCircle(int16_t x0, int16_t y0, int16_t r, SH1106_COLOR_t c
 #endif
 
 
-
-
-
-
-
 #ifdef SH1106_DrawBitmap_AI
 /**
  * @brief 绘制位图到 SH1106 显存（兼容水平扫描/MSB优先格式）
@@ -1002,9 +970,6 @@ void SH1106_DrawBitmap(int16_t x, int16_t y, const uint8_t* bitmap, int16_t w, i
     }
 }
 #endif
-
-
-
 
 #ifdef dim_one
 char SH1106_Putc(char ch, FontDef_t* Font, SH1106_COLOR_t color) {
