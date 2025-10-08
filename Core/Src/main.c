@@ -38,6 +38,12 @@
  * 	PC5     ------> SEG_DIO<br/>
  * 	PB0     ------> SEG_STB<br/>
  *
+ *　SPI GPIO Configuration<br/>
+ *  PA5		------> SPI1_SCK_Pin<br/>
+ *  PA6		------> SPI1_MISO_Pin<br/>
+ *  PA7		------> SPI1_MOSI_Pin<br/>
+ *
+ *
  * I2C Address:
  * AT24C02				0x57
  * AT24C32				0x50
@@ -1118,3 +1124,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
