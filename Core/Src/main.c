@@ -1046,13 +1046,13 @@ int main(void)
 	  output_data--;
 	  HAL_Delay(500);
 	 //printf("in while loop\n");
+#endif
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-#endif
 
 }
 
@@ -1138,5 +1138,6 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
 
 
