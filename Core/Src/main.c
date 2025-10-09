@@ -39,11 +39,25 @@
  * 	PB0     ------> SEG_STB<br/>
  *
  *　SPI GPIO Configuration<br/>
+ *  VCC
+ *  PE10 	------> SPI1_CS_Pin<br/>
+ *  PA7		------> SPI1_MOSI_Pin<br/>
  *  PA5		------> SPI1_SCK_Pin<br/>
  *  PA6		------> SPI1_MISO_Pin<br/>
- *  PA7		------> SPI1_MOSI_Pin<br/>
- *
- *
+ *  
+ * SPI Panel ili9225
+ *  VCC
+ *  GND
+ *  GND
+ *  NC
+ *  NC
+ *  NC
+ *  PA5		------> SPI1_SCK_Pin<br/>
+ *  PA6		------> SPI1_MISO_Pin<br/>
+ *  PE7		------> 9552_RS_Pin<br/>
+ *  PE8		------> 9552_RTS_Pin<br/>
+ *  PE9		------> 9552_CS_Pin<br/>
+ 
  * I2C Address:
  * AT24C02				0x57
  * AT24C32				0x50
@@ -1124,4 +1138,5 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
 
