@@ -250,19 +250,40 @@ int main(void)
   MX_GPIO_Init();
 
   /**
-     * @brief  SPI初始化
+     * @brief  SPI1初始化
      * param  無
      * @return 無
 
      */
   MX_SPI1_Init();
+    /**
+     * @brief  SPI2初始化
+     * param  無
+     * @return 無
+
+     */
+    MX_SPI2_Init();
+
+  
   /**
-      * @brief  USART初始化
+      * @brief  USART2初始化
       * param  無
       * @return 無
       */
 
   MX_USART2_UART_Init();
+
+  /**
+      * @brief  USART2初始化
+      * param  無
+      * @return 無
+      * 說明：備用,所以不會初始化
+      */
+  
+  //MX_USART3_UART_Init();
+
+
+  
   /**
       * @brief  I2C初始化
       * I2C1 GPIO Configuration
@@ -274,8 +295,19 @@ int main(void)
  	 *
      */
   MX_I2C1_Init();
+  
+    /**
+      * @brief  I2C初始化
+      * PWM GPIO Configuration
+      * param  無
+      * @return 無
+      * 備用,先不使用
+ 	  *
+    */  
+    //MX_TIM1_Init();
 
   //MX_I2C3_Init();
+  
   /* USER CODE BEGIN 2 */
   uart_io_init(); // 初始化UART輸入輸出
 
@@ -293,10 +325,11 @@ int main(void)
 
 
 
-  printf("\n************************************************\n");
+  printf("\n*************Scan_I2C_Address********************\n");
+  printf("Scan All I2C Device Address \n");
   Scan_I2C_Address();
   printf("\n************************************************\n");
-  printf("\n");
+  
   printf("\n**************I2C init. Device *****************\n");
 
 
@@ -1046,12 +1079,13 @@ int main(void)
 	  output_data--;
 	  HAL_Delay(500);
 	 //printf("in while loop\n");
-#endif
+
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
+#endif
   /* USER CODE END 3 */
 
 }

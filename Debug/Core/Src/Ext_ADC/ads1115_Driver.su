@@ -1,2 +1,4 @@
-../Core/Src/Ext_ADC/ads1115_Driver.c:105:19:ADS1115_Init	16	static
-../Core/Src/Ext_ADC/ads1115_Driver.c:152:19:ADS1115_readSingleEnded	40	static
+../Core/Src/Ext_ADC/ads1115_Driver.c:139:19:ADS1115_Init	16	static
+../Core/Src/Ext_ADC/ads1115_Driver.c:186:19:ADS1115_readOneShont	40	static
+../Core/Src/Ext_ADC/ads1115_Driver.c:236:19:ADS1115_StartContinuous	32	static
+../Core/Src/Ext_ADC/ads1115_Driver.c:250:19:ADS1115_ReadContinuous	32	static

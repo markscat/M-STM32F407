@@ -80,7 +80,6 @@ extern "C" {
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
-
 /* USER CODE BEGIN EFP */
 
 
@@ -99,12 +98,8 @@ void Error_Handler(void);
 #define PH1_OSC_OUT_GPIO_Port GPIOH
 #define OTG_FS_PowerSwitchOn_Pin GPIO_PIN_0
 #define OTG_FS_PowerSwitchOn_GPIO_Port GPIOC
-#define PDM_OUT_Pin GPIO_PIN_3
-#define PDM_OUT_GPIO_Port GPIOC
 #define B1_Pin GPIO_PIN_0
 #define B1_GPIO_Port GPIOA
-#define I2S3_WS_Pin GPIO_PIN_4
-#define I2S3_WS_GPIO_Port GPIOA
 #define SPI1_SCK_Pin GPIO_PIN_5
 #define SPI1_SCK_GPIO_Port GPIOA
 #define SPI1_MISO_Pin GPIO_PIN_6
@@ -119,12 +114,16 @@ void Error_Handler(void);
 #define SEG_STB_GPIO_Port GPIOB
 #define BOOT1_Pin GPIO_PIN_2
 #define BOOT1_GPIO_Port GPIOB
-#define GPI_PE7_Pin GPIO_PIN_7
-#define GPI_PE7_GPIO_Port GPIOE
-#define GPI_PE8_Pin GPIO_PIN_8
-#define GPI_PE8_GPIO_Port GPIOE
-#define CLK_IN_Pin GPIO_PIN_10
-#define CLK_IN_GPIO_Port GPIOB
+#define ILI9552_RS_Pin GPIO_PIN_7
+#define ILI9552_RS_GPIO_Port GPIOE
+#define ILI9552_RTS_Pin GPIO_PIN_8
+#define ILI9552_RTS_GPIO_Port GPIOE
+#define ILI9552_CS_Pin GPIO_PIN_9
+#define ILI9552_CS_GPIO_Port GPIOE
+#define SPI1_CS_Pin GPIO_PIN_10
+#define SPI1_CS_GPIO_Port GPIOE
+#define SPI2_CS_Pin GPIO_PIN_11
+#define SPI2_CS_GPIO_Port GPIOE
 #define LD4_Pin GPIO_PIN_12
 #define LD4_GPIO_Port GPIOD
 #define LD3_Pin GPIO_PIN_13
