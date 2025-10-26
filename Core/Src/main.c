@@ -297,7 +297,7 @@ int main(void)
   MX_I2C1_Init();
   
     /**
-      * @brief  I2C初始化
+      * @brief  Tim初始化
       * PWM GPIO Configuration
       * param  無
       * @return 無
@@ -307,11 +307,9 @@ int main(void)
     //MX_TIM1_Init();
 
   //MX_I2C3_Init();
-  
+
   /* USER CODE BEGIN 2 */
   uart_io_init(); // 初始化UART輸入輸出
-
-
   /**
     * @}
     */  //確保 `Initialize` 進入 `Initialize` 群組
@@ -320,18 +318,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //uart_io_init(); // 初始化UART輸入輸出
 
-  //
-
-
-
-
   printf("\n*************Scan_I2C_Address********************\n");
   printf("Scan All I2C Device Address \n");
   Scan_I2C_Address();
   printf("\n************************************************\n");
   
   printf("\n**************I2C init. Device *****************\n");
-
 
 
 
@@ -516,20 +508,30 @@ int main(void)
 #endif
 
 
-	#define HORSE_ANIM_WIDTH  128
-	#define HORSE_ANIM_HEIGHT 64
 
-	#define HORSE_ANIM_FRAME_COUNT (sizeof(horse_anim_frames) / sizeof(horse_anim_frames[0]))
 
-    const unsigned char* horse_anim_frames[10] = {
-            horse1, horse2, horse3, horse4, horse5,
-            horse6, horse7, horse8, horse9, horse10
-        };
 
 
     SH1106_Fill(SH1106_COLOR_BLACK);
 	SH1106_UpdateScreen();
 
+    if(oled_status == SH1106_OK){
+    	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
+    }
+
+    while (1) {
+        HAL_Delay(1000);
+    }
+#ifdef Horse_run
+#define HORSE_ANIM_WIDTH  128
+#define HORSE_ANIM_HEIGHT 64
+
+#define HORSE_ANIM_FRAME_COUNT (sizeof(horse_anim_frames) / sizeof(horse_anim_frames[0]))
+
+const unsigned char* horse_anim_frames[10] = {
+        horse1, horse2, horse3, horse4, horse5,
+        horse6, horse7, horse8, horse9, horse10
+    };
 
     if(oled_status == SH1106_OK){
     	while(1){
@@ -547,14 +549,12 @@ int main(void)
 
                 //HAL_Delay(100); // 調整這個值來控制速度，例如 50ms, 100ms, 200ms
     		}
-		    //SH1106_Fill(SH1106_COLOR_BLACK);
-			//SH1106_UpdateScreen();
     	}
     }else{
 		printf("OLED SH1106 Initialization FAILED! Error Code: %d\r\n", oled_status);
     }
 
-
+#endif
 
    /* const unsigned char* horse_anim[10] = {
         horse1, horse2, horse3, horse4, horse5,
@@ -1079,16 +1079,15 @@ int main(void)
 	  output_data--;
 	  HAL_Delay(500);
 	 //printf("in while loop\n");
-
+#endif
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
-#endif
   /* USER CODE END 3 */
 
-}
+
 
 /**
   * @brief System Clock Configuration

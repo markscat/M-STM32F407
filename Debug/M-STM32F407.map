@@ -361,7 +361,7 @@ Discarded input sections
  .debug_macro   0x00000000       0xc4 ./Core/Src/Error_handel.o
  .debug_macro   0x00000000      0x149 ./Core/Src/Error_handel.o
  .debug_line    0x00000000      0xac6 ./Core/Src/Error_handel.o
- .debug_str     0x00000000    0xd0dc9 ./Core/Src/Error_handel.o
+ .debug_str     0x00000000    0xd0dc7 ./Core/Src/Error_handel.o
  .comment       0x00000000       0x44 ./Core/Src/Error_handel.o
  .debug_frame   0x00000000       0x54 ./Core/Src/Error_handel.o
  .ARM.attributes
@@ -552,6 +552,21 @@ Discarded input sections
  .debug_macro   0x00000000      0x146 ./Core/Src/I2C_Peripherals.o
  .debug_macro   0x00000000       0x16 ./Core/Src/I2C_Peripherals.o
  .debug_macro   0x00000000      0x11f ./Core/Src/I2C_Peripherals.o
+ .group         0x00000000        0xc ./Core/Src/ILI9552.o
+ .text          0x00000000        0x0 ./Core/Src/ILI9552.o
+ .data          0x00000000        0x0 ./Core/Src/ILI9552.o
+ .bss           0x00000000        0x0 ./Core/Src/ILI9552.o
+ .debug_info    0x00000000       0x22 ./Core/Src/ILI9552.o
+ .debug_abbrev  0x00000000       0x12 ./Core/Src/ILI9552.o
+ .debug_aranges
+                0x00000000       0x18 ./Core/Src/ILI9552.o
+ .debug_macro   0x00000000       0x11 ./Core/Src/ILI9552.o
+ .debug_macro   0x00000000      0xad8 ./Core/Src/ILI9552.o
+ .debug_line    0x00000000       0x36 ./Core/Src/ILI9552.o
+ .debug_str     0x00000000     0x2e7f ./Core/Src/ILI9552.o
+ .comment       0x00000000       0x44 ./Core/Src/ILI9552.o
+ .ARM.attributes
+                0x00000000       0x34 ./Core/Src/ILI9552.o
  .group         0x00000000        0xc ./Core/Src/TCA555.o
  .group         0x00000000        0xc ./Core/Src/TCA555.o
  .group         0x00000000        0xc ./Core/Src/TCA555.o
@@ -728,7 +743,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x149 ./Core/Src/TCA555.o
  .debug_macro   0x00000000       0x10 ./Core/Src/TCA555.o
  .debug_line    0x00000000      0xb19 ./Core/Src/TCA555.o
- .debug_str     0x00000000    0xd0e24 ./Core/Src/TCA555.o
+ .debug_str     0x00000000    0xd0e22 ./Core/Src/TCA555.o
  .comment       0x00000000       0x44 ./Core/Src/TCA555.o
  .debug_frame   0x00000000       0xa0 ./Core/Src/TCA555.o
  .ARM.attributes
@@ -941,7 +956,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c ./Core/Src/TM1638.o
  .debug_macro   0x00000000      0x19b ./Core/Src/TM1638.o
  .debug_line    0x00000000      0xf86 ./Core/Src/TM1638.o
- .debug_str     0x00000000    0xd12e0 ./Core/Src/TM1638.o
+ .debug_str     0x00000000    0xd12de ./Core/Src/TM1638.o
  .comment       0x00000000       0x44 ./Core/Src/TM1638.o
  .debug_frame   0x00000000      0x2c0 ./Core/Src/TM1638.o
  .ARM.attributes
@@ -1284,7 +1299,7 @@ Discarded input sections
  .debug_macro   0x00000000       0xc4 ./Core/Src/crc.o
  .debug_macro   0x00000000      0x149 ./Core/Src/crc.o
  .debug_line    0x00000000      0xabe ./Core/Src/crc.o
- .debug_str     0x00000000    0xd0a43 ./Core/Src/crc.o
+ .debug_str     0x00000000    0xd0a41 ./Core/Src/crc.o
  .comment       0x00000000       0x44 ./Core/Src/crc.o
  .debug_frame   0x00000000       0x7c ./Core/Src/crc.o
  .ARM.attributes
@@ -1462,7 +1477,7 @@ Discarded input sections
  .debug_macro   0x00000000       0xc4 ./Core/Src/data_recovery.o
  .debug_macro   0x00000000      0x149 ./Core/Src/data_recovery.o
  .debug_line    0x00000000      0xb5b ./Core/Src/data_recovery.o
- .debug_str     0x00000000    0xd0998 ./Core/Src/data_recovery.o
+ .debug_str     0x00000000    0xd0996 ./Core/Src/data_recovery.o
  .comment       0x00000000       0x44 ./Core/Src/data_recovery.o
  .debug_frame   0x00000000       0x80 ./Core/Src/data_recovery.o
  .ARM.attributes
@@ -2225,7 +2240,7 @@ Discarded input sections
  .debug_macro   0x00000000       0xc4 ./Core/Src/sdio.o
  .debug_macro   0x00000000      0x149 ./Core/Src/sdio.o
  .debug_line    0x00000000      0xb13 ./Core/Src/sdio.o
- .debug_str     0x00000000    0xd0ea3 ./Core/Src/sdio.o
+ .debug_str     0x00000000    0xd0ea1 ./Core/Src/sdio.o
  .comment       0x00000000       0x44 ./Core/Src/sdio.o
  .debug_frame   0x00000000       0x74 ./Core/Src/sdio.o
  .ARM.attributes
@@ -3112,7 +3127,7 @@ Discarded input sections
  .debug_macro   0x00000000       0xc4 ./Core/Src/tim.o
  .debug_macro   0x00000000      0x149 ./Core/Src/tim.o
  .debug_line    0x00000000      0xb9c ./Core/Src/tim.o
- .debug_str     0x00000000    0xd11fe ./Core/Src/tim.o
+ .debug_str     0x00000000    0xd11fc ./Core/Src/tim.o
  .comment       0x00000000       0x44 ./Core/Src/tim.o
  .debug_frame   0x00000000       0xa8 ./Core/Src/tim.o
  .ARM.attributes
@@ -8068,6 +8083,7 @@ LOAD C:/ST/STM32CubeIDE_1.18.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
 LOAD C:/ST/STM32CubeIDE_1.18.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344/tools/bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/crt0.o
 LOAD ./Core/Src/Error_handel.o
 LOAD ./Core/Src/I2C_Peripherals.o
+LOAD ./Core/Src/ILI9552.o
 LOAD ./Core/Src/TCA555.o
 LOAD ./Core/Src/TM1638.o
 LOAD ./Core/Src/Tools.o
@@ -9719,33 +9735,33 @@ LOAD C:/ST/STM32CubeIDE_1.18.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .debug_line    0x00012ac0     0x1d60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.o
  .debug_line    0x00014820     0x260d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
-.debug_str      0x00000000    0xd7f91
- .debug_str     0x00000000    0xd7f91 ./Core/Src/I2C_Peripherals.o
-                              0xd0574 (size before relaxing)
- .debug_str     0x000d7f91    0xd0f1b ./Core/Src/Tools.o
- .debug_str     0x000d7f91    0xd0992 ./Core/Src/gpio.o
- .debug_str     0x000d7f91    0xd13f6 ./Core/Src/i2c.o
- .debug_str     0x000d7f91    0xd1172 ./Core/Src/main.o
- .debug_str     0x000d7f91    0xcd8bb ./Core/Src/ring_buffer.o
- .debug_str     0x000d7f91    0xd0e32 ./Core/Src/spi.o
- .debug_str     0x000d7f91    0xd08f0 ./Core/Src/stm32f4xx_hal_msp.o
- .debug_str     0x000d7f91    0xd0feb ./Core/Src/stm32f4xx_it.o
- .debug_str     0x000d7f91     0x99e9 ./Core/Src/syscalls.o
- .debug_str     0x000d7f91     0x7787 ./Core/Src/sysmem.o
- .debug_str     0x000d7f91    0xcb82f ./Core/Src/system_stm32f4xx.o
- .debug_str     0x000d7f91    0xd2838 ./Core/Src/uart_io.o
- .debug_str     0x000d7f91    0xd2ca1 ./Core/Src/usart.o
- .debug_str     0x000d7f91    0xd13bc ./Core/Src/OLED/I2C_OLED_SH1106.o
- .debug_str     0x000d7f91     0x2f03 ./Core/Src/OLED/I2C_OLED_horse_anim.o
- .debug_str     0x000d7f91       0x89 ./Core/Startup/startup_stm32f407vgtx.o
- .debug_str     0x000d7f91    0xcc3b3 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
- .debug_str     0x000d7f91    0xcc12f ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
- .debug_str     0x000d7f91    0xcbc49 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
- .debug_str     0x000d7f91    0xcb9aa ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
- .debug_str     0x000d7f91    0xcc84d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
- .debug_str     0x000d7f91    0xcbc63 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
- .debug_str     0x000d7f91    0xcc0ed ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.o
- .debug_str     0x000d7f91    0xcc244 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+.debug_str      0x00000000    0xd7fd4
+ .debug_str     0x00000000    0xd7fd4 ./Core/Src/I2C_Peripherals.o
+                              0xd0572 (size before relaxing)
+ .debug_str     0x000d7fd4    0xd0f19 ./Core/Src/Tools.o
+ .debug_str     0x000d7fd4    0xd0990 ./Core/Src/gpio.o
+ .debug_str     0x000d7fd4    0xd13f4 ./Core/Src/i2c.o
+ .debug_str     0x000d7fd4    0xd1170 ./Core/Src/main.o
+ .debug_str     0x000d7fd4    0xcd8b9 ./Core/Src/ring_buffer.o
+ .debug_str     0x000d7fd4    0xd0e30 ./Core/Src/spi.o
+ .debug_str     0x000d7fd4    0xd08ee ./Core/Src/stm32f4xx_hal_msp.o
+ .debug_str     0x000d7fd4    0xd0fe9 ./Core/Src/stm32f4xx_it.o
+ .debug_str     0x000d7fd4     0x99e7 ./Core/Src/syscalls.o
+ .debug_str     0x000d7fd4     0x7785 ./Core/Src/sysmem.o
+ .debug_str     0x000d7fd4    0xcb82d ./Core/Src/system_stm32f4xx.o
+ .debug_str     0x000d7fd4    0xd2836 ./Core/Src/uart_io.o
+ .debug_str     0x000d7fd4    0xd2c9f ./Core/Src/usart.o
+ .debug_str     0x000d7fd4    0xd13bc ./Core/Src/OLED/I2C_OLED_SH1106.o
+ .debug_str     0x000d7fd4     0x2f03 ./Core/Src/OLED/I2C_OLED_horse_anim.o
+ .debug_str     0x000d7fd4       0x89 ./Core/Startup/startup_stm32f407vgtx.o
+ .debug_str     0x000d7fd4    0xcc3b3 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+ .debug_str     0x000d7fd4    0xcc12f ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+ .debug_str     0x000d7fd4    0xcbc49 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+ .debug_str     0x000d7fd4    0xcb9aa ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+ .debug_str     0x000d7fd4    0xcc84d ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
+ .debug_str     0x000d7fd4    0xcbc63 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+ .debug_str     0x000d7fd4    0xcc0ed ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.o
+ .debug_str     0x000d7fd4    0xcc244 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
 .comment        0x00000000       0x43
  .comment       0x00000000       0x43 ./Core/Src/I2C_Peripherals.o

@@ -56,8 +56,6 @@ SH1106_StatusTypeDef OLED_WriteData(uint8_t *data, uint16_t size);
 
 
 /* Private variable */
-
-static uint8_t SH1106_Buffer[SH1106_WIDTH * SH1106_HEIGHT / 8]; // 顯示緩存區
 static SH1106_t SH1106; // 狀態變數 (CurrentX, CurrentY 等)
 
 
@@ -99,6 +97,7 @@ static SH1106_StatusTypeDef SH1106_WriteCommand(uint8_t command) {
 }
 
 
+
 /**
  * @brief  【統一】發送一塊數據
  */
@@ -116,6 +115,14 @@ void OLED_Write_CMD(uint8_t cmd)
     HAL_I2C_Master_Transmit(SH1106_I2C, SH1106_I2C_ADDR, data_to_send, 2, HAL_MAX_DELAY);
 }
 
+void SH1106_ShowRawBuffer(const uint8_t* buffer) {
+    for (uint8_t page = 0; page < 8; page++) {
+        SH1106_WriteCommand(0xB0 + page);
+        SH1106_WriteCommand(0x00 | (2 & 0x0F)); // column offset = 2
+        SH1106_WriteCommand(0x10 | ((2 >> 4) & 0x0F));
+        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, 0x40, 1, &buffer[page * 132], 132, HAL_MAX_DELAY);
+    }
+}
 
 /**
  * OLED 驅動 IC 在初始化時，必須照 datasheet 的上電順序，尤其是：

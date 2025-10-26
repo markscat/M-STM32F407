@@ -41,13 +41,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  18 .debug_line   00016e2d  00000000  00000000  0002c984  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000d7f91  00000000  00000000  000437b1  2**0
+ 19 .debug_str    000d7fd4  00000000  00000000  000437b1  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000043  00000000  00000000  0011b742  2**0
+ 20 .comment      00000043  00000000  00000000  0011b785  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00005224  00000000  00000000  0011b788  2**2
+ 21 .debug_frame  00005224  00000000  00000000  0011b7c8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 22 .debug_line_str 0000006d  00000000  00000000  001209ac  2**0
+ 22 .debug_line_str 0000006d  00000000  00000000  001209ec  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -17756,6 +17756,11 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
  8006e70:	681b      	ldr	r3, [r3, #0]
  8006e72:	3314      	adds	r3, #20
  8006e74:	f8c7 309c 	str.w	r3, [r7, #156]	@ 0x9c
+ */
+__STATIC_FORCEINLINE uint32_t __LDREXW(volatile uint32_t *addr)
+{
+    uint32_t result;
+
    __ASM volatile ("ldrex %0, %1" : "=r" (result) : "Q" (*addr) );
  8006e78:	f8d7 309c 	ldr.w	r3, [r7, #156]	@ 0x9c
  8006e7c:	e853 3f00 	ldrex	r3, [r3]
@@ -17770,6 +17775,11 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
  8006e96:	f8d7 20d0 	ldr.w	r2, [r7, #208]	@ 0xd0
  8006e9a:	f8c7 20a8 	str.w	r2, [r7, #168]	@ 0xa8
  8006e9e:	f8c7 30a4 	str.w	r3, [r7, #164]	@ 0xa4
+ */
+__STATIC_FORCEINLINE uint32_t __STREXW(uint32_t value, volatile uint32_t *addr)
+{
+   uint32_t result;
+
    __ASM volatile ("strex %0, %2, %1" : "=&r" (result), "=Q" (*addr) : "r" (value) );
  8006ea2:	f8d7 10a4 	ldr.w	r1, [r7, #164]	@ 0xa4
  8006ea6:	f8d7 20a8 	ldr.w	r2, [r7, #168]	@ 0xa8

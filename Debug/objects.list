@@ -1,5 +1,6 @@
 "./Core/Src/Error_handel.o"
 "./Core/Src/I2C_Peripherals.o"
+"./Core/Src/ILI9225.o"
 "./Core/Src/TCA555.o"
 "./Core/Src/TM1638.o"
 "./Core/Src/Tools.o"

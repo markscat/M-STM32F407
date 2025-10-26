@@ -169,8 +169,9 @@ typedef enum {
 
 //#define Mem_Write
 #define OLED_Write_0805_
+void SH1106_ShowRawBuffer(const uint8_t* buffer);
 
-
+void SH1106_DrawImageDirect(const uint8_t *image,uint8_t x, uint8_t y,uint16_t width,uint16_t height,uint8_t is_vertical);
 
 /**
  * @brief  Initializes the SH1106 display.
