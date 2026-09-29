@@ -5,7 +5,8 @@
  *      Author: Ethan
  */
 
-#include "ILI9225.h"
+//#include "ILI9225.h"
+#include "../Inc/ILI9225.h"
 #include "main.h"
 //#define ILI9225_CS_PORT   GPIOE
 //#define ILI9225_CS_PIN    GPIO_PIN_9

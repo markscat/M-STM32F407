@@ -8,19 +8,22 @@ C_SRCS += \
 ../Core/Src/OLED/I2C_OLED_SH1106.c \
 ../Core/Src/OLED/I2C_OLED_fonts.c \
 ../Core/Src/OLED/I2C_OLED_fonts_Dimensions.c \
-../Core/Src/OLED/I2C_OLED_horse_anim.c 
+../Core/Src/OLED/I2C_OLED_horse_anim.c \
+../Core/Src/OLED/UI.c 
 
 OBJS += \
 ./Core/Src/OLED/I2C_OLED_SH1106.o \
 ./Core/Src/OLED/I2C_OLED_fonts.o \
 ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.o \
-./Core/Src/OLED/I2C_OLED_horse_anim.o 
+./Core/Src/OLED/I2C_OLED_horse_anim.o \
+./Core/Src/OLED/UI.o 
 
 C_DEPS += \
 ./Core/Src/OLED/I2C_OLED_SH1106.d \
 ./Core/Src/OLED/I2C_OLED_fonts.d \
 ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.d \
-./Core/Src/OLED/I2C_OLED_horse_anim.d 
+./Core/Src/OLED/I2C_OLED_horse_anim.d \
+./Core/Src/OLED/UI.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -30,7 +33,7 @@ Core/Src/OLED/%.o Core/Src/OLED/%.su Core/Src/OLED/%.cyclo: ../Core/Src/OLED/%.c
 clean: clean-Core-2f-Src-2f-OLED
 
 clean-Core-2f-Src-2f-OLED:
-	-$(RM) ./Core/Src/OLED/I2C_OLED_SH1106.cyclo ./Core/Src/OLED/I2C_OLED_SH1106.d ./Core/Src/OLED/I2C_OLED_SH1106.o ./Core/Src/OLED/I2C_OLED_SH1106.su ./Core/Src/OLED/I2C_OLED_fonts.cyclo ./Core/Src/OLED/I2C_OLED_fonts.d ./Core/Src/OLED/I2C_OLED_fonts.o ./Core/Src/OLED/I2C_OLED_fonts.su ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.cyclo ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.d ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.o ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.su ./Core/Src/OLED/I2C_OLED_horse_anim.cyclo ./Core/Src/OLED/I2C_OLED_horse_anim.d ./Core/Src/OLED/I2C_OLED_horse_anim.o ./Core/Src/OLED/I2C_OLED_horse_anim.su
+	-$(RM) ./Core/Src/OLED/I2C_OLED_SH1106.cyclo ./Core/Src/OLED/I2C_OLED_SH1106.d ./Core/Src/OLED/I2C_OLED_SH1106.o ./Core/Src/OLED/I2C_OLED_SH1106.su ./Core/Src/OLED/I2C_OLED_fonts.cyclo ./Core/Src/OLED/I2C_OLED_fonts.d ./Core/Src/OLED/I2C_OLED_fonts.o ./Core/Src/OLED/I2C_OLED_fonts.su ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.cyclo ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.d ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.o ./Core/Src/OLED/I2C_OLED_fonts_Dimensions.su ./Core/Src/OLED/I2C_OLED_horse_anim.cyclo ./Core/Src/OLED/I2C_OLED_horse_anim.d ./Core/Src/OLED/I2C_OLED_horse_anim.o ./Core/Src/OLED/I2C_OLED_horse_anim.su ./Core/Src/OLED/UI.cyclo ./Core/Src/OLED/UI.d ./Core/Src/OLED/UI.o ./Core/Src/OLED/UI.su
 
 .PHONY: clean-Core-2f-Src-2f-OLED
 

@@ -39,7 +39,7 @@ Core/Src/Tools.o: ../Core/Src/Tools.c ../Core/Inc/Tools.h \
  ../Core/Inc/main.h ../Core/Inc/i2c.h ../Core/Inc/spi.h \
  ../Core/Inc/usart.h ../Core/Inc/crc.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
  ../Core/Inc/OLED/I2C_OLED_fonts.h ../Core/Inc/OLED/I2C_OLED_horse_anim.h \
- ../Core/Inc/EXT_ADC/ads1115.h
+ ../Core/Inc/OLED/UI.h ../Core/Inc/EXT_ADC/ads1115.h
 ../Core/Inc/Tools.h:
 ../Core/Inc/I2C_Peripherals.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -90,4 +90,5 @@ Core/Src/Tools.o: ../Core/Src/Tools.c ../Core/Inc/Tools.h \
 ../Core/Inc/OLED/I2C_OLED_SH1106.h:
 ../Core/Inc/OLED/I2C_OLED_fonts.h:
 ../Core/Inc/OLED/I2C_OLED_horse_anim.h:
+../Core/Inc/OLED/UI.h:
 ../Core/Inc/EXT_ADC/ads1115.h:

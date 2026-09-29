@@ -1,0 +1,49 @@
+# --- [Visual Studio 暫存檔] ---
+.vs/
+out/
+Debug/* 
+Release/
+x64/
+*.user
+*.suo
+*.db
+*.opendb
+*.VC.db
+
+# --- [CMake 產生的建置資料夾] ---
+# 這是最重要的，不要把整個 build 資料夾傳上去
+build*/
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+cmake_install.cmake
+Makefile
+*.cmake
+
+
+# --- [Qt 自動產生的代碼] ---
+# 這些是從你的 .ui 或標頭檔自動生成的，不需要上傳
+ui_*.h
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+*.moc
+
+# --- [編譯結果] ---
+*.exe
+*.dll
+*.lib
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.rar
+*.o
+
+# --- [專案日誌檔案 (你的 CalcLogger 產生的)] ---
+# 因為硬碟很大，但 GitHub 空間有限，且這是你私人的計算紀錄
+*.log
+
+# --- [其他系統檔案] ---
+.DS_Store
+Thumbs.db

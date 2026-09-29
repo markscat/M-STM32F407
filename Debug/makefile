@@ -62,8 +62,8 @@ all: main-build
 main-build: M-STM32F407.elf secondary-outputs
 
 # Tool invocations
-M-STM32F407.elf M-STM32F407.map: $(OBJS) $(USER_OBJS) C:\Ethan\workshop\mcu\STM32-2\Markscat_prj01_git\M-STM32F407\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "M-STM32F407.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Ethan\workshop\mcu\STM32-2\Markscat_prj01_git\M-STM32F407\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="M-STM32F407.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+M-STM32F407.elf M-STM32F407.map: $(OBJS) $(USER_OBJS) D:\for\ work\temp\workshorp\MCU\STM32-2\M-STM32F407\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "M-STM32F407.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\for work\temp\workshorp\MCU\STM32-2\M-STM32F407\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="M-STM32F407.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -506,12 +506,6 @@ int main(void)
     while (1);
 
 #endif
-
-
-
-
-
-
     SH1106_Fill(SH1106_COLOR_BLACK);
 	SH1106_UpdateScreen();
 
