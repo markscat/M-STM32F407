@@ -325,7 +325,135 @@ int main(void)
   
   printf("\n**************I2C init. Device *****************\n");
 
+  I2C_Status status = I2C_Init_Devices();
 
+    if (status != I2C_OK) {
+      //printf("[錯誤] I2C設備初始化失敗! 錯誤碼: %d\n", status);
+      HAL_Delay(1000);
+      //Error_Handler();  // 需自定义错误处理函数
+      return status;
+    }
+    printf("I2C device init ok!yy \n\n");
+    printf("\n************System Ready.********************2******\n");
+
+
+#ifdef time_setting
+
+    //<讀取階段>
+    HAL_StatusTypeDef DT_status;	//時間和日期的讀取狀態
+    HAL_StatusTypeDef Temp_status;	//溫度的讀取狀態
+
+    RTC_Time RTC_dt = {0};				//時間和日期
+    DS3231_Temp Temp={0};			//RTC的溫度
+
+    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+
+    char YandN;
+
+    printf("need setup time ? [Y]/[N] \n");
+    scanf(" %c",&YandN);
+
+    if(YandN =='Y' || YandN =='y'){
+    	printf("\n input time :\n");
+        scanf("%32s", input_str);
+        printf("Received_time : %s\r\n\n",input_str);
+        RTC_dt = Parse_TimeString(input_str);
+
+        if (CheckTimeStruct(&RTC_dt)){
+        	printf("set time... \n");
+        	DT_status = RTC_SetTime(&RTC_dt);
+        	if (DT_status == HAL_OK) {
+        		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+        				RTC_dt.year, RTC_dt.month, RTC_dt.date, RTC_dt.day,
+						RTC_dt.hours , RTC_dt.minutes, RTC_dt.seconds);
+        	} else {
+        		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+        	}
+
+        }else{
+        	printf("No calibration command, do not calibrate the time, display the time \n\n");
+        }
+    }else if(YandN =='N' || YandN =='n'){
+    	printf("show Time \n\n");
+    }else{
+    	printf("No input, no time correction, display time\n\n");
+    }
+
+//#define loop
+
+    static const char*  fracStr[]={"00","25","50","75"};
+
+
+
+    // 任務 1: 不斷地、非阻塞地從 UART 數據流中組裝命令
+    ProcessUartRingBuffer();
+
+    // 任務 2: 呼叫我們新的命令處理中心，讓它去檢查旗標並執行命令
+    HandleUartCommands();
+
+    // 讀取時間
+	DT_status = RTC_GetTime(&RTC_dt);
+
+	//顯示時間 as
+	if (DT_status == HAL_OK) {
+		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+				RTC_dt.year,
+				RTC_dt.month,
+				RTC_dt.date,
+				RTC_dt.day,
+				RTC_dt.hours,
+				RTC_dt.minutes,
+				RTC_dt.seconds);
+	} else {
+		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+	}
+
+	Temp_status = DS3231_GetTemp(&Temp);
+
+	if(Temp_status == HAL_OK)
+	{
+		printf("現在溫度: %d.%s °C\r\n", Temp.Integer,fracStr[Temp.Fraction]);
+
+		//printf("現在溫度: 20%02d \r\n",    		    				Temp.Integer, Temp.Fraction);
+	}
+
+
+#ifdef loop
+    while(1){
+
+
+        // 任務 1: 不斷地、非阻塞地從 UART 數據流中組裝命令
+        ProcessUartRingBuffer();
+
+        // 任務 2: 呼叫我們新的命令處理中心，讓它去檢查旗標並執行命令
+        HandleUartCommands();
+
+        // 讀取時間
+    	DT_status = RTC_GetTime(&dt);
+
+    	//顯示時間 as
+    	if (DT_status == HAL_OK) {
+    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
+    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
+    	} else {
+    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
+    	}
+
+    	Temp_status = DS3231_GetTemp(&Temp);
+
+    	if(Temp_status == HAL_OK)
+    	{
+    		printf("現在溫度: %d.%s °C\r\n", Temp.Integer,fracStr[Temp.Fraction]);
+
+    		//printf("現在溫度: 20%02d \r\n",    		    				Temp.Integer, Temp.Fraction);
+    	}
+
+    	//memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
+    	HAL_Delay(1000);
+
+    }
+#endif //loop
+#endif //time_setting
 
 
 #ifdef ADS1115
@@ -424,18 +552,9 @@ int main(void)
 #endif
 
 
-  I2C_Status status = I2C_Init_Devices();
-
-    if (status != I2C_OK) {
-      printf("[错误] I2C设备初始化失败! 错误码: %d\n", status);
-      Error_Handler();  // 需自定义错误处理函数
-      return status;
-    }
-    printf("I2C device init ok!yy \n\n");
-    printf("\n************System Ready.**************************\n");
-
-
 #define oled
+//#define on_off_screen
+//#define Horse_run
 
 #ifdef oled
     printf("init oled \n");
@@ -443,8 +562,24 @@ int main(void)
     SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
     oled_status = SH1106_Init();     // 调用初始化函数
 
+    SH1106_Fill(SH1106_COLOR_BLACK);
+	SH1106_UpdateScreen();
+
+    if(oled_status == SH1106_OK){
+    	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
+    }
+
+    while (1) {
+        HAL_Delay(1000);
+    }
+#endif
 
 #ifdef on_off_screen
+    printf("init oled \n");
+
+    SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
+    oled_status = SH1106_Init();     // 调用初始化函数
+
      // --- 【关键】检查初始化结果 ---
      if (oled_status == SH1106_OK)
      {
@@ -506,16 +641,7 @@ int main(void)
     while (1);
 
 #endif
-    SH1106_Fill(SH1106_COLOR_BLACK);
-	SH1106_UpdateScreen();
 
-    if(oled_status == SH1106_OK){
-    	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
-    }
-
-    while (1) {
-        HAL_Delay(1000);
-    }
 #ifdef Horse_run
 #define HORSE_ANIM_WIDTH  128
 #define HORSE_ANIM_HEIGHT 64
@@ -566,7 +692,7 @@ const unsigned char* horse_anim_frames[10] = {
   //  SH1106_DrawImageDirect(horse1, 0, 2, 128, 32, 0);
   //  SH1106_UpdateScreen();
 
-#endif
+//#endif
 
 //#define oled_test
 
@@ -606,6 +732,7 @@ const unsigned char* horse_anim_frames[10] = {
 	HAL_Delay(1000);
 
 #endif
+
 #ifdef Fill_OLED_Display_at_0
 
     //uint8_t oled_buffer[1024] = {0}; // 128 * 64 / 8
@@ -627,92 +754,6 @@ const unsigned char* horse_anim_frames[10] = {
 
 #endif
 
-
-#ifdef time_setting
-
-    //<讀取階段>
-    HAL_StatusTypeDef DT_status;	//時間和日期的讀取狀態
-    HAL_StatusTypeDef Temp_status;	//溫度的讀取狀態
-
-    RTC_Time dt = {0};				//時間和日期
-    DS3231_Temp Temp={0};			//RTC的溫度
-
-
-
-    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-
-    char YandN;
-
-
-
-    printf("need setup time ? [Y]/[N] \n");
-    scanf(" %c",&YandN);
-
-    if(YandN =='Y' || YandN =='y'){
-    	printf("\n input time :\n");
-        scanf("%32s", input_str);
-        printf("Received_time : %s\r\n\n",input_str);
-        dt = Parse_TimeString(input_str);
-
-        if (CheckTimeStruct(&dt)){
-        	printf("set time... \n");
-        	DT_status = RTC_SetTime(&dt);
-        	if (DT_status == HAL_OK) {
-        		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-        				dt.year, dt.month, dt.date, dt.day,
-						dt.hours , dt.minutes, dt.seconds);
-        	} else {
-        		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-        	}
-
-        }else{
-        	printf("No calibration command, do not calibrate the time, display the time \n\n");
-        }
-    }else if(YandN =='N' || YandN =='n'){
-    	printf("show Time \n\n");
-    }else{
-    	printf("No input, no time correction, display time\n\n");
-    }
-
-#define loop
-
-    static const char*  fracStr[]={"00","25","50","75"};
-#ifdef loop
-    while(1){
-
-
-        // 任務 1: 不斷地、非阻塞地從 UART 數據流中組裝命令
-        ProcessUartRingBuffer();
-
-        // 任務 2: 呼叫我們新的命令處理中心，讓它去檢查旗標並執行命令
-        HandleUartCommands();
-
-        // 讀取時間
-    	DT_status = RTC_GetTime(&dt);
-
-    	//顯示時間 as
-    	if (DT_status == HAL_OK) {
-    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-    	} else {
-    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-    	}
-
-    	Temp_status = DS3231_GetTemp(&Temp);
-
-    	if(Temp_status == HAL_OK)
-    	{
-    		printf("現在溫度: %d.%s °C\r\n", Temp.Integer,fracStr[Temp.Fraction]);
-
-    		//printf("現在溫度: 20%02d \r\n",    		    				Temp.Integer, Temp.Fraction);
-    	}
-
-    	//memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-    	HAL_Delay(1000);
-
-    }
-#endif //loop
-#endif //time_setting
 
 
 
@@ -761,6 +802,7 @@ const unsigned char* horse_anim_frames[10] = {
     	       	HAL_Delay(1000);
        }
 #endif
+
 
 #ifdef RTCSet
 

@@ -184,6 +184,8 @@ I2C_Status I2C_Init_Devices(void) {
   // 步骤1: 初始化I2C硬件总线
   if (HAL_I2C_Init(&I2C_HANDLE) != HAL_OK) {
     return I2C_ERR_INIT;
+  }else{
+	  printf("I2C init ready");
   }
 
   // 步骤2: 遍历所有设备进行初始化
@@ -192,9 +194,9 @@ I2C_Status I2C_Init_Devices(void) {
     I2C_Status status = dev_config[i].init_fn();
     if (status != I2C_OK) {
       // 输出调试信息（需实现printf）
-      printf("[I2C Init] Device %s initialization failed! Error: %d\n\n",
-            dev_config[i].dev_name, status);
-      return status; // 严格模式：遇到错误立即返回
+      printf("[I2C Init] Device %s initialization failed! Error: %d\n\n",dev_config[i].dev_name, status);
+      //printf("debug");
+      //return status; // 严格模式：遇到错误立即返回
     }
     printf("[I2C Init] %s initialized successfully.\n", dev_config[i].dev_name);
   }
@@ -323,7 +325,7 @@ RTC_Time Parse_TimeString(const char *str) {
     RTC_Time DT = {0};
     char *token = NULL;
 
-    // 示例字符串格式："2023,12,31,23,59,30,checksum,command_ID"
+    // 示例字符串格式："2023,12,31,23,59,30,week,checksum,command_ID"
     //int year, month, day, hour, minute, second;
     // 如果傳入的字串是空的，直接返回一個空的結構體，防止崩潰
 
@@ -379,13 +381,21 @@ RTC_Time Parse_TimeString(const char *str) {
     token = strtok(NULL, ",");
     if (token == NULL) { printf("ERR: Parsing date failed.\n"); goto cleanup; }
     DT.day = atoi(token);
-    //printf("OK: Parsed Seconds = %u\n", DT.seconds);
+    printf("OK: Parsed Day = %u\n", DT.day);
 
+    /*
+     * 這是一個備用的程式,因為年代已久遠,所以忘記功能是什麼,所以註解掉.
+     * 但結構體還留著,最大的原因是因為『萬一呢？』
     //7. 解析 COMMAND_ID
+
     token = strtok(NULL, ",");
     if (token == NULL) { printf("ERR: Parsing Command_ID failed.\n"); goto cleanup; }
     DT.Command_ID = atoi(token);
     //printf("OK: Parsed Command_ID = %u\n", DT.Command_ID);
+     */
+    DT.Command_ID = 1;
+    printf("OK: Parsed Command_ID = %u\n", DT.Command_ID);
+
 
     //8. 解析 checksum
     token = strtok(NULL, ",");

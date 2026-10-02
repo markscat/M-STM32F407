@@ -60,7 +60,8 @@ extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
 #endif
 
 #ifdef EEPROM_with_AT24C02
-#define EEPROM_I2C_ADDR        0x57       // 设备7位地址
+//#define EEPROM_I2C_ADDR        0x57       // 设备7位地址 A0=1,A1=1,A2=1
+#define EEPROM_I2C_ADDR        0x50       // 设备7位地址 A0=0,A1=0,A2=0
 #endif
 
 #define EEPROM_MAX_ADDR        	0x0FFF
