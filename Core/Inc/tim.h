@@ -4,6 +4,8 @@
   * @file    tim.h
   * @brief   This file contains all the function prototypes for
   *          the tim.c file
+  *          內部計時器初始化程式
+  *
   ******************************************************************************
   * @attention
   *
@@ -14,7 +16,8 @@
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
-  ******************************************************************************
+  *****************************************************\
+  *****************************************************\\0*************************
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/

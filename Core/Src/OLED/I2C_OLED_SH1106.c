@@ -52,9 +52,6 @@ static SH1106_StatusTypeDef SH1106_WriteCommand(uint8_t command);
 //static void SH1106_WriteData(uint8_t* data, uint16_t size); // <--- [修改] 這是我們統一使用的內部數據發送函式
 SH1106_StatusTypeDef OLED_WriteData(uint8_t *data, uint16_t size);
 
-
-
-
 /* Private variable */
 static SH1106_t SH1106; // 狀態變數 (CurrentX, CurrentY 等)
 
@@ -116,11 +113,17 @@ void OLED_Write_CMD(uint8_t cmd)
 }
 
 void SH1106_ShowRawBuffer(const uint8_t* buffer) {
+    uint8_t temp[132];  // 非 const
+
     for (uint8_t page = 0; page < 8; page++) {
+        memcpy(temp, &buffer[page * 132], 132);
         SH1106_WriteCommand(0xB0 + page);
         SH1106_WriteCommand(0x00 | (2 & 0x0F)); // column offset = 2
         SH1106_WriteCommand(0x10 | ((2 >> 4) & 0x0F));
-        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, 0x40, 1, &buffer[page * 132], 132, HAL_MAX_DELAY);
+
+        //HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, 0x40, 1, &buffer[page * 132], 132, HAL_MAX_DELAY);
+        HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, 0x40, 1, temp, 132, HAL_MAX_DELAY);
+
     }
 }
 

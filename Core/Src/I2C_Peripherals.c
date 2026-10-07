@@ -1,23 +1,16 @@
 /*
  *   ******************************************************************************
- * @file eeprom_handler.c
- * @brief AT2432 讀寫程式：
- *
- *	- AT24C32是32Kbit的EEPROM，也就是4KByte，分页的话，每页32字节<br/>
- *
- *	私有函數結構：（公開函數宣告在eeprom_handler.h）<br/>
- *	EEPROM位置驗證<br/>
- *	static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size);<br/>
- *	內部寫入：<br/>
- *	static EEPROM_Status Internal_Write(uint16_t addr, const uint8_t* data, uint16_t size);<br/>
- *	內部讀取<br/>
- *	static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size);<br/>
- *	更新健康<br/>
- *	static void Update_Health(bool success);<br/>
- *	硬體重置<br/>
- *	static void Hardware_Reset(void);<br/>
- *
- *
+ * @file I2C_Peripherals
+ * @brief I2C 週邊功能程式
+ * 所有I2C週邊的操作都在這裡
+ * 1. EEPROM 讀取,寫入,
+ * 2. RTC
+ * 		- DS1307/DS3231 的時間讀取
+ * 		- DS3231 溫度的讀取
+ * 		- DS1307/DS3231 的時間寫入
+ * 		- uart輸入RTC數值的分析器
+ * 		- DEC轉BCD，用於輸入年月日時分秒
+ * 3.　原本還有1.3吋 oled的,但是在諸多考量之下,把OLED分離出去了.
  *  @date Mar 16, 2025<br/>
  *  @author  Deepseek and Ethan<br/>
  *
@@ -421,6 +414,22 @@ uint8_t bcd_to_dec(uint8_t val) {
 
 
 /*====================EEPROM段====================*/
+/**
+*	- AT24C32是32Kbit的EEPROM，也就是4KByte，分页的话，每页32字节<br/>
+*　	私有函數結構：（公開函數宣告在eeprom_handler.h）<br/>
+*	EEPROM位置驗證<br/>
+*	static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size);<br/>
+*	內部寫入：<br/>
+*	static EEPROM_Status Internal_Write(uint16_t addr, const uint8_t* data, uint16_t size);<br/>
+*	內部讀取<br/>
+*	static EEPROM_Status Internal_Read(uint16_t addr, uint8_t* data, uint16_t size);<br/>
+*	更新健康<br/>
+*	static void Update_Health(bool success);<br/>
+*	硬體重置<br/>
+*	static void Hardware_Reset(void);<br/>
+*/
+
+
 
 /**
   * @brief 初始化EEPROM模块
