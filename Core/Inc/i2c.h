@@ -35,6 +35,9 @@ extern "C" {
 extern I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN Private defines */
+extern I2C_HandleTypeDef* hi2c_main;    // [MOD] 重命名为通用I2C句柄
+
+
 
 /* USER CODE END Private defines */
 

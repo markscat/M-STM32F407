@@ -242,8 +242,6 @@ void ProcessUartRingBuffer(void) {
 }
 
 
-
-
 /**
  * @brief 計算給定字串的簡單異或校驗和。
  */

@@ -79,6 +79,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <I2C_APP.h>
 #include "main.h"
 #include "I2C_Peripherals.h"//ok
 
@@ -110,11 +111,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define ADS1115
 
 
-
+/*
 #define MAX_INPUT_LEN 32 // 输入字符串最大长度
 #define MAX_INPUT_LEN_MINIMAL 32
 #define MAX_COMMAND_LEN_MAIN 32                         // UART 命令行的最大允許字符數 (不包括 '\0')
 #define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
+*/
 //static uint8_t SH1106_Buffer_in_main[SH1106_WIDTH * SH1106_HEIGHT / 8];
 
 
@@ -318,6 +320,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //uart_io_init(); // 初始化UART輸入輸出
 
+/*
   printf("\n*************Scan_I2C_Address********************\n");
   printf("Scan All I2C Device Address \n");
   Scan_I2C_Address();
@@ -336,124 +339,22 @@ int main(void)
     printf("I2C device init ok!yy \n\n");
     printf("\n************System Ready.********************2******\n");
 
+*/
+  //掃描所有I2C的設備
+
+  if (APP_I2C_Init() != I2C_OK) {
+        HAL_Delay(1000);
+        return 1;             // main 回傳 int，不要直接回傳 I2C_Status
+    }
+
+  //時間設定
+
 
 #ifdef time_setting
-
-    //<讀取階段>
-    HAL_StatusTypeDef DT_status;	//時間和日期的讀取狀態
-    HAL_StatusTypeDef Temp_status;	//溫度的讀取狀態
-
-    RTC_Time RTC_dt = {0};				//時間和日期
-    DS3231_Temp Temp={0};			//RTC的溫度
-
-    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
-
-    char YandN;
-
-    printf("need setup time ? [Y]/[N] \n");
-    scanf(" %c",&YandN);
-
-    if(YandN =='Y' || YandN =='y'){
-    	printf("\n input time :\n");
-        scanf("%32s", input_str);
-        printf("Received_time : %s\r\n\n",input_str);
-        RTC_dt = Parse_TimeString(input_str);
-
-        if (CheckTimeStruct(&RTC_dt)){
-        	printf("set time... \n");
-        	DT_status = RTC_SetTime(&RTC_dt);
-        	if (DT_status == HAL_OK) {
-        		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-        				RTC_dt.year, RTC_dt.month, RTC_dt.date, RTC_dt.day,
-						RTC_dt.hours , RTC_dt.minutes, RTC_dt.seconds);
-        	} else {
-        		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-        	}
-
-        }else{
-        	printf("No calibration command, do not calibrate the time, display the time \n\n");
-        }
-    }else if(YandN =='N' || YandN =='n'){
-    	printf("show Time \n\n");
-    }else{
-    	printf("No input, no time correction, display time\n\n");
-    }
-
-//#define loop
-
-    static const char*  fracStr[]={"00","25","50","75"};
-
-
-
-    // 任務 1: 不斷地、非阻塞地從 UART 數據流中組裝命令
-    ProcessUartRingBuffer();
-
-    // 任務 2: 呼叫我們新的命令處理中心，讓它去檢查旗標並執行命令
-    HandleUartCommands();
-
-    // 讀取時間
-	DT_status = RTC_GetTime(&RTC_dt);
-
-	//顯示時間 as
-	if (DT_status == HAL_OK) {
-		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-				RTC_dt.year,
-				RTC_dt.month,
-				RTC_dt.date,
-				RTC_dt.day,
-				RTC_dt.hours,
-				RTC_dt.minutes,
-				RTC_dt.seconds);
-	} else {
-		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-	}
-
-	Temp_status = DS3231_GetTemp(&Temp);
-
-	if(Temp_status == HAL_OK)
-	{
-		printf("現在溫度: %d.%s °C\r\n", Temp.Integer,fracStr[Temp.Fraction]);
-
-		//printf("現在溫度: 20%02d \r\n",    		    				Temp.Integer, Temp.Fraction);
-	}
-
-
-#ifdef loop
-    while(1){
-
-
-        // 任務 1: 不斷地、非阻塞地從 UART 數據流中組裝命令
-        ProcessUartRingBuffer();
-
-        // 任務 2: 呼叫我們新的命令處理中心，讓它去檢查旗標並執行命令
-        HandleUartCommands();
-
-        // 讀取時間
-    	DT_status = RTC_GetTime(&dt);
-
-    	//顯示時間 as
-    	if (DT_status == HAL_OK) {
-    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-    	} else {
-    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-    	}
-
-    	Temp_status = DS3231_GetTemp(&Temp);
-
-    	if(Temp_status == HAL_OK)
-    	{
-    		printf("現在溫度: %d.%s °C\r\n", Temp.Integer,fracStr[Temp.Fraction]);
-
-    		//printf("現在溫度: 20%02d \r\n",    		    				Temp.Integer, Temp.Fraction);
-    	}
-
-    	//memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-    	HAL_Delay(1000);
-
-    }
-#endif //loop
-#endif //time_setting
+    APP_RTC_SetupInteractive();
+    APP_RTC_ShowTimeAndTemp();
+    APP_UART_Poll();
+#endif
 
 
 #ifdef ADS1115

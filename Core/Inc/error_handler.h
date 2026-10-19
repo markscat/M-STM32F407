@@ -10,6 +10,7 @@
 
 #pragma once
 #include <I2C_Peripherals.h>
+#include "I2C_parameter.h"
 #include "gpio.h"
 
 

@@ -34,12 +34,13 @@ Core/Src/uart_io.o: ../Core/Src/uart_io.c ../Core/Inc/uart_io.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Inc/ring_buffer.h ../Core/Inc/gpio.h ../Core/Inc/main.h \
- ../Core/Inc/Tools.h ../Core/Inc/I2C_Peripherals.h \
- ../Core/Inc/error_handler.h ../Core/Inc/gpio.h ../Core/Inc/i2c.h \
- ../Core/Inc/spi.h ../Core/Inc/usart.h ../Core/Inc/crc.h \
- ../Core/Inc/OLED/I2C_OLED_SH1106.h ../Core/Inc/main.h \
- ../Core/Inc/OLED/I2C_OLED_fonts.h ../Core/Inc/OLED/I2C_OLED_horse_anim.h \
- ../Core/Inc/OLED/UI.h ../Core/Inc/EXT_ADC/ads1115.h
+ ../Core/Inc/Tools.h ../Core/Inc/I2C_Peripherals.h ../Core/Inc/i2c.h \
+ ../Core/Inc/I2C_parameter.h ../Core/Inc/error_handler.h \
+ ../Core/Inc/I2C_Peripherals.h ../Core/Inc/gpio.h ../Core/Inc/spi.h \
+ ../Core/Inc/usart.h ../Core/Inc/crc.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
+ ../Core/Inc/main.h ../Core/Inc/OLED/I2C_OLED_fonts.h \
+ ../Core/Inc/OLED/I2C_OLED_horse_anim.h ../Core/Inc/OLED/UI.h \
+ ../Core/Inc/EXT_ADC/ads1115.h
 ../Core/Inc/uart_io.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -80,9 +81,11 @@ Core/Src/uart_io.o: ../Core/Src/uart_io.c ../Core/Inc/uart_io.h \
 ../Core/Inc/main.h:
 ../Core/Inc/Tools.h:
 ../Core/Inc/I2C_Peripherals.h:
-../Core/Inc/error_handler.h:
-../Core/Inc/gpio.h:
 ../Core/Inc/i2c.h:
+../Core/Inc/I2C_parameter.h:
+../Core/Inc/error_handler.h:
+../Core/Inc/I2C_Peripherals.h:
+../Core/Inc/gpio.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/usart.h:
 ../Core/Inc/crc.h:

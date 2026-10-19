@@ -17,8 +17,6 @@
  *    ******************************************************************************
  */
 
-
-
 #include <I2C_Peripherals.h>
 #include <string.h>
 #include "stdlib.h"
@@ -26,11 +24,6 @@
 #include "stdio.h"
 #include "Tools.h"
 
-#define EEPROM_SIZE 4096  // AT24C32容量
-#define MAX_READ_LEN 32   // 推荐单次读取长度
-#define MAX_EEPROM_WRITE_SIZE 32
-
-#define DS1307_Driver
 
 /* 私有变量 ------------------------------------------------------------------*/
 static EEPROM_Status Validate_Address(uint16_t addr, uint16_t size);
