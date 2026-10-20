@@ -13,7 +13,6 @@
 #ifndef INC_I2C_APP_H_
 #define INC_I2C_APP_H_
 
-
 #include "I2C_parameter.h"   // 拿 I2C_Status
 
 #define MAX_INPUT_LEN 32 // 输入字符串最大长度
@@ -39,3 +38,26 @@ void APP_UART_Poll(void);
 
 
 #endif /* INC_I2C_APP_H_ */
+
+
+#define ADC_1115
+
+#ifdef ADC_1115
+
+#include "Ext_ADC\ads1115.h"
+
+/* 設定 ADS1115：模式、通道、PGA、取樣率
+ * 參數直接用 ads1115.h 的巨集：
+ *   mux     : ADS1115_MUX_AIN0 / ADS1115_MUX_DIFF_0_1 ...
+ *   pga     : ADS1115_PGA_ONE / ADS1115_PGA_TWO ...
+ *   dataRate: ADS1115_DATA_RATE_128 ...
+ *   continuous: 0 = 單次, 1 = 連續
+ */
+
+HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
+                                     uint16_t dataRate, uint8_t continuous);
+
+/* 讀取一次（依目前設定） */
+HAL_StatusTypeDef APP_ADS1115_Read(float *voltage);
+
+#endif

@@ -81,6 +81,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <I2C_APP.h>
 #include "main.h"
+#include "Ext_ADC\ads1115.h"
 #include "I2C_Peripherals.h"//ok
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
@@ -108,16 +109,8 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define EEPROM_write
 //#define EEPROM_read
 #define time_setting
-//#define ADS1115
+#define ADS1115
 
-
-/*
-#define MAX_INPUT_LEN 32 // 输入字符串最大长度
-#define MAX_INPUT_LEN_MINIMAL 32
-#define MAX_COMMAND_LEN_MAIN 32                         // UART 命令行的最大允許字符數 (不包括 '\0')
-#define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
-*/
-//static uint8_t SH1106_Buffer_in_main[SH1106_WIDTH * SH1106_HEIGHT / 8];
 
 
 bool CheckTimeStruct (const RTC_Time* time_to_check );
@@ -318,28 +311,7 @@ int main(void)
 
 
   /* USER CODE BEGIN 2 */
-  //uart_io_init(); // 初始化UART輸入輸出
 
-/*
-  printf("\n*************Scan_I2C_Address********************\n");
-  printf("Scan All I2C Device Address \n");
-  Scan_I2C_Address();
-  printf("\n************************************************\n");
-  
-  printf("\n**************I2C init. Device *****************\n");
-
-  I2C_Status status = I2C_Init_Devices();
-
-    if (status != I2C_OK) {
-      //printf("[錯誤] I2C設備初始化失敗! 錯誤碼: %d\n", status);
-      HAL_Delay(1000);
-      //Error_Handler();  // 需自定义错误处理函数
-      return status;
-    }
-    printf("I2C device init ok!yy \n\n");
-    printf("\n************System Ready.********************2******\n");
-
-*/
   //掃描所有I2C的設備
 
   if (APP_I2C_Init() != I2C_OK) {
@@ -349,106 +321,18 @@ int main(void)
 
   //時間設定
 
-
 #ifdef time_setting
     APP_RTC_SetupInteractive();
     APP_RTC_ShowTimeAndTemp();
     APP_UART_Poll();
 #endif
 
-
-#ifdef ADS1115
-
-  // 初始化 ADS1115
-      if (ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE) == HAL_OK) {
-          printf("ADC ADS1115 init ok!\n");
-          //while(1);
-      }else{
-    	  printf("ADC ADS1115 init fial \n");
-      }
-
-      /*
-       * Vout = Vin*(R2/(R1+R2))
-       * Vin = 5V
-       * R2 = 2000 ohm
-       * R3 = 3000 ohm
-       *
-       * */
-      int32_t Vth = 1;
+//ADC設定
 
 
-      printf("adc read ........... \n");
-
-/**
- * ADS1115 程式應用
- * 	目前可以作到單端單次讀取,差動(AIN0-AIN1,AIN2-AIN3,AIN0-AIN3四種方式)單次讀取
- * 	單端連續讀取,差動連續讀取
- * 	Comparator mode 和 ALERT/RDY	還沒實作
- * */
-
-      //決定單次還是連續
-      //#define OneShont
-      #define Continuous
-
-      //決定是單端還是差動
-      //#define singelend
-      #define Different
-
-	  #ifdef Continuous
-      #ifdef singelend
-      	  float voltage_A0;
-      	  ADS1115_StartContinuous(ADS1115_MUX_AIN0,ADS1115_PGA_ONE,ADS1115_DATA_RATE_128);
-      #endif
-
-	#ifdef Different
-      	  float voltage_diff_01;
-      	  ADS1115_StartContinuous(ADS1115_MUX_DIFF_0_1,ADS1115_PGA_ONE,ADS1115_DATA_RATE_128);
-	#endif
-
-      while(1){
-    	  #ifdef singelend
-    	   if( ADS1115_ReadContinuous(&voltage_A0)== HAL_OK){
-               printf("A0 voltage    = %.3f V\n", ((voltage_A0*Vth)/(1000)));
-    	   }
-    	  #endif
-
-		  #ifdef Different
-    	   if( ADS1115_ReadContinuous(&voltage_diff_01)== HAL_OK){
-               printf("A0 voltage    = %.3f V\n", ((voltage_diff_01*Vth)/(1000)));
-    	   }
-		  #endif
-
-           HAL_Delay(1000);
-      }
-
-#endif
-
-#ifdef OneShont
-      float voltage_A0,voltage_A1,voltage_diff_01;
-
-      while(1) {
-          if (ADS1115_readOneShont(ADS1115_MUX_AIN0, &voltage_A0) == HAL_OK) {
-              printf("A0 voltage    = %.3f V\n", ((voltage_A0*Vth)/(1000)));
-          } else {
-              printf("Read failed\n");
-          }
-
-          if (ADS1115_readOneShont(ADS1115_MUX_AIN1, &voltage_A1) == HAL_OK) {
-        	  printf("A1 voltage    = %.3f V\n", ((voltage_A1*Vth)/(1000)));
-          } else {
-        	  printf("Read failed\n");
-          }
-          if (ADS1115_readOneShont(ADS1115_MUX_DIFF_0_1, &voltage_diff_01) == HAL_OK) {
-        	  printf("diff_1 voltage = %.3f V\n", ((voltage_diff_01*Vth)/(1000)));
-        	  printf("A0-A1          = %.3f V\n",((voltage_A0-voltage_A1)/1000));
-          } else {
-        	  printf("Read failed\n");
-          }
-          printf("\n");
-
-          HAL_Delay(1000);
-      }
-#endif
+#ifdef ADC_1115
+    APP_ADS1115_Config(ADS1115_MUX_DIFF_0_1, ADS1115_PGA_ONE,
+                       ADS1115_DATA_RATE_128, 1);
 
 #endif
 
@@ -470,10 +354,23 @@ int main(void)
     	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
     }
 
+#endif
+
     while (1) {
+        //HAL_Delay(1000);
+
+        #ifdef ADC_1115
+        	float v;
+        	if (APP_ADS1115_Read(&v) == HAL_OK) {
+        		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V
+        	}else {
+        		printf("ADC read failed\r\n");
+        	}
+        #endif
+
         HAL_Delay(1000);
     }
-#endif
+
 
 #ifdef on_off_screen
     printf("init oled \n");
@@ -577,25 +474,6 @@ const unsigned char* horse_anim_frames[10] = {
 
 #endif
 
-   /* const unsigned char* horse_anim[10] = {
-        horse1, horse2, horse3, horse4, horse5,
-        horse6, horse7, horse8, horse9, horse10
-    };*/
-
-    // horse_anim.h 中声明
-
-    // 假设 horse1 是 128x32 的位图（水平扫描，MSB优先）
-//    SH1106_DrawBitmap(0, 2, horse1, 128, 32, 1); // 在(0,2)位置绘制白色图像
-//    SH1106_UpdateScreen();
-
-
-    // 显示 128x32 水平扫描图像（居中）
-  //  SH1106_DrawImageDirect(horse1, 0, 2, 128, 32, 0);
-  //  SH1106_UpdateScreen();
-
-//#endif
-
-//#define oled_test
 
 #ifdef oled_test
     #define Fill_OLED_Display_at_1
@@ -655,157 +533,6 @@ const unsigned char* horse_anim_frames[10] = {
 
 #endif
 
-
-
-
-#ifdef RTC_Write
-
-
-
-	    while(1){}
-
-    if(dt.date<30 || dt.day<8 ){
-     	printf("set time... /n");
-     	DT_status = RTC_SetTime(&dt);
-
-     	if (DT_status == HAL_OK) {
-     		printf("時間設定成功: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-     				dt.year, dt.month, dt.date, dt.day,
- 					dt.hours , dt.minutes, dt.seconds);
-     	} else {
-     		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-     	}
-     	memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-     }else{
-     	printf("不需要校正時間:");
-     	DT_status = RTC_GetTime(&dt);
-     	if (DT_status == HAL_OK) {
-     		printf("現在時間: %04u-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-     				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-     	} else {
-     		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-     	}
-     }
-
-
-
-    while(1){
-
-    	DT_status = RTC_GetTime(&dt);
-    	if (DT_status == HAL_OK) {
-    		printf("現在時間: 20%02d-%02u-%02u(%02u) %02u:%02u:%02u\r\n",
-    				dt.year,dt.month,dt.date,dt.day,dt.hours,dt.minutes,dt.seconds);
-    	} else {
-    		printf("錯誤: 時間設定失敗 (HAL狀態碼: %d)\r\n", DT_status);
-    	}
-    	        //memset(input_str, 0, sizeof(input_str)); // 清空輸入緩衝
-
-    	       	HAL_Delay(1000);
-       }
-#endif
-
-
-#ifdef RTCSet
-
-    //RTC_Time dt={0};
-    //HAL_StatusTypeDef uart_status;
-
-    //宣告一個uart_common_id,讓每次uart中斷後,判斷是什麼樣的命令
-	//int UART_common_id = 0;
-
-    // 為了實現非阻塞的週期性任務，我們需要一個時間戳變數
-        uint32_t last_periodic_task_tick = 0;
-
-
-    while(1){
-        ProcessUartRingBuffer();
-        if (g_command_line_ready) {
-        	// --- 只有在收到完整命令時，才進入此處理區 ---
-        	printf("CMD RX: %s\n", g_command_line_buffer);
-        	// 3. 解析命令，分離出 ID 和 Payload
-        	int cmd_id;
-        	const char* payload = ParseCommand(g_command_line_buffer, &cmd_id);
-        	if (payload != NULL) { // 確保格式正確 (找到了逗號)
-        		// 4. 使用從 UART 解析出的 cmd_id 進行分派
-        		switch (cmd_id) {
-        			case 1: // 設定時間
-        				{
-        					// A. 從 payload 解析時間，這需要一個【新的】時間變數
-        					RTC_Time time_to_set = Parse_TimeString(payload);
-        					// 檢查解析是否成功
-        					if (time_to_set.year != 0xFF) {// B. 設定 RTC，並檢查返回值
-        						HAL_StatusTypeDef status = RTC_SetTime(&time_to_set);
-        						if (status == HAL_OK) {
-        							printf("OK: Time set successfully.\n");
-        							// =======================================================
-        							//        ↓↓↓ 【新增的回讀驗證步驟】 ↓↓↓
-        							// =======================================================
-        							printf("Verifying time by reading back from RTC...\n");
-        							RTC_Time verified_time;
-        							HAL_Delay(5); // 給 RTC 一點點反應時間（可選，但有時有好處）
-        							if (RTC_GetTime(&verified_time) == HAL_OK) {
-        								printf("Verification successful. Current RTC Time: 20%02u-%02u-%02u %02u:%02u:%02u\n",
-        										verified_time.year, verified_time.month, verified_time.date,
-												verified_time.hours, verified_time.minutes, verified_time.seconds);
-        							} else {
-        								printf("WARN: Time set, but verification read failed!\n");
-        							}
-        							// =======================================================
-        							//        ↑↑↑ 【新增的回讀驗證步驟】 ↑↑↑
-        							// =======================================================
-        						} else {
-        							printf("ERR: Failed to set time (HAL Status: %d).\n", status);
-        						}
-        					} else {
-        						printf("ERR: Invalid time data in payload for command 1.\n");
-        					}
-        				}
-        				break;
-        			case 2: // 獲取時間
-        				{
-        					// A. 宣告一個【新的】時間變數來存放讀取結果
-        					RTC_Time current_time;
-        					HAL_StatusTypeDef status = RTC_GetTime(&current_time);
-        					if (status == HAL_OK) {
-        						printf("OK: Current time is 20%02u-%02u-%02u %02u:%02u:%02u\n",
-        								current_time.year, current_time.month, current_time.date,
-										current_time.hours, current_time.minutes, current_time.seconds);
-        					} else {
-        						printf("ERR: Failed to get time (HAL Status: %d).\n", status);
-        					}
-        				}
-        				break;
-        				// 在這裡添加 case 3, 4, 5...
-        				default: // 未知的命令 ID
-        					printf("ERR: Unknown Command ID %d received.\n", cmd_id);
-        					break;
-        	                }
-        	            } else { // 格式錯誤，連逗號都沒有
-        	                printf("ERR: Invalid command format. Expected 'ID,Payload'.\n");
-        	            }
-        	// 5. 【非常重要】處理完畢，放下旗子，重置緩衝區，準備接收下一條命令
-        	g_command_line_index = 0;
-        	 memset(g_command_line_buffer, 0, sizeof(g_command_line_buffer)); // 推薦清空
-        	g_command_line_ready = false;
-        	// --- 命令處理區結束 ---
-        }
-
-        // 3. [低頻率執行] 在這裡處理其他週期性任務，而不是用 HAL_Delay() 阻塞所有事
-        if (HAL_GetTick() - last_periodic_task_tick >= 1000) {
-            last_periodic_task_tick = HAL_GetTick(); // 更新時間戳
-
-            // 在這裡可以放你希望每秒執行一次的任務
-            // 比如，打印一個心跳信息，或者更新一個不重要的顯示
-            printf("Heartbeat: System is running.\n");
-        }
-
-        // 你的主迴圈現在可以飛速運行，既能即時響應命令，又能處理週期性任務
-
-    	HAL_Delay(1000);
-    }
-
-
-#endif
 
 
 

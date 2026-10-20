@@ -5,11 +5,12 @@
  *      Author: Ethan
  */
 
-
-
 #include "I2C_Peripherals.h"
 #include <stdio.h>
 #include <I2C_APP.h>
+//#include "Ext_ADC\ads1115.h"
+
+//#define ADC_1115
 
 /* 外部依賴：UART ring buffer 處理（定義在 uart_io.c / Tools.c） */
 extern void ProcessUartRingBuffer(void);
@@ -110,3 +111,46 @@ void APP_UART_Poll(void){
     ProcessUartRingBuffer();
     HandleUartCommands();
 }
+
+
+#ifdef ADC_1115
+
+//#include "Ext_ADC/ads1115.h"
+
+/* App 記住「目前設定」 */
+
+static uint16_t s_mux        = ADS1115_MUX_AIN0;
+static uint16_t s_pga        = ADS1115_PGA_ONE;
+static uint16_t s_dataRate   = ADS1115_DATA_RATE_128;
+static uint8_t  s_continuous = 0;   /* 0=單次, 1=連續 */
+
+HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
+                                     uint16_t dataRate, uint8_t continuous)
+{
+    s_mux        = mux;
+    s_pga        = pga;
+    s_dataRate   = dataRate;
+    s_continuous = continuous;
+
+    /* 初始化（設定 PGA / 取樣率） */
+    if (ADS1115_Init(&hi2c1, dataRate, pga) != HAL_OK) {
+        return HAL_ERROR;
+    }
+
+    /* 連續模式：立刻啟動轉換 */
+    if (continuous) {
+        return ADS1115_StartContinuous(mux, pga, dataRate);
+    }
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef APP_ADS1115_Read(float *voltage)
+{
+    if (s_continuous) {
+        return ADS1115_ReadContinuous(voltage);
+    } else {
+        return ADS1115_readOneShont(s_mux, voltage);
+    }
+}
+
+#endif
