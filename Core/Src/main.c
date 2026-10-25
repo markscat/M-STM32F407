@@ -84,6 +84,9 @@
 #include "Ext_ADC\ads1115.h"
 #include "I2C_Peripherals.h"//ok
 
+#include "I2C_TCA9548.h"        // TCA9548 的 API
+
+
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 
 /* Private includes ----------------------------------------------------------*/
@@ -314,10 +317,29 @@ int main(void)
 
   //掃描所有I2C的設備
 
+
+  /*  TCA9548 初始化 */
+  #ifdef use_TCA9548
+  if (TCA9548_Init() != TCA9548_OK) {
+      printf("TCA9548 init failed!\n");
+      HAL_Delay(1000);
+      return 1;
+  }
+
+  /* 3. 選 CH0（ADS1115 接在 CH0） */
+  if (TCA9548_SelectChannel(0) != TCA9548_OK) {
+      printf("TCA9548 select CH0 failed!\n");
+      HAL_Delay(1000);
+      return 1;
+  }
+  #endif
+
+
   if (APP_I2C_Init() != I2C_OK) {
         HAL_Delay(1000);
         return 1;             // main 回傳 int，不要直接回傳 I2C_Status
     }
+
 
   //時間設定
 
@@ -333,7 +355,6 @@ int main(void)
 #ifdef ADC_1115
     APP_ADS1115_Config(ADS1115_MUX_DIFF_0_1, ADS1115_PGA_ONE,
                        ADS1115_DATA_RATE_128, 1);
-
 #endif
 
 
@@ -344,30 +365,32 @@ int main(void)
 #ifdef oled
     printf("init oled \n");
 
-    SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
-    oled_status = SH1106_Init();     // 调用初始化函数
+    //SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
+    //oled_status = SH1106_Init();     // 调用初始化函数
 
     SH1106_Fill(SH1106_COLOR_BLACK);
 	SH1106_UpdateScreen();
 
+	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
+/*
     if(oled_status == SH1106_OK){
     	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
     }
+*/
 
+#endif
+
+#ifdef ADC_1115
+	float v;
+	if (APP_ADS1115_Read(&v) == HAL_OK) {
+		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V
+	}else {
+		printf("ADC read failed\r\n");
+	}
 #endif
 
     while (1) {
         //HAL_Delay(1000);
-
-        #ifdef ADC_1115
-        	float v;
-        	if (APP_ADS1115_Read(&v) == HAL_OK) {
-        		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V
-        	}else {
-        		printf("ADC read failed\r\n");
-        	}
-        #endif
-
         HAL_Delay(1000);
     }
 
@@ -607,10 +630,10 @@ const unsigned char* horse_anim_frames[10] = {
 /*
     printf("prog end......\n\n");
 */
-    while(1)
+/*    while(1)
     {
 
-    }
+    }*/
 
 #endif
 

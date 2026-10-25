@@ -49,6 +49,7 @@
 #define use_TCA9548
 
 #ifdef use_TCA9548
+
 /* TCA9548A 基本資訊 */
 #define TCA9548_I2C_ADDR     0x70   // 7-bit 位址（A0-A2 全接地）
 #define TCA9548_REG_CTRL     0x00   // 控制暫存器（寫入即選通道）

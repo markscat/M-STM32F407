@@ -18,6 +18,7 @@
  */
 
 #include <I2C_Peripherals.h>
+#include <OLED/I2C_OLED_SH1106.h>
 #include <string.h>
 #include "stdlib.h"
 #include "stdbool.h"
@@ -145,11 +146,11 @@ I2C_Status I2C_Init_Devices(void) {
       .dev_name  = "DS1307 RTC"
     },
     // 可在此添加更多设备...
-	/*{
+	{
 	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
-       .init_fn   = SH1106_OLED_Init,
+       .init_fn   = SH1106_DeviceInit,
        .dev_name  = "SH1106 OLED"
-	}*/
+	}
 
   };
   //end I2C_DeviceConfig dev_config[]
@@ -171,7 +172,7 @@ I2C_Status I2C_Init_Devices(void) {
   if (HAL_I2C_Init(&I2C_HANDLE) != HAL_OK) {
     return I2C_ERR_INIT;
   }else{
-	  printf("I2C init ready");
+	  printf("I2C init ready \n\n");
   }
 
   // 步骤2: 遍历所有设备进行初始化
@@ -179,12 +180,11 @@ I2C_Status I2C_Init_Devices(void) {
   for (uint8_t i = 0; i < sizeof(dev_config)/sizeof(dev_config[0]); i++) {
     I2C_Status status = dev_config[i].init_fn();
     if (status != I2C_OK) {
-      // 输出调试信息（需实现printf）
       printf("[I2C Init] Device %s initialization failed! Error: %d\n\n",dev_config[i].dev_name, status);
-      //printf("debug");
       //return status; // 严格模式：遇到错误立即返回
+    }else{
+    	printf("[I2C Init] %s initialized successfully.\n\n", dev_config[i].dev_name);
     }
-    printf("[I2C Init] %s initialized successfully.\n", dev_config[i].dev_name);
   }
 
   return I2C_OK;
@@ -588,8 +588,6 @@ EEPROM_Status EEPROM_Write(uint16_t addr, const uint8_t* data, uint16_t size) {
   return status;
 }
 
-
-
 /**
  * EEPROM_Read(uint16_t addr, uint8_t* data, uint16_t size)
  *
@@ -833,8 +831,6 @@ static void Update_Health(bool success) {
     }
   }
 }
-
-
 
 void EEPROM_EraseAll(void) {
     uint8_t blank[32];

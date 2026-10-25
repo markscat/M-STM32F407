@@ -181,11 +181,12 @@ void SH1106_DrawImageDirect(const uint8_t *image,uint8_t x, uint8_t y,uint16_t w
 
 //uint8_t SH1106_Init(I2C_HandleTypeDef *hi2c);
 
-uint8_t SH1106_OLED_Init();
+//uint8_t SH1106_OLED_Init();
 
 /**
  * @brief init with HAL*/
 SH1106_StatusTypeDef SH1106_Init(void);
+I2C_Status SH1106_DeviceInit(void);
 
 
 /**

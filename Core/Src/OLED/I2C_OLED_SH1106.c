@@ -56,6 +56,7 @@ SH1106_StatusTypeDef OLED_WriteData(uint8_t *data, uint16_t size);
 static SH1106_t SH1106; // 狀態變數 (CurrentX, CurrentY 等)
 
 
+
 /**
  * @brief  【已实现】将 HAL_StatusTypeDef 转换为 SH1106_StatusTypeDef
  * @param  hal_status: 从 HAL 库函数返回的状态码
@@ -284,6 +285,21 @@ SH1106_StatusTypeDef SH1106_Init(void) {
 }
 #endif
 
+/**
+ * 這個函數主教是作一個包裝(wrapper)
+ * 因為在做函數初始化的時候,型別和其他的設備型別不同,所以必須做個包裝
+ *
+ * */
+I2C_Status SH1106_DeviceInit(void)
+{
+    SH1106_StatusTypeDef st = SH1106_Init();
+    if (st == SH1106_OK) {
+        return I2C_OK;
+    }
+    printf("[I2C Init] SH1106_Init failed: %d\n", st);
+    return I2C_ERR_INIT;
+}
+
 
 /**
  * @brief 將緩存區內容刷新到螢幕
@@ -327,7 +343,6 @@ void SH1106_Fill(SH1106_COLOR_t color) {
 	/* Set memory */
 	memset(SH1106_Buffer, (color == SH1106_COLOR_BLACK) ? 0x00 : 0xFF, sizeof(SH1106_Buffer));
 }
-
 
 /**
  * @brief 在緩存區中畫一個點
