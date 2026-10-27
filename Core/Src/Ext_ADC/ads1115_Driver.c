@@ -1,5 +1,5 @@
 /*
- * 程式名	　			:	ADS1115 相關驅動程式(ADS1115 Driver)
+ * 程式名	　			    :	ADS1115 相關驅動程式(ADS1115 Driver)
  * 更新人員(Modify by)	:	Ethan Yang
  * Date Modify			:	2025/10/03 (YYYY/MM/DD)
  * Last Modify			:

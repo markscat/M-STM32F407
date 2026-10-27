@@ -253,9 +253,70 @@ uint8_t calculate_checksum(const char *data_str, size_t len) {
     return checksum;
 }
 
+//#define use_TCA9548
+//#define no_use_TCA9548
 
-#include <stdio.h>
+#ifdef use_TCA9548
 
+#include "I2C_TCA9548.h"
+#define TCA9548_SCAN_MAX   32   // 扫描结果数组大小（你自行调整）
+
+
+typedef struct {
+	uint8_t TCA9548_CH;
+    uint8_t Peripheral_address;
+} TCA9548_CH_and_address;
+
+/* 全域扫描结果（后面的初始化会用到） */
+TCA9548_CH_and_address g_scan_result[TCA9548_SCAN_MAX];
+uint8_t g_scan_count = 0;
+
+void Scan_I2C_Address(void) {
+    printf("--- Starting I2C Bus Scan ---\n");
+    HAL_StatusTypeDef status;
+    uint8_t found_count = 0;
+
+    g_scan_count = 0;   // 重置
+
+
+    for (uint8_t ch = 0; ch < 8; ch++) {
+        TCA9548_SelectChannel(ch);
+        for (uint8_t i = 1; i < 128; i++) {
+
+            if (i == TCA9548_I2C_ADDR) continue;
+
+            uint16_t device_address = (uint16_t)(i << 1);
+            status = HAL_I2C_IsDeviceReady(&hi2c1, device_address, 1, 10);
+
+            if (status == HAL_OK) {
+                printf("SUCCESS: CH%u found device at I2C address 0x%02X\n", ch, i);
+                found_count++;
+
+                /* 记录到全域数组 */
+                if (g_scan_count < TCA9548_SCAN_MAX) {
+                	g_scan_result[g_scan_count].TCA9548_CH        = ch;
+                	g_scan_result[g_scan_count].Peripheral_address = i;
+                	g_scan_count++;
+                } else {
+                	printf("WARNING: scan result array full!\n");
+                }
+
+            }
+        }
+    }
+    TCA9548_SelectChannel(0);
+
+    if (found_count == 0) {
+        printf("RESULT: No I2C devices found on the bus.\n");
+    } else {
+    	 printf("--- Scan Finished. Found %u device(s). ---\n", found_count);
+    	 printf("--- Recorded %u device(s) in g_scan_result[] ---\n", g_scan_count);
+    }
+}
+
+#endif
+
+#ifdef no_use_TCA9548
 // 假設 hi2c1 是你的 I2C Handle
 // extern I2C_HandleTypeDef hi2c1;
 
@@ -287,7 +348,7 @@ void Scan_I2C_Address(void) {
     }
 }
 
-
+#endif
 
 
 

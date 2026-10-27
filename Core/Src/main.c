@@ -320,30 +320,53 @@ int main(void)
 
   /*  TCA9548 初始化 */
   #ifdef use_TCA9548
+
   if (TCA9548_Init() != TCA9548_OK) {
       printf("TCA9548 init failed!\n");
       HAL_Delay(1000);
-      return 1;
+      //return 1;
   }
 
+  Scan_I2C_Address();
+
+
+  while(1){};
+
+  #endif
+
+  #ifdef use_TCA9548_
   /* 3. 選 CH0（ADS1115 接在 CH0） */
   if (TCA9548_SelectChannel(0) != TCA9548_OK) {
       printf("TCA9548 select CH0 failed!\n");
       HAL_Delay(1000);
       return 1;
+  }else{
+	  printf("TCA9548 select CH0 ok!\n");
   }
   #endif
 
-
+/*
   if (APP_I2C_Init() != I2C_OK) {
         HAL_Delay(1000);
         return 1;             // main 回傳 int，不要直接回傳 I2C_Status
     }
-
+*/
 
   //時間設定
 
 #ifdef time_setting
+
+
+#ifdef use_TCA9548_
+  /* 3. 選 CH0（ADS1115 接在 CH0） */
+  if (TCA9548_SelectChannel(7) != TCA9548_OK) {
+      printf("TCA9548 select CH7 failed!\n");
+      HAL_Delay(1000);
+      return 1;
+  }else{
+	  printf("TCA9548 select CH5 ok!\n");
+  }
+  #endif
     APP_RTC_SetupInteractive();
     APP_RTC_ShowTimeAndTemp();
     APP_UART_Poll();
@@ -358,7 +381,7 @@ int main(void)
 #endif
 
 
-#define oled
+//#define oled
 //#define on_off_screen
 //#define Horse_run
 
