@@ -19,6 +19,7 @@
 
 #include <I2C_Peripherals.h>
 #include <OLED/I2C_OLED_SH1106.h>
+#include "I2C_TCA9548.h"
 #include <string.h>
 #include "stdlib.h"
 #include "stdbool.h"
@@ -73,6 +74,10 @@ typedef struct {
   * @retval I2C_Status 错误码
   */
 static I2C_Status EEPROM_DeviceInit(void) {
+  //確認通道上有eeprom
+#ifdef use_TCA9548
+  TCA9548_SelectChannel(6);   // ← 切到 EEPROM 所在通道
+#endif
   // 检测设备是否存在
   if (HAL_I2C_IsDeviceReady(&I2C_HANDLE, EEPROM_I2C_ADDR << 1, 3, 100) != HAL_OK) {
     return I2C_ERR_INIT;
@@ -114,6 +119,7 @@ static I2C_Status DS1307_DeviceInit(void) {
   * @retval I2C_Status 错误码
   *
   */
+
 I2C_Status I2C_Init_Devices(void) {
   // 设备配置表（按需扩展）
 	/**

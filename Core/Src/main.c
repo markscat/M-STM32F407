@@ -59,11 +59,14 @@
  *  PE9		------> 9552_CS_Pin<br/>
  
  * I2C Address:
- * AT24C02				0x57
- * AT24C32				0x50
- * SH1106				0x3C
- * RTC(DS3231/ DS1307) 	0x68
- * ADS1115(ADC)			0x78
+ * AT24C02				0x57 / 0x50  ok
+ * SH1106				0x3C         ok
+ * RTC(DS3231/ DS1307) 	0x68         ok
+ * ADS1115(ADC)			0x48         ok
+ * mcp4725              0x61
+ * pca9685              0x40
+ * PCA9548_I2C Mux 		0x70
+ * 
  *
  * ##版權：<br/>
  * GNU GENERAL PUBLIC LICENSE<br/>
@@ -330,63 +333,82 @@ int main(void)
   Scan_I2C_Address();
 
 
-  while(1){};
+
+  //while(1){};
 
   #endif
 
-  #ifdef use_TCA9548_
-  /* 3. 選 CH0（ADS1115 接在 CH0） */
-  if (TCA9548_SelectChannel(0) != TCA9548_OK) {
-      printf("TCA9548 select CH0 failed!\n");
-      HAL_Delay(1000);
-      return 1;
-  }else{
-	  printf("TCA9548 select CH0 ok!\n");
-  }
-  #endif
 
-/*
   if (APP_I2C_Init() != I2C_OK) {
         HAL_Delay(1000);
         return 1;             // main 回傳 int，不要直接回傳 I2C_Status
     }
-*/
+
 
   //時間設定
 
 #ifdef time_setting
 
+	#ifdef use_TCA9548
+  	  /* 3. 選 CH6（ADS1115 接在 CH6） */
+  	  if (TCA9548_SelectChannel(6) != TCA9548_OK) {
+  		  printf("TCA9548 select CH6 failed!\n");
+  		  HAL_Delay(1000);
+  		  return 1;
+  	  }else{
+  		  printf("TCA9548 select CH6 on, For RTC+EEPROM !\n");
+  	  }
 
-#ifdef use_TCA9548_
-  /* 3. 選 CH0（ADS1115 接在 CH0） */
-  if (TCA9548_SelectChannel(7) != TCA9548_OK) {
-      printf("TCA9548 select CH7 failed!\n");
-      HAL_Delay(1000);
-      return 1;
-  }else{
-	  printf("TCA9548 select CH5 ok!\n");
-  }
   #endif
     APP_RTC_SetupInteractive();
     APP_RTC_ShowTimeAndTemp();
     APP_UART_Poll();
 #endif
 
+
 //ADC設定
 
-
 #ifdef ADC_1115
+
+	#ifdef use_TCA9548
+    /* 3. 選 CH0（ADS1115 接在 CH0） */
+    	if (TCA9548_SelectChannel(0) != TCA9548_OK) {
+    		printf("TCA9548 select CH0 failed!\n");
+    		HAL_Delay(1000);
+    		return 1;
+    	}else{
+    		printf("TCA9548 select CH0 on, For ADS1115 !\n");
+    	}
+    #endif
+
     APP_ADS1115_Config(ADS1115_MUX_DIFF_0_1, ADS1115_PGA_ONE,
                        ADS1115_DATA_RATE_128, 1);
+	float v;
+	if (APP_ADS1115_Read(&v) == HAL_OK) {
+		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V
+	}else {
+		printf("ADC read failed\r\n");
+	}
 #endif
 
 
-//#define oled
+#define oled
 //#define on_off_screen
 //#define Horse_run
 
 #ifdef oled
-    printf("init oled \n");
+#ifdef use_TCA9548
+  /* 3. 選 CH6（ADS1115 接在 CH6） */
+  if (TCA9548_SelectChannel(5) != TCA9548_OK) {
+      printf("TCA9548 select CH5 failed!\n");
+      HAL_Delay(1000);
+      return 1;
+  }else{
+	  printf("TCA9548 select CH5 on, For OLED SH1106!\n");
+  }
+  #endif
+
+    //printf("init oled \n");
 
     //SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
     //oled_status = SH1106_Init();     // 调用初始化函数
@@ -403,7 +425,7 @@ int main(void)
 
 #endif
 
-#ifdef ADC_1115
+#ifdef ADC_1115_
 	float v;
 	if (APP_ADS1115_Read(&v) == HAL_OK) {
 		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V

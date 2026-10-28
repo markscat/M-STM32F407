@@ -24,6 +24,7 @@
 #include <main.h>
 #include <OLED\I2C_OLED_fonts.h>
 #include <OLED\I2C_OLED_SH1106.h>
+#include "I2C_TCA9548.h"
 #include <stdlib.h> // <--- 【添加這一行】
 #include "log.h"
 extern I2C_HandleTypeDef hi2c1;
@@ -292,6 +293,9 @@ SH1106_StatusTypeDef SH1106_Init(void) {
  * */
 I2C_Status SH1106_DeviceInit(void)
 {
+#ifdef use_TCA9548
+	  TCA9548_SelectChannel(5);   // ← 切到 EEPROM 所在通道
+#endif
     SH1106_StatusTypeDef st = SH1106_Init();
     if (st == SH1106_OK) {
         return I2C_OK;

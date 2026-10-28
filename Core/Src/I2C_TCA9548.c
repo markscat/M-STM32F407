@@ -41,7 +41,7 @@ TCA9548_Status TCA9548_Init(void)
     /* 清除快取，確保第一次 SelectChannel 一定會寫入 */
     s_current_mask = 0xFF;
 
-    printf("[TCA9548] Init OK at 0x%02X\n", TCA9548_I2C_ADDR);
+    printf("[TCA9548] Init OK at 0x%02X\n\n", TCA9548_I2C_ADDR);
     return TCA9548_OK;
 }
 
