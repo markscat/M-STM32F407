@@ -73,6 +73,24 @@ extern uint16_t g_command_line_index ;
 // 2. 通信旗標，【核心】ISR 和主迴圈之間的信號
 extern volatile bool g_command_line_ready ;
 
+
+
+#ifdef use_TCA9548
+
+typedef struct {
+    uint8_t TCA9548_CH;
+    uint8_t Peripheral_address;
+} TCA9548_CH_and_address;
+
+
+#define MAX_SCAN_RESULTS 32
+
+extern TCA9548_CH_and_address g_scan_result[MAX_SCAN_RESULTS];
+
+extern uint8_t g_scan_count;
+#endif
+
+
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */

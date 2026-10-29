@@ -321,7 +321,7 @@ int main(void)
   //掃描所有I2C的設備
 
 
-  /*  TCA9548 初始化 */
+  /*  I2C MUX TCA9548 初始化 */
   #ifdef use_TCA9548
 
   if (TCA9548_Init() != TCA9548_OK) {
@@ -330,20 +330,65 @@ int main(void)
       //return 1;
   }
 
+#endif   /*  I2C MUX TCA9548 初始化 */
+
+  /* 掃描所有的 i2C 的週邊 以及相對應位址 */
   Scan_I2C_Address();
 
-
-
-  //while(1){};
-
-  #endif
-
+  /* 輪著週邊初始化 */
 
   if (APP_I2C_Init() != I2C_OK) {
         HAL_Delay(1000);
         return 1;             // main 回傳 int，不要直接回傳 I2C_Status
     }
 
+//#define PWM_Servo_motor
+
+#ifdef PWM_Servo_motor
+
+#ifdef use_TCA9548
+
+  uint8_t ch=0xFF;
+
+  for(uint8_t i= 0; i<g_scan_count ; i++){
+	  if (g_scan_result[i].Peripheral_address == 0x40)	{
+		  ch=g_scan_result[i].TCA9548_CH;
+		  printf("PCA9685 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+          break; // 找到了就可以跳出迴圈了
+	  }
+  }
+  printf("\n\nPCA9685 ch = %d\n\n",ch);
+
+	  TCA9548_SelectChannel(ch);   // ← 切到 PCA9685 所在通道
+#endif
+
+	  printf("\n Initializing PCA9685...\n");
+	      if (PCA9685_Init() == HAL_OK) {
+	          printf("PCA9685 ready. (50Hz PWM)\n");
+	      } else {
+	          printf("PCA9685 init failed! Check wiring.\n");
+	          // 這裡可以選擇停在 Error_Handler 或繼續
+	      }
+
+	      // --- 初始化結束，裝置已待命 ---
+
+	      // 直到這裡，才開始下達「動作」指令
+	      printf("Moving Servo to 90 deg...\n");
+
+
+	    	  PCA9685_SetPWM(1 , 102);// 通道 0，0度
+	          HAL_Delay(1000);
+
+	    	  PCA9685_SetPWM(1 , 307); // 通道 0，90度
+	          HAL_Delay(1000);
+
+	    	  PCA9685_SetPWM(1 , 512); // 通道 0，180度
+	          HAL_Delay(1000);
+
+  while(1){
+
+  }
+#endif
 
   //時間設定
 
@@ -397,6 +442,7 @@ int main(void)
 //#define Horse_run
 
 #ifdef oled
+
 #ifdef use_TCA9548
   /* 3. 選 CH6（ADS1115 接在 CH6） */
   if (TCA9548_SelectChannel(5) != TCA9548_OK) {
@@ -408,32 +454,18 @@ int main(void)
   }
   #endif
 
-    //printf("init oled \n");
-
-    //SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
-    //oled_status = SH1106_Init();     // 调用初始化函数
 
     SH1106_Fill(SH1106_COLOR_BLACK);
 	SH1106_UpdateScreen();
 
 	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
-/*
-    if(oled_status == SH1106_OK){
-    	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
-    }
-*/
 
 #endif
 
-#ifdef ADC_1115_
-	float v;
-	if (APP_ADS1115_Read(&v) == HAL_OK) {
-		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V
-	}else {
-		printf("ADC read failed\r\n");
-	}
-#endif
 
+#ifdef use_TCA9548
+	  TCA9548_SelectChannel(0);   // ← 切到 EEPROM 所在通道
+#endif
     while (1) {
         //HAL_Delay(1000);
         HAL_Delay(1000);

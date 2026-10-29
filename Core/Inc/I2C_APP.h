@@ -14,11 +14,18 @@
 #define INC_I2C_APP_H_
 
 #include "I2C_parameter.h"   // 拿 I2C_Status
+#include <I2C_PCA9685.h>
+
+
 
 #define MAX_INPUT_LEN 32 // 输入字符串最大长度
 #define MAX_INPUT_LEN_MINIMAL 32
 #define MAX_COMMAND_LEN_MAIN 32                         // UART 命令行的最大允許字符數 (不包括 '\0')
 #define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
+
+#define ADC_1115
+#define PWM_Servo_motor
+
 /**
   * @brief  掃描 I2C 匯流排 + 初始化所有已知 I2C 設備
   * @retval I2C_OK        成功
@@ -37,14 +44,10 @@ void APP_RTC_ShowTimeAndTemp(void);
 void APP_UART_Poll(void);
 
 
-#endif /* INC_I2C_APP_H_ */
-
-
-#define ADC_1115
-
 #ifdef ADC_1115
 
 #include "Ext_ADC\ads1115.h"
+#include <I2C_PCA9685.h>
 
 /* 設定 ADS1115：模式、通道、PGA、取樣率
  * 參數直接用 ads1115.h 的巨集：
@@ -61,3 +64,13 @@ HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
 HAL_StatusTypeDef APP_ADS1115_Read(float *voltage);
 
 #endif
+
+
+
+#endif /* INC_I2C_APP_H_ */
+
+
+
+
+
+

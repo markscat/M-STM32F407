@@ -154,3 +154,50 @@ HAL_StatusTypeDef APP_ADS1115_Read(float *voltage)
 }
 
 #endif
+
+#define PWM_Servo_motor
+
+#ifdef PWM_Servo_motor
+#include <stdlib.h> // 需要用到 abs() 絕對值函式
+
+// 平滑轉動函式
+// channel: 通道
+// target_angle: 目標角度 (0~180)
+// step_delay_ms: 每一步之間的延遲時間 (數字越大，轉越慢)
+void PCA9685_MoveSlowly(uint8_t channel, uint8_t target_angle, uint16_t step_delay_ms) {
+    // 靜態變數，用來記住每一顆舵機「目前」在哪個角度
+    static int8_t current_angle[16] = {90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90};
+
+    // 防呆
+    if (channel > 15) return;
+    if (target_angle > 180) target_angle = 180;
+
+    int current = current_angle[channel];
+    int target = target_angle;
+
+    // 如果目標和現在一樣，就不用動了
+    if (current == target) return;
+
+    // 判斷要增加還是減少角度
+    int step = (target > current) ? 1 : -1;
+
+    // 開始一步一步轉
+    while (current != target) {
+        current += step;
+
+        // 把角度換算成 Ticks (0度=102, 180度=512)
+        uint16_t ticks = 102 + ((uint16_t)current * 410 / 180);
+
+        // 送給 PCA9685
+        PCA9685_SetPWM(channel, ticks);
+
+        // 停頓一下，這就是控制「速度」的關鍵
+        HAL_Delay(step_delay_ms);
+    }
+
+    // 更新記憶體中這顆舵機的最新角度
+    current_angle[channel] = target;
+}
+#endif
+
+

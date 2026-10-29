@@ -259,16 +259,17 @@ uint8_t calculate_checksum(const char *data_str, size_t len) {
 #ifdef use_TCA9548
 
 #include "I2C_TCA9548.h"
-#define TCA9548_SCAN_MAX   32   // 扫描结果数组大小（你自行调整）
+//#define TCA9548_SCAN_MAX   32   // 扫描结果数组大小（你自行调整）
 
-
+/*
 typedef struct {
 	uint8_t TCA9548_CH;
     uint8_t Peripheral_address;
-} TCA9548_CH_and_address;
+} TCA9548_CH_and_address;*/
 
 /* 全域扫描结果（后面的初始化会用到） */
-TCA9548_CH_and_address g_scan_result[TCA9548_SCAN_MAX];
+TCA9548_CH_and_address g_scan_result[MAX_SCAN_RESULTS];
+
 uint8_t g_scan_count = 0;
 
 void Scan_I2C_Address(void) {
@@ -293,7 +294,7 @@ void Scan_I2C_Address(void) {
                 found_count++;
 
                 /* 记录到全域数组 */
-                if (g_scan_count < TCA9548_SCAN_MAX) {
+                if (g_scan_count < MAX_SCAN_RESULTS) {
                 	g_scan_result[g_scan_count].TCA9548_CH        = ch;
                 	g_scan_result[g_scan_count].Peripheral_address = i;
                 	g_scan_count++;
