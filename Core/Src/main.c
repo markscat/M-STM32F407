@@ -115,7 +115,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define EEPROM_write
 //#define EEPROM_read
 #define time_setting
-#define ADS1115
+//#define ADS1115
 
 
 
@@ -385,55 +385,51 @@ int main(void)
 	    	  PCA9685_SetPWM(1 , 512); // 通道 0，180度
 	          HAL_Delay(1000);
 
-  while(1){
 
-  }
 #endif
 
   //時間設定
 
 #ifdef time_setting
+	//  * RTC(DS3231/ DS1307) I2C address = 0x68
 
 	#ifdef use_TCA9548
-  	  /* 3. 選 CH6（ADS1115 接在 CH6） */
-  	  if (TCA9548_SelectChannel(6) != TCA9548_OK) {
-  		  printf("TCA9548 select CH6 failed!\n");
-  		  HAL_Delay(1000);
-  		  return 1;
-  	  }else{
-  		  printf("TCA9548 select CH6 on, For RTC+EEPROM !\n");
-  	  }
+	  if (TCA9548_SelectByAddress(0x68) == HAL_OK) {
+	#endif
+		  APP_RTC_SetupInteractive();
+		  APP_RTC_ShowTimeAndTemp();
+		  APP_UART_Poll();
+#ifdef use_TCA9548
+	  }
+#endif
 
-  #endif
-    APP_RTC_SetupInteractive();
-    APP_RTC_ShowTimeAndTemp();
-    APP_UART_Poll();
 #endif
 
 
 //ADC設定
 
 #ifdef ADC_1115
+	//ADS1115 I2C address = 0x48
 
 	#ifdef use_TCA9548
-    /* 3. 選 CH0（ADS1115 接在 CH0） */
-    	if (TCA9548_SelectChannel(0) != TCA9548_OK) {
-    		printf("TCA9548 select CH0 failed!\n");
-    		HAL_Delay(1000);
-    		return 1;
-    	}else{
-    		printf("TCA9548 select CH0 on, For ADS1115 !\n");
-    	}
-    #endif
+	  if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
 
-    APP_ADS1115_Config(ADS1115_MUX_DIFF_0_1, ADS1115_PGA_ONE,
+	#endif
+    APP_ADS1115_Config(ADS1115_MUX_AIN0, ADS1115_PGA_ONE,
                        ADS1115_DATA_RATE_128, 1);
-	float v;
-	if (APP_ADS1115_Read(&v) == HAL_OK) {
-		printf("ADC voltage = %.3f V\r\n", v / 1000.0f);  // v 是 mV，除以 1000 變 V
-	}else {
-		printf("ADC read failed\r\n");
-	}
+
+    float adc_voltage = 0.0f;
+    // 呼叫你的封裝函式讀取
+    if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
+    	// 注意：ADS1115 讀出來的單位是「毫伏 (mV)」
+    	printf("ADC 電壓: %.3f V\r\n", adc_voltage / 1000.0f);
+    } else {
+    	printf("ADC 讀取失敗!\n");
+    }
+
+#ifdef use_TCA9548
+	  }
+	#endif
 #endif
 
 
@@ -442,23 +438,18 @@ int main(void)
 //#define Horse_run
 
 #ifdef oled
+	//SH1106 1.3 inch OLED address= 0x3C
+	#ifdef use_TCA9548
+		if (TCA9548_SelectByAddress(0x3C) == HAL_OK) {
+	#endif
 
-#ifdef use_TCA9548
-  /* 3. 選 CH6（ADS1115 接在 CH6） */
-  if (TCA9548_SelectChannel(5) != TCA9548_OK) {
-      printf("TCA9548 select CH5 failed!\n");
-      HAL_Delay(1000);
-      return 1;
-  }else{
-	  printf("TCA9548 select CH5 on, For OLED SH1106!\n");
-  }
-  #endif
+	  SH1106_Fill(SH1106_COLOR_BLACK);
+	  SH1106_UpdateScreen();
+	  SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
 
-
-    SH1106_Fill(SH1106_COLOR_BLACK);
-	SH1106_UpdateScreen();
-
-	SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
+	#ifdef use_TCA9548
+		}
+	#endif
 
 #endif
 

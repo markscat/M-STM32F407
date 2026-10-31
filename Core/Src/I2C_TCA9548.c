@@ -140,3 +140,42 @@ TCA9548_Status TCA9548_GetChannel(uint8_t *mask)
     return TCA9548_ERR_COMM;
 }
 
+
+
+// 定義一個靜態變數，用來記住「目前 TCA9548 停留在哪個通道」
+// 0xFF 代表未知或尚未切換
+static uint8_t current_active_channel = 0xFF;
+
+/**
+ * @brief 根據設備位址，自動切換 TCA9548 通道
+ * @param target_addr 目標設備的 7-bit 位址 (例如 PCA9685 是 0x40)
+ * @retval HAL_OK 切換成功 / HAL_ERROR 找不到設備或切換失敗
+ */
+HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr) {
+    // 1. 走訪掃描陣列，尋找位址
+    for (uint8_t i = 0; i < g_scan_count; i++) {
+        if (g_scan_result[i].Peripheral_address == target_addr) {
+            uint8_t target_ch = g_scan_result[i].TCA9548_CH;
+
+            // 2. 如果目前已經在這個通道，直接回傳成功，省下一次 I2C 通訊
+            if (current_active_channel == target_ch) {
+                return HAL_OK;
+            }
+
+            // 3. 如果不在，就切換通道
+            if (TCA9548_SelectChannel(target_ch) == TCA9548_OK) {
+                current_active_channel = target_ch; // 更新記憶
+                printf("[MUX] 自動切換至 CH%u (目標: 0x%02X)\n", target_ch, target_addr);
+                return HAL_OK;
+            } else {
+                printf("[MUX] 切換至 CH%u 失敗！\n", target_ch);
+                current_active_channel = 0xFF; // 狀態未知
+                return HAL_ERROR;
+            }
+        }
+    }
+
+    // 找不到
+    printf("[MUX] 錯誤：掃描清單中找不到 0x%02X\n", target_addr);
+    return HAL_ERROR;
+}

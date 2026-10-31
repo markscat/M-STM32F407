@@ -71,12 +71,24 @@ typedef struct {
 /*----------------------------- 设备初始化函数 -----------------------------*/
 /**
   * @brief  EEPROM (AT24C32) 初始化
-  * @retval I2C_Status 错误码
+  * @rightful I2C_Status 错误码
   */
 static I2C_Status EEPROM_DeviceInit(void) {
   //確認通道上有eeprom
 #ifdef use_TCA9548
-  TCA9548_SelectChannel(6);   // ← 切到 EEPROM 所在通道
+
+	uint8_t ch=0xFF;
+
+	  for(uint8_t i= 0; i<g_scan_count ; i++){
+		  if (g_scan_result[i].Peripheral_address == 0x57)	{
+			  ch=g_scan_result[i].TCA9548_CH;
+			  printf("EEPROM ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+	          break; // 找到了就可以跳出迴圈了
+		  }
+	  }
+		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
+		  //TCA9548_SelectChannel(6);   // ← 切到 EEPROM 所在通道
+
 #endif
   // 检测设备是否存在
   if (HAL_I2C_IsDeviceReady(&I2C_HANDLE, EEPROM_I2C_ADDR << 1, 3, 100) != HAL_OK) {
@@ -89,7 +101,7 @@ static I2C_Status EEPROM_DeviceInit(void) {
 
 /**
   * @brief  DS1307 实时时钟初始化
-  * @retval I2C_Status 错误码
+  * @rightful I2C_Status 错误码
   */
 static I2C_Status DS1307_DeviceInit(void) {
   // 检测设备是否存在

@@ -294,7 +294,17 @@ SH1106_StatusTypeDef SH1106_Init(void) {
 I2C_Status SH1106_DeviceInit(void)
 {
 #ifdef use_TCA9548
-	  TCA9548_SelectChannel(5);   // ← 切到 EEPROM 所在通道
+	uint8_t ch=0xFF;
+
+		  for(uint8_t i= 0; i<g_scan_count ; i++){
+			  if (g_scan_result[i].Peripheral_address == 0x3C)	{
+				  ch=g_scan_result[i].TCA9548_CH;
+				  printf("SH1106 OLED ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+		          break; // 找到了就可以跳出迴圈了
+			  }
+		  }
+			  TCA9548_SelectChannel(ch);   // ← 切到 SH1106 所在通道
+
 #endif
     SH1106_StatusTypeDef st = SH1106_Init();
     if (st == SH1106_OK) {

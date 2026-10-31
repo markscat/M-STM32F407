@@ -35,13 +35,23 @@ TCA9548_Status TCA9548_Init(void);
 /* 選擇單一通道（0~7），會關閉其他通道 */
 TCA9548_Status TCA9548_SelectChannel(uint8_t ch);
 
+
+//HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr);
+
+
+/**
+ * @brief 根據設備位址，自動切換 TCA9548 通道
+ * @param target_addr 目標設備的 7-bit 位址 (例如 PCA9685 是 0x40)
+ * @retval HAL_OK 切換成功 / HAL_ERROR 找不到設備或切換失敗
+ */
+HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr);
+
+
 /* 關閉所有通道（隔離 downstream） */
 TCA9548_Status TCA9548_DisableAll(void);
 
 /* 讀回目前通道設定（除錯用） */
 TCA9548_Status TCA9548_GetChannel(uint8_t *mask);
-
-
 
 
 #endif /* INC_I2C_TCA9548_H_ */

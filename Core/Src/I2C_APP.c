@@ -153,6 +153,8 @@ HAL_StatusTypeDef APP_ADS1115_Read(float *voltage)
     }
 }
 
+
+
 #endif
 
 #define PWM_Servo_motor

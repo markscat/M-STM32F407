@@ -80,6 +80,7 @@ extern volatile bool g_command_line_ready ;
 typedef struct {
     uint8_t TCA9548_CH;
     uint8_t Peripheral_address;
+
 } TCA9548_CH_and_address;
 
 
