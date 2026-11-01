@@ -1,33 +1,52 @@
 我在ＳＴＭ３２Ｆ４０７上開發的程式……好吧！還有Deepseek、chargpt和Gemini
 <br>
-2026/10/29
-    完成pca9685初始化,以及控制舵機
-  I2C Address 以及開發狀況:
-  AT24C02				   0x57 / 0x50  ok
-  SH1106				   0x3C         ok
-  RTC(DS3231/ DS1307) 	   0x68         ok
-  ADS1115(ADC)			   0x48         ok
-  PCA9548_I2C Mux 		   0x70         ok
-  mcp4725                  0x61
-  pca9685                  0x40         ok
-    總覺得程式得好好整理一下,尤其是i2C的部份
-    
-
-2026/10/28
-  完成透過TCA9458後，週邊初始化：
+2026/11/01<br>
+我超威……一年又快過去了
+  完成mcp4725的初始化和階層控制<br>
   
-  I2C Address 以及開發狀況:
-  AT24C02				   0x57 / 0x50  ok
-  SH1106				   0x3C         ok
-  RTC(DS3231/ DS1307) 	   0x68         ok
-  ADS1115(ADC)			   0x48         ok
-  PCA9548_I2C Mux 		   0x70         ok
-  mcp4725                  0x61
-  pca9685                  0x40
-    
- 還有幾個的週邊要改,其中一個是ＬＣＭ,只是沒在上面
- 跳線板確定胎死腹中,插上跳線板,ＭＣＵ就讀不到9458的I2C,用杜邦線跳就可以
- 所以決定直接洗板.
+  I2C Address 以及開發狀況:<br>
+  AT24C02				   0x57 / 0x50  ok<br>
+  SH1106				   0x3C         ok<br>
+  RTC(DS3231/ DS1307) 	   0x68         ok<br>
+  ADS1115(ADC)			   0x48         ok<br>
+  PCA9548_I2C Mux 		   0x70         ok<br>
+  mcp4725                  0x61         ok<br>
+  pca9685                  0x40         ok<br>
+  I2C_TCA555和LCM的部份,我想等到 轉接板出來再說.<br>
+  現在拿出那堆週邊,就像在拿要你命三千……<br>
+  在那之前,想想看pca9685可以怎麼玩
+    <br>
+<br>
+
+
+2026/10/29<br>
+    完成pca9685初始化,<br>
+  I2C Address 以及開發狀況:<br>
+  AT24C02				   0x57 / 0x50  ok<br>
+  SH1106				   0x3C         ok<br>
+  RTC(DS3231/ DS1307) 	   0x68         ok<br>
+  ADS1115(ADC)			   0x48         ok<br>
+  PCA9548_I2C Mux 		   0x70         ok<br>
+  mcp4725                  0x61<br>
+  pca9685                  0x40         ok<br>
+    總覺得程式得好好整理一下,尤其是i2C的部份<br>
+    <br>
+<br>
+2026/10/28<br>
+  完成透過TCA9458後，週邊初始化：<br>
+  <br>
+  I2C Address 以及開發狀況:<br>
+  AT24C02				   0x57 / 0x50  ok<br>
+  SH1106				   0x3C         ok<br>
+  RTC(DS3231/ DS1307) 	   0x68         ok<br>
+  ADS1115(ADC)			   0x48         ok<br>
+  PCA9548_I2C Mux 		   0x70         ok<br>
+  mcp4725                  0x61<br>
+  pca9685                  0x40<br>
+    <br>
+ 還有幾個的週邊要改,其中一個是ＬＣＭ,只是沒在上面<br>
+ 跳線板確定胎死腹中,插上跳線板,ＭＣＵ就讀不到9458的I2C,用杜邦線跳就可以<br>
+ 所以決定直接洗板.<br>
  
 2026/10/27<br>
     - 用洞洞板焊了一塊板子,或許是因為想要的太多,搞到I2C認不到TCA9548

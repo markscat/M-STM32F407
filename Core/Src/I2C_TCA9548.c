@@ -165,7 +165,7 @@ HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr) {
             // 3. 如果不在，就切換通道
             if (TCA9548_SelectChannel(target_ch) == TCA9548_OK) {
                 current_active_channel = target_ch; // 更新記憶
-                printf("[MUX] 自動切換至 CH%u (目標: 0x%02X)\n", target_ch, target_addr);
+                //printf("[MUX] 自動切換至 CH%u (目標: 0x%02X)\n", target_ch, target_addr);
                 return HAL_OK;
             } else {
                 printf("[MUX] 切換至 CH%u 失敗！\n", target_ch);

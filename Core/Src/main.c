@@ -63,9 +63,9 @@
  * SH1106				0x3C         ok
  * RTC(DS3231/ DS1307) 	0x68         ok
  * ADS1115(ADC)			0x48         ok
- * mcp4725              0x61
- * pca9685              0x40
- * PCA9548_I2C Mux 		0x70
+ * mcp4725              0x61		 todo
+ * pca9685              0x40		 ok
+ * PCA9548_I2C Mux 		0x70		 ok
  * 
  *
  * ##版權：<br/>
@@ -85,7 +85,7 @@
 #include <I2C_APP.h>
 #include "main.h"
 #include "Ext_ADC\ads1115.h"
-#include "I2C_Peripherals.h"//ok
+#include "I2C_MCP4725.h"//ok
 
 #include "I2C_TCA9548.h"        // TCA9548 的 API
 
@@ -101,7 +101,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
  * @{
  */
 
-//#define TCA555
 //#define uartPrintfloop
 //#define EEPROM
 //#define PrintfScanfTestCode
@@ -114,8 +113,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define clear_EEPROM
 //#define EEPROM_write
 //#define EEPROM_read
-#define time_setting
-//#define ADS1115
+
 
 
 
@@ -145,7 +143,7 @@ uint8_t rx_data;
 
 /**  @brief 設定只執行TCA555的程式 */
 #ifdef TCA555
-#include "TCA555.h"
+#include <I2C_TCA555.h>
 #endif
 /**
  * @}
@@ -410,15 +408,15 @@ int main(void)
 
 #ifdef ADC_1115
 	//ADS1115 I2C address = 0x48
+	    float adc_voltage = 0.0f;
 
 	#ifdef use_TCA9548
 	  if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
 
 	#endif
-    APP_ADS1115_Config(ADS1115_MUX_AIN0, ADS1115_PGA_ONE,
+    APP_ADS1115_Config(ADS1115_MUX_AIN0, ADS1115_PGA_TWOTHIRDS,
                        ADS1115_DATA_RATE_128, 1);
 
-    float adc_voltage = 0.0f;
     // 呼叫你的封裝函式讀取
     if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
     	// 注意：ADS1115 讀出來的單位是「毫伏 (mV)」
@@ -433,7 +431,7 @@ int main(void)
 #endif
 
 
-#define oled
+
 //#define on_off_screen
 //#define Horse_run
 
@@ -449,18 +447,186 @@ int main(void)
 
 	#ifdef use_TCA9548
 		}
+		printf("Visual monitor status \n\n");
 	#endif
 
 #endif
 
+#ifdef DAC_MCP4725
 
-#ifdef use_TCA9548
+		//模板開始
+		#ifdef use_TCA9548
+		    //要執行下面這行,必須先執行  Scan_I2C_Address();
+		    //但這是系統一開始就該做的,所以不太需要特別說明;
+		    //不過,狗工程師很多,寫個說明,以防萬一
+		  if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+
+		#endif
+
+				if (MCP4725_Init() == HAL_OK) {
+					printf("\n MCP4725 init ok \n\n");
+				}else{
+					printf("\n\n MCP4725 init fail \n\n");
+				}
+
+			  //程式主體
+			  //初始化必須要在之前就做好這個區塊是用來做應用層的東西,不是用來做初始化
+
+		#ifdef use_TCA9548
+		  }
+		#endif
+		  //模板結束
+#endif
+
+// 最後的結尾,進入無盡迴圈
+#ifdef use_TCA9548_
 	  TCA9548_SelectChannel(0);   // ← 切到 EEPROM 所在通道
 #endif
+
+//正弦波測試
+//#define sinWave_test
+
+#ifdef sinWave_test
+	  // 256 點正弦波 (數值範圍 0 ~ 4095，中點為 2047)
+	  const uint16_t sin_table[256] = {
+	      2048, 2098, 2148, 2198, 2248, 2298, 2348, 2398, 2447, 2496, 2545, 2594, 2642, 2690, 2737, 2784,
+	      2831, 2877, 2923, 2968, 3013, 3057, 3100, 3143, 3185, 3227, 3267, 3307, 3346, 3385, 3422, 3459,
+	      3495, 3530, 3564, 3598, 3630, 3662, 3692, 3721, 3750, 3777, 3804, 3829, 3853, 3876, 3898, 3919,
+	      3939, 3958, 3975, 3992, 4007, 4021, 4033, 4045, 4055, 4064, 4071, 4077, 4082, 4085, 4087, 4088,
+	      4088, 4088, 4087, 4085, 4082, 4077, 4071, 4064, 4055, 4045, 4033, 4021, 4007, 3992, 3975, 3958,
+	      3939, 3919, 3898, 3876, 3853, 3829, 3804, 3777, 3750, 3721, 3692, 3662, 3630, 3598, 3564, 3530,
+	      3495, 3459, 3422, 3385, 3346, 3307, 3267, 3227, 3185, 3143, 3100, 3057, 3013, 2968, 2923, 2877,
+	      2831, 2784, 2737, 2690, 2642, 2594, 2545, 2496, 2447, 2398, 2348, 2298, 2248, 2198, 2148, 2098,
+	      2048, 1998, 1948, 1898, 1848, 1798, 1748, 1698, 1649, 1600, 1551, 1502, 1454, 1406, 1359, 1312,
+	      1265, 1219, 1173, 1128, 1083, 1039, 996, 953, 911, 869, 829, 789, 750, 711, 674, 637,
+	      601, 566, 532, 498, 466, 434, 404, 375, 346, 319, 292, 267, 243, 220, 198, 177,
+	      157, 138, 121, 104, 89, 75, 63, 51, 41, 32, 25, 19, 14, 11, 9, 8,
+	      8, 8, 9, 11, 14, 19, 25, 32, 41, 51, 63, 75, 89, 104, 121, 138,
+	      157, 177, 198, 220, 243, 267, 292, 319, 346, 375, 404, 434, 466, 498, 532, 566,
+	      601, 637, 674, 711, 750, 789, 829, 869, 911, 953, 996, 1039, 1083, 1128, 1173, 1219,
+	      1265, 1312, 1359, 1406, 1454, 1502, 1551, 1600, 1649, 1698, 1748, 1798, 1848, 1898, 1948, 1998
+	  };
+
+	    int index = 0;
+
+	    while (1) {
+	        // 1. 切換到 DAC 通道
+	        if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+	            // 2. 查表並輸出
+	            MCP4725_SetRawValue(sin_table[index]);
+	        }
+
+	        // 3. 索引增加，滿 256 就歸零
+	        index++;
+	        if (index >= 256) {
+	            index = 0;
+	        }
+
+	        // 4. 這裡的 Delay 決定了正弦波的「頻率」
+	        // 如果設 100us (0.1ms)，一個完整波型需 256 * 0.1ms = 25.6ms (約 39Hz)
+	        HAL_Delay(0); // 先不加延遲，看看 I2C 的極速能跑多快
+	    }
+#endif
+
+//正弦波測試	-end
+
+#define MCP4725_test
+
+#ifdef MCP4725_test
+/*MCP4725 測試程式*/
+
+	    while (1) {
+	        // 往上掃 (一次跳 100 階)
+	        for (uint16_t i = 0; i < 4096; i += 100) {
+	            if (TCA9548_SelectByAddress(0x61) == HAL_OK) MCP4725_SetRawValue(i);
+	            // 如果你要它在示波器上看起來平滑，這裡可以不用 Delay
+	        }
+	        // 往下掃
+	        for (int32_t i = 4095; i >= 0; i -= 100) {
+	            if (TCA9548_SelectByAddress(0x61) == HAL_OK) MCP4725_SetRawValue(i);
+	        }
+	    }
+/*MCP4725 測試程式 -end*/
+#endif
+
+
+#ifdef MCP4725_AND_ADS1115_test
+
+/*ads1115 and MCP4725 測試程式*/
     while (1) {
-        //HAL_Delay(1000);
-        HAL_Delay(1000);
+        printf("\n--- 開始往上掃描 (0 -> 4095) ---\n");
+        
+        // 1. 往上掃
+        for (uint16_t i = 0; i < 4096; i++) {
+            
+            // 設定 DAC 輸出
+            if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+                MCP4725_SetRawValue(i);
+            }
+            
+            HAL_Delay(2); // 等 DAC 穩壓 (這很重要)
+            
+            // 切換回 ADC 讀取
+            if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
+                if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
+                    // 因為掃描很快，如果你覺得印出太多行，可以自己加條件
+                    printf("DAC: %4u | ADC: %.3f V\r\n", i, adc_voltage / 1000.0f);
+                }
+            }
+        }
+
+        printf("\n--- 開始往下掃描 (4095 -> 0) ---\n");
+        
+        // 2. 往下掃 (注意：uint16_t 不能直接遞減到 -1，所以要寫點技巧)
+        for (int32_t i = 4095; i >= 0; i--) {
+            
+            // 設定 DAC 輸出
+            if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+                MCP4725_SetRawValue((uint16_t)i);
+            }
+            
+            HAL_Delay(2);
+            
+            // 切換回 ADC 讀取
+            if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
+                if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
+                    printf("DAC: %4d | ADC: %.3f V\r\n", i, adc_voltage / 1000.0f);
+                }
+            }
+        }
+        
+        printf("--- 掃描結束 ---\n\n");
+        HAL_Delay(2000); // 停兩秒後重新開始
     }
+#endif
+/*ads1115 and MCP4725 測試程式 -End */
+
+
+#ifdef use_TCA9548_temp
+/*這是使用的模板
+ * 其實可以用更簡單的方式,但這個方式有個好處
+ * 只要把I2C_parameter.h中,『#define use_TCA9548』
+ * 這行刪掉或是標示註解,這樣只要有關TCA9548的程式碼都會變成註解
+ *
+ * */
+
+//模板開始
+#ifdef use_TCA9548
+    //要執行下面這行,必須先執行  Scan_I2C_Address();
+    //但這是系統一開始就該做的,所以不太需要特別說明;
+    //不過,狗工程師很多,寫個說明,以防萬一
+  if (TCA9548_SelectByAddress(<設備位址>) == HAL_OK) {
+
+#endif
+
+	  //程式主體
+	  //初始化必須要在之前就做好這個區塊是用來做應用層的東西,不是用來做初始化
+
+#ifdef use_TCA9548
+  }
+#endif
+  //模板結束
+#endif
 
 
 #ifdef on_off_screen

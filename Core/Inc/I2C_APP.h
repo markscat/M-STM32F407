@@ -24,7 +24,11 @@
 #define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
 
 #define ADC_1115
+#define DAC_MCP4725
+#define time_setting
+#define oled
 #define PWM_Servo_motor
+//#define TCA555
 
 /**
   * @brief  掃描 I2C 匯流排 + 初始化所有已知 I2C 設備
