@@ -1,4 +1,0 @@
-../Core/Src/Ext_ADC/ads1115_Driver.c:142:19:ADS1115_Init	8
-../Core/Src/Ext_ADC/ads1115_Driver.c:189:19:ADS1115_readOneShont	7
-../Core/Src/Ext_ADC/ads1115_Driver.c:239:19:ADS1115_StartContinuous	1
-../Core/Src/Ext_ADC/ads1115_Driver.c:253:19:ADS1115_ReadContinuous	2

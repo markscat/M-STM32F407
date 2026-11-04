@@ -50,7 +50,7 @@ extern "C" {
 #include "ring_buffer.h"
 #include "main.h"
 #include "i2c.h"
-#include "I2C_Peripherals.h"
+#include <I2C_Device/I2C_Peripherals.h>
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -60,7 +60,7 @@ extern "C" {
 #include <OLED/I2C_OLED_horse_anim.h>
 #include <OLED/UI.h>
 
-#include "EXT_ADC/ads1115.h"
+//#include "EXT_ADC/ads1115.h"
 
 /* USER CODE END Includes */
 

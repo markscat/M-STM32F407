@@ -13,8 +13,8 @@
 #ifndef INC_I2C_APP_H_
 #define INC_I2C_APP_H_
 
-#include "I2C_parameter.h"   // 拿 I2C_Status
-#include <I2C_PCA9685.h>
+#include "I2C_Device\I2C_parameter.h"   // 拿 I2C_Status
+#include <I2C_Device\I2C_PCA9685.h>
 
 
 
@@ -50,8 +50,8 @@ void APP_UART_Poll(void);
 
 #ifdef ADC_1115
 
-#include "Ext_ADC\ads1115.h"
-#include <I2C_PCA9685.h>
+#include "I2C_Device\ads1115.h"
+#include <I2C_Device\I2C_PCA9685.h>
 
 /* 設定 ADS1115：模式、通道、PGA、取樣率
  * 參數直接用 ads1115.h 的巨集：

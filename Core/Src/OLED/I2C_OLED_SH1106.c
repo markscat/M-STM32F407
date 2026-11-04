@@ -24,7 +24,7 @@
 #include <main.h>
 #include <OLED\I2C_OLED_fonts.h>
 #include <OLED\I2C_OLED_SH1106.h>
-#include "I2C_TCA9548.h"
+#include "I2C_Device\I2C_TCA9548.h"
 #include <stdlib.h> // <--- 【添加這一行】
 #include "log.h"
 extern I2C_HandleTypeDef hi2c1;

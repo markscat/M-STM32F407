@@ -9,8 +9,8 @@
 #define INC_ERROR_HANDLER_H_
 
 #pragma once
-#include <I2C_Peripherals.h>
-#include "I2C_parameter.h"
+#include <I2C_Device\I2C_Peripherals.h>
+#include "I2C_Device\I2C_parameter.h"
 #include "gpio.h"
 
 

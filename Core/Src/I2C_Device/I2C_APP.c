@@ -5,9 +5,9 @@
  *      Author: Ethan
  */
 
-#include "I2C_Peripherals.h"
+#include "I2C_Device\I2C_Peripherals.h"
 #include <stdio.h>
-#include <I2C_APP.h>
+#include <I2C_Device\I2C_APP.h>
 //#include "Ext_ADC\ads1115.h"
 
 //#define ADC_1115
@@ -149,7 +149,7 @@ HAL_StatusTypeDef APP_ADS1115_Read(float *voltage)
     if (s_continuous) {
         return ADS1115_ReadContinuous(voltage);
     } else {
-        return ADS1115_readOneShont(s_mux, voltage);
+        return ADS1115_readOneShot(s_mux, voltage);
     }
 }
 

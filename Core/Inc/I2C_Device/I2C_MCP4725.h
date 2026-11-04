@@ -9,6 +9,8 @@
 
 #include "stm32f4xx_hal.h"
 #include "i2c.h"
+#include "I2C_TCA9548.h"        // TCA9548 的 API
+
 
 // MCP4725 預設 I2C 位址 (請依你模組上的 A0 接法確認，常見為 0x60 或 0x61)
 #define MCP4725_I2C_ADDR    0x61
@@ -21,5 +23,7 @@
 HAL_StatusTypeDef MCP4725_Init(void);
 HAL_StatusTypeDef MCP4725_SetVoltage(float voltage, float vref);
 HAL_StatusTypeDef MCP4725_SetRawValue(uint16_t value);
+void mcp4725_sinWave_test(void);
+
 
 #endif /* INC_I2C_MCP4725_H_ */

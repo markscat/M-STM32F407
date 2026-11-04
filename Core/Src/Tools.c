@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <main.h>
-#include "I2C_Peripherals.h"
+#include "I2C_Device\I2C_Peripherals.h"
 extern volatile uint8_t RxBuffer[BUFFER_SIZE];
 
 RTC_Time RTC_DateTime;
@@ -258,7 +258,7 @@ uint8_t calculate_checksum(const char *data_str, size_t len) {
 
 #ifdef use_TCA9548
 
-#include "I2C_TCA9548.h"
+#include "I2C_Device\I2C_TCA9548.h"
 //#define TCA9548_SCAN_MAX   32   // 扫描结果数组大小（你自行调整）
 
 /*

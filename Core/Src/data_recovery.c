@@ -6,7 +6,7 @@
  */
 
 
-#include <I2C_Peripherals.h>
+#include <I2C_Device\I2C_Peripherals.h>
 #include "data_recovery.h"
 #include "error_handler.h"
 #include <string.h>

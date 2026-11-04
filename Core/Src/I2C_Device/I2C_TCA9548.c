@@ -10,8 +10,8 @@
  */
 
 
-#include <I2C_Peripherals.h>
-#include "I2C_TCA9548.h"
+#include <I2C_Device\I2C_Peripherals.h>
+#include "I2C_Device\I2C_TCA9548.h"
 #include <stdio.h>
 
 /* 目前通道快取（0xFF = 未知，強制下一次一定寫入） */

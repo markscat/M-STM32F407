@@ -53,7 +53,7 @@
  *  Created on: Feb 28, 2025
  *      Author: user
  */
-#include <I2C_TCA555.h>
+#include <I2C_Device\I2C_TCA555.h>
 #include "i2c.h"
 
 //extern I2C_HandleTypeDef hi2c1;

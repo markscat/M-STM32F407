@@ -29,8 +29,8 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 //#include "main.h"
-#include "I2C_Peripherals.h"
-#include "I2C_parameter.h"
+#include "I2C_Device\I2C_Peripherals.h"
+#include "I2C_Device\I2C_parameter.h"
 
 #include "ring_buffer.h" // << 也需要環形緩衝區的函數
 #include <ctype.h>

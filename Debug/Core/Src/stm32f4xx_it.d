@@ -33,14 +33,16 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/uart_io.h ../Core/Inc/Tools.h ../Core/Inc/I2C_Peripherals.h \
- ../Core/Inc/i2c.h ../Core/Inc/main.h ../Core/Inc/I2C_parameter.h \
- ../Core/Inc/ring_buffer.h ../Core/Inc/error_handler.h \
- ../Core/Inc/I2C_Peripherals.h ../Core/Inc/gpio.h ../Core/Inc/spi.h \
+ ../Core/Inc/uart_io.h ../Core/Inc/Tools.h \
+ ../Core/Inc/I2C_Device\I2C_Peripherals.h ../Core/Inc/i2c.h \
+ ../Core/Inc/main.h ../Core/Inc/I2C_Device\I2C_parameter.h \
+ ../Core/Inc/I2C_Device\I2C_parameter.h ../Core/Inc/ring_buffer.h \
+ ../Core/Inc/error_handler.h ../Core/Inc/I2C_Device\I2C_Peripherals.h \
+ ../Core/Inc/gpio.h ../Core/Inc/i2c.h \
+ ../Core/Inc/I2C_Device/I2C_Peripherals.h ../Core/Inc/spi.h \
  ../Core/Inc/usart.h ../Core/Inc/crc.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
  ../Core/Inc/OLED/I2C_OLED_fonts.h ../Core/Inc/OLED/I2C_OLED_horse_anim.h \
- ../Core/Inc/OLED/UI.h ../Core/Inc/EXT_ADC/ads1115.h \
- ../Core/Inc/stm32f4xx_it.h
+ ../Core/Inc/OLED/UI.h ../Core/Inc/stm32f4xx_it.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -78,14 +80,17 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Inc/uart_io.h:
 ../Core/Inc/Tools.h:
-../Core/Inc/I2C_Peripherals.h:
+../Core/Inc/I2C_Device\I2C_Peripherals.h:
 ../Core/Inc/i2c.h:
 ../Core/Inc/main.h:
-../Core/Inc/I2C_parameter.h:
+../Core/Inc/I2C_Device\I2C_parameter.h:
+../Core/Inc/I2C_Device\I2C_parameter.h:
 ../Core/Inc/ring_buffer.h:
 ../Core/Inc/error_handler.h:
-../Core/Inc/I2C_Peripherals.h:
+../Core/Inc/I2C_Device\I2C_Peripherals.h:
 ../Core/Inc/gpio.h:
+../Core/Inc/i2c.h:
+../Core/Inc/I2C_Device/I2C_Peripherals.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/usart.h:
 ../Core/Inc/crc.h:
@@ -93,5 +98,4 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
 ../Core/Inc/OLED/I2C_OLED_fonts.h:
 ../Core/Inc/OLED/I2C_OLED_horse_anim.h:
 ../Core/Inc/OLED/UI.h:
-../Core/Inc/EXT_ADC/ads1115.h:
 ../Core/Inc/stm32f4xx_it.h:

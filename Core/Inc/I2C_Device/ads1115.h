@@ -1,3 +1,7 @@
+
+#ifndef ADS1115_H
+#define ADS1115_H
+
 /*
  * Library Name: 	ADS1115 STM32 Single-Ended, Single-Shot, PGA & Data Rate Enabled HAL Library
  * Written By:		Ahmet Batuhan Günaltay
@@ -23,6 +27,22 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  *  */
+
+
+/*
+ * Design by Ethan
+ * 為什麼加入這個?
+ * 理由很簡單,我覺得HAL_StatusTypeDef的錯誤碼太少了
+ * 出了什麼事情根本不知道
+ *
+*/
+
+
+
+#include "stm32f4xx_hal.h" // Could be changed for a specific processor.
+#include "string.h"
+#include "stdio.h"
+
 
 /* Definitions */
 #define ADS1115_OS (0b1 << 7) // Default
@@ -72,8 +92,62 @@
 /* TIMEOUT */
 #define ADS1115_TIMEOUT 1 // Timeout for HAL I2C functions.
 
+
+
+typedef enum {
+    /* ==========================================
+     * 成功
+     * ========================================== */
+	I2C_ADS1115_OK = 0,//redeclaration of enumerator 'ADS1115_OK'
+
+    /* ==========================================
+     * 軟體狀態與參數錯誤（還沒碰硬體就錯的）
+     * ========================================== */
+	I2C_ADS1115_ERR_NOT_INIT,           /* 沒呼叫 Init 就直接呼叫 Read */
+	I2C_ADS1115_ERR_INVALID_PGA,        /* 傳入的 PGA 參數亂填 (超出 0~5) */
+	I2C_ADS1115_ERR_INVALID_MUX,        /* 傳入的 MUX 通道亂填 (例如選了 AIN8) */
+	I2C_ADS1115_ERR_INVALID_RATE,       /* 傳入的 Data Rate 亂填 */
+	I2C_ADS1115_ERR_INVALID_HANDLER,    /* 傳入的 I2C_HandleTypeDef 是 NULL */
+
+    /* ==========================================
+     * I2C 匯流排層錯誤（HAL 回報的）
+     * ========================================== */
+	I2C_ADS1115_ERR_I2C_BUSY,           /* 匯流排被佔用 (HAL_BUSY) */
+	I2C_ADS1115_ERR_I2C_TIMEOUT,        /* 匯流排超時 (HAL_TIMEOUT) */
+	I2C_ADS1115_ERR_I2C_NACK,           /* 裝置沒回 ACK (通常是沒接好或位址錯，HAL_ERROR 且伴隨 AF 旗標) */
+	I2C_ADS1115_ERR_I2C_ARBITRATION,    /* 多主機仲裁失敗 (HAL_ERROR 且伴隨 ARLO 旗標) */
+	I2C_ADS1115_ERR_I2C_BERR,           /* 匯流排錯誤 (Bus Error, 通常是雜訊干擾) */
+	I2C_ADS1115_ERR_I2C_OVR,            /* 溢位錯誤 (Overrun/Underrun) */
+	I2C_ADS1115_ERR_I2C_UNKNOWN,        /* 其他未知的 HAL_ERROR */
+
+    /* ==========================================
+     * ADS1115 暫存器邏輯錯誤
+     * ========================================== */
+	I2C_ADS1115_ERR_CFG_READ_FAIL,      /* 寫入 Config 成功，但讀回 Config 失敗 */
+	I2C_ADS1115_ERR_CFG_VERIFY_FAIL,    /* 寫入 Config 後，讀回來發現內容跟寫進去的不一樣 */
+	I2C_ADS1115_ERR_CONV_READ_FAIL,     /* 轉換完成，但讀取 Conversion 暫存器失敗 */
+
+    /* ==========================================
+     * ADS1115 硬體行為錯誤（通訊 OK，但晶片不理你）
+     * ========================================== */
+	I2C_ADS1115_ERR_CONV_TIMEOUT,       /* 啟動轉換後，等不到 OS (Operational Status) bit 變為 1 */
+	I2C_ADS1115_ERR_CONV_NOT_READY,     /* 嘗試讀取時，晶片回報資料還沒準備好 */
+
+    /* ==========================================
+//     * 物理量測警告（非通訊錯誤，但數值不可信）
+     * ========================================== */
+	I2C_ADS1115_WARN_PGA_SATURATED,     /* 量測值頂到 FSR 滿量程 (32767 或 -32768)，可能超壓 */
+	I2C_ADS1115_WARN_NEAR_RAIL,         /* 量測值非常接近滿量程 (例如 > 95%)，建議換檔 */
+	I2C_ADS1115_WARN_NOISE_HIGH          /* (選用) 連續讀取跳動過大，懷疑訊號有雜訊 */
+
+} I2C_ADS1115_Status;
+
+
+
 /* Function prototypes. */
 HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA);
-HAL_StatusTypeDef ADS1115_readOneShont(uint16_t muxPort, float *voltage);
+HAL_StatusTypeDef ADS1115_readOneShot(uint16_t muxPort, float *voltage);
 HAL_StatusTypeDef ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16_t dataRate);
 HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage);
+
+#endif
