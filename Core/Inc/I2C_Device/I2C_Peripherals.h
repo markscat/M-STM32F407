@@ -15,7 +15,19 @@
 #include "stm32f4xx_hal_i2c.h"   // I2C外设支持
 #include "stdbool.h"
 #include "i2c.h"
-#include "I2C_parameter.h"
+#include <string.h>
+#include "stdlib.h"
+#include "stdbool.h"
+#include "stdio.h"
+
+#include <I2C_Device/I2C_parameter.h>
+#include <I2C_Device/I2C_TCA9548.h>
+#include <I2C_Device/ads1115.h>
+#include <OLED/I2C_OLED_SH1106.h>
+#include "Tools.h"
+
+
+
 
 uint16_t Compute_CRC(const uint8_t* data, uint16_t len);
 

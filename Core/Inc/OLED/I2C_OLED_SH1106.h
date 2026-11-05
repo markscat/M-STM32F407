@@ -186,7 +186,12 @@ void SH1106_DrawImageDirect(const uint8_t *image,uint8_t x, uint8_t y,uint16_t w
 /**
  * @brief init with HAL*/
 SH1106_StatusTypeDef SH1106_Init(void);
+
+//加層皮,讓回傳值是I2C_Status
 I2C_Status SH1106_DeviceInit(void);
+
+//加層皮,讓回傳值是整數
+int SH1106_DeviceInit_Wrapper(void);
 
 
 /**

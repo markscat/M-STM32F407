@@ -12,6 +12,21 @@
  * @brief 初始化 MCP4725 (確認設備在位)
  */
 	HAL_StatusTypeDef MCP4725_Init(void) {
+#ifdef use_TCA9548
+
+	uint8_t ch=0xFF;
+
+	  for(uint8_t i= 0; i<g_scan_count ; i++){
+		  if (g_scan_result[i].Peripheral_address == MCP4725_I2C_ADDR)	{
+			  ch=g_scan_result[i].TCA9548_CH;
+			  printf("MCP4725 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+	          break; // 找到了就可以跳出迴圈了
+		  }
+	  }
+		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
+
+#endif
+
 		// 檢查設備是否在匯流排上
 		if (HAL_I2C_IsDeviceReady(hi2c_main, MCP4725_I2C_ADDR << 1, 3, 100) != HAL_OK) {
 			return HAL_ERROR;

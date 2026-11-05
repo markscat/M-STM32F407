@@ -18,13 +18,6 @@
  */
 
 #include <I2C_Device\I2C_Peripherals.h>
-#include <OLED\I2C_OLED_SH1106.h>
-#include "I2C_Device\I2C_TCA9548.h"
-#include <string.h>
-#include "stdlib.h"
-#include "stdbool.h"
-#include "stdio.h"
-#include "Tools.h"
 
 
 /* 私有变量 ------------------------------------------------------------------*/
@@ -36,11 +29,14 @@ static void Hardware_Reset(void);
 
 static I2C_HandleTypeDef* hi2c_eeprom = &I2C_HANDLE;
 static EEPROM_Health health_monitor = {0};
+
 //static const uint16_t crc_poly = 0x1021;  // CRC-16-CCITTInternal_Write
+
 
 /* [修改] 原EEPROM代码适配共用I2C ----------------------------------------------*/
 // 原文件 eeprom_handler.c 中修改：
  //static I2C_HandleTypeDef* hi2c_eeprom = &EEPROM_I2C_HANDLE; //--> 修改为：
+
 I2C_HandleTypeDef* hi2c_main = &I2C_HANDLE;  // [MOD] 统一I2C句柄名称
 
 
@@ -68,6 +64,16 @@ typedef struct {
   const char* dev_name;           // 设备名称（用于调试信息）
 } I2C_DeviceConfig;
 
+
+typedef int (*I2C_InitFunc_t)(void);
+
+typedef struct {
+    uint8_t dev_addr;
+    I2C_InitFunc_t init_fn;
+    const char* dev_name;
+    bool is_required;
+} I2C_DeviceConfig_2;
+
 /*----------------------------- 设备初始化函数 -----------------------------*/
 /**
   * @brief  EEPROM (AT24C32) 初始化
@@ -87,7 +93,6 @@ static I2C_Status EEPROM_DeviceInit(void) {
 		  }
 	  }
 		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
-		  //TCA9548_SelectChannel(6);   // ← 切到 EEPROM 所在通道
 
 #endif
   // 检测设备是否存在
@@ -99,11 +104,34 @@ static I2C_Status EEPROM_DeviceInit(void) {
   return I2C_OK;
 }
 
+
+int EEPROM_DeviceInit_Wrapper(void) {
+    // 假設你的 handler 是 &hi2c1
+	    return (int)EEPROM_DeviceInit(); // 假設 EEPROM_DeviceInit 回傳 I2C_Status，I2C_OK 通常是 0
+	}
+
+
 /**
   * @brief  DS1307 实时时钟初始化
   * @rightful I2C_Status 错误码
   */
 static I2C_Status DS1307_DeviceInit(void) {
+#ifdef use_TCA9548
+
+	uint8_t ch=0xFF;
+
+	  for(uint8_t i= 0; i<g_scan_count ; i++){
+		  if (g_scan_result[i].Peripheral_address == RTC_I2C_ADDR)	{
+			  ch=g_scan_result[i].TCA9548_CH;
+			  printf("RTC EEPROM ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+	          break; // 找到了就可以跳出迴圈了
+		  }
+	  }
+		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
+
+#endif
+
+
   // 检测设备是否存在
   if (HAL_I2C_IsDeviceReady(&I2C_HANDLE, RTC_I2C_ADDR << 1, 3, 100) != HAL_OK) {
     return I2C_ERR_INIT;
@@ -124,6 +152,12 @@ static I2C_Status DS1307_DeviceInit(void) {
   }
   return I2C_OK;
 }
+
+
+int DS1307_DeviceInit_Wrapper(void) {
+    // 假設你的 handler 是 &hi2c1
+	    return (int)DS1307_DeviceInit() ; // 假設 EEPROM_DeviceInit 回傳 I2C_Status，I2C_OK 通常是 0
+	}
 
 /*----------------------------- 核心初始化函数 -----------------------------*/
 /**
@@ -150,24 +184,38 @@ I2C_Status I2C_Init_Devices(void) {
 	 * }</code>
   *
 	 * */
-  static const I2C_DeviceConfig dev_config[] = {
+  static const I2C_DeviceConfig_2 dev_config[] = {
     // EEPROM 设备
+
     {
-      .dev_addr  = EEPROM_I2C_ADDR,  // 7位地址
-      .init_fn   = EEPROM_DeviceInit,
-      .dev_name  = "AT24C32 EEPROM"
+      .dev_addr   = EEPROM_I2C_ADDR,  // 7位地址
+      //.init_fn    = EEPROM_DeviceInit,
+	  .init_fn	  = EEPROM_DeviceInit_Wrapper,
+      .dev_name   = "AT24C32 EEPROM",
+      .is_required = true
     },
     // DS1307 设备
     {
       .dev_addr  = RTC_I2C_ADDR,  // 7位地址
-      .init_fn   = DS1307_DeviceInit,
-      .dev_name  = "DS1307 RTC"
+      //.init_fn   = DS1307_DeviceInit,
+	  .init_fn	 = DS1307_DeviceInit_Wrapper,
+      .dev_name  = "DS1307 RTC",
+      .is_required = true
     },
     // 可在此添加更多设备...
 	{
 	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
-       .init_fn   = SH1106_DeviceInit,
-       .dev_name  = "SH1106 OLED"
+       //.init_fn   = SH1106_DeviceInit,
+	   .init_fn   = SH1106_DeviceInit_Wrapper,
+       .dev_name  = "SH1106 OLED",
+       .is_required = true
+	},
+	{
+       //.dev_addr  = ADS1115_Address,  // 7位地址
+	   .dev_addr  = 0x48,  // 7位地址
+	   .init_fn   = ADS1115_DeviceInit_Wrapper,
+	   .dev_name  = "ADS1115 ADC",
+	   .is_required = true
 	}
 
   };

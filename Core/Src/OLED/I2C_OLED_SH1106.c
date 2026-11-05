@@ -314,6 +314,27 @@ I2C_Status SH1106_DeviceInit(void)
     return I2C_ERR_INIT;
 }
 
+int SH1106_DeviceInit_Wrapper(void){
+
+#ifdef use_TCA9548
+	uint8_t ch=0xFF;
+	for(uint8_t i= 0; i<g_scan_count ; i++){
+		if (g_scan_result[i].Peripheral_address == 0x3C){
+			ch=g_scan_result[i].TCA9548_CH;
+			printf("SH1106 OLED ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+			break; // 找到了就可以跳出迴圈了
+			}
+	}
+	TCA9548_SelectChannel(ch);   // ← 切到 SH1106 所在通道
+#endif
+	SH1106_StatusTypeDef st = SH1106_Init();
+	if (st == SH1106_OK) {
+		return I2C_OK;
+	}else{
+		printf("[I2C Init] SH1106_Init failed: %d\n", st);
+		return I2C_ERR_INIT;
+	}
+}
 
 /**
  * @brief 將緩存區內容刷新到螢幕

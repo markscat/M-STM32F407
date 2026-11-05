@@ -95,12 +95,77 @@
  *	4) Üçüncü adımdan sonra değişkeninizin içerisinde uygun katsayıyla çarpılmış gerilim değeri saklanacaktır.
  *
  *
+ * 新版和原本的差異列表
+ * =========================================================================================
+ *  [修改對照表 (Modification Log)]
+ * =========================================================================================
+ *  項目 (Item)              原始版本 (Original)                 修改後 (Modified by Ethan)
+ *  ---------------------------------------------------------------------------------------
+ *  狀態回報型別 (Status)    HAL_StatusTypeDef                   I2C_ADS1115_Status
+ *                           (只有 HAL_OK / HAL_ERROR)         (自訂精準錯誤碼，如 NACK/TIMEOUT)
+ *  ---------------------------------------------------------------------------------------
+ *  錯誤除錯能力 (Debug)     只回傳 HAL_ERROR，無法得知具體原因        精準區分 I2C 錯誤，並印出 Log
+ *  ---------------------------------------------------------------------------------------
+ *  裝置位址 (Address)       全域變數 ADS1115_devAddress          #define 常數 (節省記憶體)
+ *  ---------------------------------------------------------------------------------------
+ *  函式命名 (Function)      ADS1115_Init / readOneShont         I2C_ADS1115_Init / readOneShot
+ *                           (原作者拼字錯誤)                     (修正拼字)
+ *  ---------------------------------------------------------------------------------------
+ *  PGA 防呆 (Default)       無 default 分支                     加入 default 回傳 ERR_INVALID_PGA
+ *  ---------------------------------------------------------------------------------------
+ *  相容性 (Compatibility)   無                                   保留 HAL 外皮 (Wrapper) 供舊程式碼使用
+ *  ---------------------------------------------------------------------------------------
+ *  讀取逾時 (Timeout)       回傳 HAL_ERROR                       回傳 ERR_CONV_TIMEOUT
+ *  ---------------------------------------------------------------------------------------
+ *  滿量程警告 (Saturation)  無，直接回傳數值                         加入 WARN_PGA_SATURATED 警告
+ *  ---------------------------------------------------------------------------------------
+ *  程式架構 (Architecture) 核心與外皮混在一起                       分離「核心(I2C_ADS1115_Status)」
+ *                                                                與「外皮(HAL_StatusTypeDef)」
+ * =========================================================================================
+ *
+ *
+ * English versions
+ *
+ * List of differences between the new and original versions
+ * =========================================================================================
+ *  [Modification Log]
+ * =========================================================================================
+ *  Item                    Original Version                    Modified by Ethan
+ *  ---------------------------------------------------------------------------------------
+ *  Status Return Type      HAL_StatusTypeDef                   I2C_ADS1115_Status
+ *                          (Only HAL_OK / HAL_ERROR)           (Custom error codes: NACK/TIMEOUT)
+ *  ---------------------------------------------------------------------------------------
+ *  Debug Capability        Only returns HAL_ERROR;             Accurately distinguishes I2C errors
+ *                          unclear where the fault occurred    and prints detailed logs
+ *  ---------------------------------------------------------------------------------------
+ *  Device Address          Global variable ADS1115_devAddress #define constant (saves memory)
+ *  ---------------------------------------------------------------------------------------
+ *  Function Naming         ADS1115_Init / readOneShont         I2C_ADS1115_Init / readOneShot
+ *                          (original author's typo)            (typo fixed)
+ *  ---------------------------------------------------------------------------------------
+ *  PGA Safety              No default branch;                  Added default returning
+ *                          invalid input causes UB             ERR_INVALID_PGA
+ *  ---------------------------------------------------------------------------------------
+ *  Compatibility           None                                Preserved HAL wrapper for
+ *                                                              legacy code compatibility
+ *  ---------------------------------------------------------------------------------------
+ *  Read Timeout            Returns HAL_ERROR                   Returns ERR_CONV_TIMEOUT
+ *  ---------------------------------------------------------------------------------------
+ *  Saturation Warning      None; returns raw value directly    Added WARN_PGA_SATURATED warning
+ *  ---------------------------------------------------------------------------------------
+ *  Architecture            Core and wrapper mixed together     Separated into "Core
+ *                                                              (I2C_ADS1115_Status)" and
+ *                                                              "Wrapper (HAL_StatusTypeDef)"
+ * =========================================================================================
  */
 
 #include "I2C_Device\ads1115.h"
 
+extern I2C_HandleTypeDef hi2c1;
+
+
 /* Variables */
-uint8_t ADS1115_devAddress = 0b1001000;	// 0x48, Addr pin to Gnd, 7 bit address, without R/W' bit.
+//uint8_t ADS1115_devAddress = 0b1001000;	// 0x48, Addr pin to Gnd, 7 bit address, without R/W' bit.
 
 I2C_HandleTypeDef ADS1115_I2C_Handler;	// HAL I2C handler store variable.
 
@@ -130,11 +195,6 @@ uint8_t ADS1115_config[2];
 uint8_t ADS1115_rawValue[2];
 
 float ADS1115_voltCoef;			// Voltage coefficient.
-
-
-
-
-
 
 I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA){
 
@@ -180,7 +240,7 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
 
 		}
 	// 檢查晶片
-	HAL_StatusTypeDef hal_st = HAL_I2C_IsDeviceReady(&ADS1115_I2C_Handler, (uint16_t)(ADS1115_devAddress << 1),
+	HAL_StatusTypeDef hal_st = HAL_I2C_IsDeviceReady(&ADS1115_I2C_Handler, (uint16_t)(ADS1115_Address << 1),
 													  5, ADS1115_TIMEOUT);
 
 	if (hal_st == HAL_OK) {
@@ -217,9 +277,73 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
 	}*/
 }
 
+
 /* =========================================================
  * 2. 再寫外皮（Wrapper）
  * ========================================================= */
+
+//外皮1 轉成回傳整數值
+// 在 ads1115.c 裡面，自己定義的 init (回傳 int 就好)
+
+#define ADS1115_Wrapper
+
+#ifdef ADS1115_Wrapper
+
+int ADS1115_DeviceInit_Wrapper(void) {
+    // 假設你的 handler 是 &hi2c1
+    //return (int)I2C_ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE);
+    I2C_ADS1115_Status status = I2C_ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE);
+
+    // 2. 根據狀態碼印出詳細報告
+    switch (status) {
+        case I2C_ADS1115_OK:
+            return 0; // 成功回傳 0
+
+        case I2C_ADS1115_ERR_INVALID_PGA:
+            printf("[ADS1115] Error: Invalid PGA setting.\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_INVALID_HANDLER:
+            printf("[ADS1115] Error: I2C Handler is NULL.\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_BUSY:
+            printf("[ADS1115] Error: I2C Bus BUSY.\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_TIMEOUT:
+            printf("[ADS1115] Error: I2C TIMEOUT (Check wires).\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_NACK:
+            printf("[ADS1115] Error: I2C NACK (Check power/address).\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_ARBITRATION:
+            printf("[ADS1115] Error: I2C Arbitration lost.\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_BERR:
+            printf("[ADS1115] Error: I2C Bus Error (Noise).\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_OVR:
+            printf("[ADS1115] Error: I2C Overrun.\n");
+            return (int)status;
+
+        case I2C_ADS1115_ERR_I2C_UNKNOWN:
+            printf("[ADS1115] Error: Unknown I2C Error.\n");
+            return (int)status;
+
+        default:
+            printf("[ADS1115] Error: Unhandled code %d.\n", status);
+            return (int)status;
+
+    }
+}
+#else
+
+//外皮2 轉成HAL_StatusTypeDef
 HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA) {
 
     // 呼叫核心邏輯
@@ -303,7 +427,7 @@ HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate,
     }
 
 }
-
+#endif
 
 I2C_ADS1115_Status I2C_ADS1115_readOneShot(uint16_t muxPort, float *voltage) {
 
@@ -315,7 +439,7 @@ I2C_ADS1115_Status I2C_ADS1115_readOneShot(uint16_t muxPort, float *voltage) {
     uint16_t cnt = 0;
 
     // 1. 寫入 Config 啟動轉換
-    if (HAL_I2C_Mem_Write(&ADS1115_I2C_Handler, (uint16_t)(ADS1115_devAddress << 1), ADS1115_CONFIG_REG, 1,
+    if (HAL_I2C_Mem_Write(&ADS1115_I2C_Handler, (uint16_t)(ADS1115_Address << 1), ADS1115_CONFIG_REG, 1,
                           ADS1115_config, 2, ADS1115_TIMEOUT) != HAL_OK) {
         // 精準抓取寫入失敗的原因
         uint32_t err = HAL_I2C_GetError(&ADS1115_I2C_Handler);
@@ -326,7 +450,7 @@ I2C_ADS1115_Status I2C_ADS1115_readOneShot(uint16_t muxPort, float *voltage) {
 
     // 2. 輪詢等待轉換完成 (檢查 OS bit)
     while (waiting) {
-        if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler, (uint16_t)((ADS1115_devAddress << 1) | 0x1),
+        if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler, (uint16_t)((ADS1115_Address << 1) | 0x1),
         		ADS1115_CONFIG_REG, 1, ADS1115_config, 2, ADS1115_TIMEOUT) == HAL_OK) {
             if (ADS1115_config[0] & ADS1115_OS) {
                 waiting = 0; // 轉換完成
@@ -341,7 +465,7 @@ I2C_ADS1115_Status I2C_ADS1115_readOneShot(uint16_t muxPort, float *voltage) {
     }
 
     // 3. 讀取轉換結果
-    if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler, (uint16_t)((ADS1115_devAddress << 1) | 0x1),
+    if (HAL_I2C_Mem_Read(&ADS1115_I2C_Handler, (uint16_t)((ADS1115_Address << 1) | 0x1),
     		ADS1115_CONVER_REG, 1, ADS1115_rawValue, 2, ADS1115_TIMEOUT) == HAL_OK) {
 
         // 組合 16-bit 數值
@@ -426,7 +550,7 @@ I2C_ADS1115_Status I2C_ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, u
 	    			 	 	ADS1115_COMP_QUE;
 	    // 寫入 I2C
 	    HAL_StatusTypeDef hal_st = HAL_I2C_Mem_Write(&ADS1115_I2C_Handler,
-	                                                 (uint16_t)(ADS1115_devAddress << 1),
+	                                                 (uint16_t)(ADS1115_Address << 1),
 	                                                 ADS1115_CONFIG_REG, 1,
 	                                                 ADS1115_config, 2,
 	                                                 ADS1115_TIMEOUT);
@@ -443,6 +567,7 @@ I2C_ADS1115_Status I2C_ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, u
 
 }
 
+
 HAL_StatusTypeDef ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16_t dataRate) {
 
 	I2C_ADS1115_Status status = I2C_ADS1115_StartContinuous(muxPort, pga, dataRate);
@@ -455,13 +580,14 @@ HAL_StatusTypeDef ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16
 
 }
 
+
 I2C_ADS1115_Status I2C_ADS1115_ReadContinuous(float *voltage){
 
 	//return type defaults to 'int' [-Wimplicit-int]
 
     // 直接讀取轉換結果暫存器 (因為 ADC 正在背景持續轉換)
     HAL_StatusTypeDef hal_st = HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
-                                                (uint16_t)(ADS1115_devAddress << 1) | 0x1,
+                                                (uint16_t)(ADS1115_Address << 1) | 0x1,
                                                 ADS1115_CONVER_REG, 1,
                                                 ADS1115_rawValue, 2,
                                                 ADS1115_TIMEOUT);
@@ -486,11 +612,10 @@ I2C_ADS1115_Status I2C_ADS1115_ReadContinuous(float *voltage){
     return I2C_ADS1115_OK;
 }
 
-
 HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage){
 	// 直接讀暫存器，因為 ADC 持續更新
 	if(HAL_I2C_Mem_Read(&ADS1115_I2C_Handler,
-			(uint16_t)(ADS1115_devAddress << 1),
+			(uint16_t)(ADS1115_Address << 1),
 			ADS1115_CONVER_REG, 1,
 			ADS1115_rawValue, 2, ADS1115_TIMEOUT) != HAL_OK) {
 		return HAL_ERROR;
@@ -508,12 +633,14 @@ HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage){
  * 其實只要留下用I2C_ADS1115_Status宣告的函數就好，至於皮？是因為我懶得改其他的程式碼而已．
  * 如果哪天有機會，就把其他的給改了．
  *
+ *
+ *
+ *
  * */
 /* Function definitions. */
 /**
- * @b
- * */
-
+ * /*
+ *
 /*
 HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA) {
 

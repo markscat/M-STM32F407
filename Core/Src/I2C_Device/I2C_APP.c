@@ -112,7 +112,6 @@ void APP_UART_Poll(void){
     HandleUartCommands();
 }
 
-
 #ifdef ADC_1115
 
 //#include "Ext_ADC/ads1115.h"
@@ -132,14 +131,22 @@ HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
     s_dataRate   = dataRate;
     s_continuous = continuous;
 
+    I2C_ADS1115_Status init_status = I2C_ADS1115_Init(&hi2c1, dataRate, pga);
+
     /* 初始化（設定 PGA / 取樣率） */
-    if (ADS1115_Init(&hi2c1, dataRate, pga) != HAL_OK) {
-        return HAL_ERROR;
+    if (init_status != I2C_ADS1115_OK) {
+    	// 這裡可以順便印出詳細錯誤，或者交給 Wrapper 去印
+    	printf("[APP] ADS1115 Init failed! Code: %d\n", init_status);
+    	return HAL_ERROR;
     }
 
     /* 連續模式：立刻啟動轉換 */
     if (continuous) {
-        return ADS1115_StartContinuous(mux, pga, dataRate);
+        return I2C_ADS1115_StartContinuous(mux, pga, dataRate);
+        /*
+         * implicit declaration of function 'I2C_ADS1115_StartContinuous'; did you mean 'ADS1115_StartContinuous'? [-Wimplicit-function-declaration]
+         * */
+        //return ADS1115_StartContinuous(mux, pga, dataRate);
     }
     return HAL_OK;
 }
@@ -147,9 +154,9 @@ HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
 HAL_StatusTypeDef APP_ADS1115_Read(float *voltage)
 {
     if (s_continuous) {
-        return ADS1115_ReadContinuous(voltage);
+        return I2C_ADS1115_ReadContinuous(voltage);
     } else {
-        return ADS1115_readOneShot(s_mux, voltage);
+        return I2C_ADS1115_readOneShot(s_mux, voltage);
     }
 }
 

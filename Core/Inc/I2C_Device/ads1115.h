@@ -46,8 +46,7 @@
 
 /* Definitions */
 #define ADS1115_OS (0b1 << 7) // Default
-
-
+#define ADS1115_Address  0x48	// 0x48, Addr pin to Gnd, 7 bit address, without R/W' bit.
 
 #define ADS1115_MUX_AIN0 (0b100 << 4)		// Analog input 1 0x40
 #define ADS1115_MUX_AIN1 (0b101 << 4)		// Analog input 2 0x50
@@ -149,5 +148,13 @@ HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate,
 HAL_StatusTypeDef ADS1115_readOneShot(uint16_t muxPort, float *voltage);
 HAL_StatusTypeDef ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16_t dataRate);
 HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage);
+
+I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA);
+I2C_ADS1115_Status I2C_ADS1115_readOneShot(uint16_t muxPort, float *voltage);
+I2C_ADS1115_Status I2C_ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, uint16_t dataRate );
+I2C_ADS1115_Status I2C_ADS1115_ReadContinuous(float *voltage);
+
+int ADS1115_DeviceInit_Wrapper(void);
+
 
 #endif
