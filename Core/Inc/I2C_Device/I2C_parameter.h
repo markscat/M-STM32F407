@@ -65,10 +65,23 @@
 #define TCA9548_CH7   0x80
 
 typedef enum {
-    TCA9548_OK = 0,
-    TCA9548_ERR_COMM,
-    TCA9548_ERR_TIMEOUT,
-    TCA9548_ERR_INVALID_CH
+    /* === 成功狀態 === */
+    TCA9548_OK = 0,             // 操作成功
+
+    /* === 初始化與硬體狀態 === */
+    TCA9548_ERR_INIT,           // 初始化失敗 (例如晶片上電沒反應)
+    TCA9548_ERR_NOT_READY,      // 設備未就緒 (可能正在重置或未供電)
+
+    /* === 參數與邏輯錯誤 (軟體端) === */
+    TCA9548_ERR_INVALID_CH,     // 無效的通道編號 (例如傳入大於 7 的數字)
+    TCA9548_ERR_INVALID_PARAM,  // 無效的參數 (例如傳入 NULL 指標)
+
+    /* === 通訊與匯流排錯誤 (硬體端) === */
+    TCA9548_ERR_COMM,           // I2C 通訊失敗 (NACK 或一般錯誤)
+    TCA9548_ERR_TIMEOUT,        // I2C 通訊超時 (HAL_TIMEOUT)
+    TCA9548_ERR_BUS_BUSY,       // I2C 匯流排忙碌 (HAL_BUSY，可能被其他中斷卡住)
+    TCA9548_ERR_BUS_FAULT       // 匯流排錯誤 (例如 SDA/SCL 短路導致 Hard Fault)
+
 } TCA9548_Status;
 #endif
 

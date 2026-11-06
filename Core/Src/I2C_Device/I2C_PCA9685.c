@@ -52,6 +52,13 @@
 #define PCA9685_LED0_ON_L 0x06
 */
 HAL_StatusTypeDef PCA9685_Init(void) {
+#ifdef use_TCA9548
+	if(TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK){
+
+		printf("PCA9685 not exist, or Not connected to TCA9548");
+	}
+
+#endif
     uint8_t oldmode, newmode;
     HAL_StatusTypeDef status;
 
@@ -88,6 +95,10 @@ HAL_StatusTypeDef PCA9685_Init(void) {
     }
 
     return HAL_OK; // 確認晶片已待命，初始化成功
+}
+
+int  PCA9685_DeviceInit_Wrapper(void) {
+		return (int)PCA9685_Init();
 }
 
 /**
@@ -153,4 +164,52 @@ HAL_StatusTypeDef PCA9685_SetPWM(uint8_t channel, uint16_t off_ticks)
                              pwm_data,
                              4,
                              100);
+}
+
+
+/**
+ * @brief 動態修改 PCA9685 的 PWM 頻率
+ * @param freq_hz 目標頻率 (24Hz ~ 1526Hz)
+ * @retval HAL_OK 修改成功
+ * @retval HAL_ERROR 參數錯誤或 I2C 通訊失敗
+ */
+HAL_StatusTypeDef PCA9685_SetFrequency(uint16_t freq_hz)
+{
+    // 1. 邊界檢查：PCA9685 的硬體極限
+    if (freq_hz < 24 || freq_hz > 1526) {
+        printf("[PCA9685] Error: Frequency must be between 24Hz and 1526Hz\n");
+        return HAL_ERROR;
+    }
+
+    // 2. 計算 Prescale 值
+    // 公式：round(25,000,000 / (4096 * freq)) - 1
+    // 加上 0.5f 是為了實現四捨五入
+    float prescale_f = (25000000.0f / (4096.0f * freq_hz)) - 1.0f;
+    uint8_t prescale = (uint8_t)(prescale_f + 0.5f);
+
+    HAL_StatusTypeDef status;
+    uint8_t oldmode, newmode;
+
+    // 3. 讀取目前的 MODE1
+    status = HAL_I2C_Mem_Read(hi2c_main, PCA9685_ADDR << 1, PCA9685_MODE1, 1, &oldmode, 1, 100);
+    if (status != HAL_OK) return status;
+
+    // 4. 進入 Sleep 模式 (Bit 4 設為 1)
+    uint8_t sleep_mode = oldmode | 0x10;
+    status = HAL_I2C_Mem_Write(hi2c_main, PCA9685_ADDR << 1, PCA9685_MODE1, 1, &sleep_mode, 1, 100);
+    if (status != HAL_OK) return status;
+
+    // 5. 寫入新的 Prescale
+    status = HAL_I2C_Mem_Write(hi2c_main, PCA9685_ADDR << 1, PCA9685_PRESCALE, 1, &prescale, 1, 100);
+    if (status != HAL_OK) return status;
+
+    // 6. 喚醒晶片 (清除 Sleep 位元，並確保 Auto-Increment 是開啟的)
+    newmode = (oldmode & 0xEF) | 0x20; // 清除 bit4，設定 bit5 (AI)
+    status = HAL_I2C_Mem_Write(hi2c_main, PCA9685_ADDR << 1, PCA9685_MODE1, 1, &newmode, 1, 100);
+    if (status != HAL_OK) return status;
+
+    // 等待震盪器穩定 (官方建議 > 500us)
+    HAL_Delay(1);
+
+    return HAL_OK;
 }

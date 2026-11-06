@@ -198,6 +198,21 @@ float ADS1115_voltCoef;			// Voltage coefficient.
 
 I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA){
 
+#ifdef use_TCA9548
+
+	uint8_t ch=0xFF;
+
+	  for(uint8_t i= 0; i<g_scan_count ; i++){
+		  if (g_scan_result[i].Peripheral_address == ADS1115_Address)	{
+			  ch=g_scan_result[i].TCA9548_CH;
+			  printf("ADS1115 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+	          break; // 找到了就可以跳出迴圈了
+		  }
+	  }
+		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
+
+#endif
+
     if (handler == NULL) {
         return I2C_ADS1115_ERR_INVALID_HANDLER; // 防呆
     }
@@ -292,6 +307,7 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
 int ADS1115_DeviceInit_Wrapper(void) {
     // 假設你的 handler 是 &hi2c1
     //return (int)I2C_ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE);
+
     I2C_ADS1115_Status status = I2C_ADS1115_Init(&hi2c1, ADS1115_DATA_RATE_128, ADS1115_PGA_ONE);
 
     // 2. 根據狀態碼印出詳細報告
@@ -639,9 +655,9 @@ HAL_StatusTypeDef ADS1115_ReadContinuous(float *voltage){
  * */
 /* Function definitions. */
 /**
- * /*
  *
-/*
+ *
+
 HAL_StatusTypeDef ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setDataRate, uint16_t setPGA) {
 
 	// Handler

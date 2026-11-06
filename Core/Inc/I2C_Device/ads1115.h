@@ -42,6 +42,7 @@
 #include "stm32f4xx_hal.h" // Could be changed for a specific processor.
 #include "string.h"
 #include "stdio.h"
+#include "I2C_TCA9548.h"
 
 
 /* Definitions */

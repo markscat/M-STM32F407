@@ -45,7 +45,9 @@ Core/Src/Tools.o: ../Core/Src/Tools.c ../Core/Inc/Tools.h \
  ../Core/Inc/OLED/I2C_OLED_horse_anim.h ../Core/Inc/OLED/UI.h \
  ../Core/Inc/I2C_Device/I2C_parameter.h \
  ../Core/Inc/I2C_Device/I2C_TCA9548.h \
- ../Core/Inc/I2C_Device/I2C_parameter.h ../Core/Inc/I2C_Device/ads1115.h
+ ../Core/Inc/I2C_Device/I2C_parameter.h ../Core/Inc/I2C_Device/ads1115.h \
+ ../Core/Inc/I2C_Device/I2C_MCP4725.h \
+ ../Core/Inc/I2C_Device/I2C_PCA9685.h
 ../Core/Inc/Tools.h:
 ../Core/Inc/I2C_Device\I2C_Peripherals.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -105,3 +107,5 @@ Core/Src/Tools.o: ../Core/Src/Tools.c ../Core/Inc/Tools.h \
 ../Core/Inc/I2C_Device/I2C_TCA9548.h:
 ../Core/Inc/I2C_Device/I2C_parameter.h:
 ../Core/Inc/I2C_Device/ads1115.h:
+../Core/Inc/I2C_Device/I2C_MCP4725.h:
+../Core/Inc/I2C_Device/I2C_PCA9685.h:

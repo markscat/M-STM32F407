@@ -153,19 +153,20 @@ static uint8_t current_active_channel = 0xFF;
  */
 HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr) {
     // 1. 走訪掃描陣列，尋找位址
+
     for (uint8_t i = 0; i < g_scan_count; i++) {
         if (g_scan_result[i].Peripheral_address == target_addr) {
             uint8_t target_ch = g_scan_result[i].TCA9548_CH;
 
             // 2. 如果目前已經在這個通道，直接回傳成功，省下一次 I2C 通訊
-            if (current_active_channel == target_ch) {
+            /*if (current_active_channel == target_ch) {
                 return HAL_OK;
-            }
+            }*/
 
             // 3. 如果不在，就切換通道
             if (TCA9548_SelectChannel(target_ch) == TCA9548_OK) {
                 current_active_channel = target_ch; // 更新記憶
-                //printf("[MUX] 自動切換至 CH%u (目標: 0x%02X)\n", target_ch, target_addr);
+                printf("[MUX] 切換至 CH%u (目標: 0x%02X)\n", target_ch, target_addr);
                 return HAL_OK;
             } else {
                 printf("[MUX] 切換至 CH%u 失敗！\n", target_ch);
@@ -178,4 +179,21 @@ HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr) {
     // 找不到
     printf("[MUX] 錯誤：掃描清單中找不到 0x%02X\n", target_addr);
     return HAL_ERROR;
+}
+
+
+const char* TCA9548_Status_ToString(TCA9548_Status status)
+{
+    switch (status) {
+        case TCA9548_OK:              return "OK";
+        case TCA9548_ERR_INIT:        return "Init Failed";
+        case TCA9548_ERR_NOT_READY:   return "Not Ready";
+        case TCA9548_ERR_INVALID_CH:  return "Invalid Channel (>7)";
+        case TCA9548_ERR_INVALID_PARAM: return "Invalid Parameter";
+        case TCA9548_ERR_COMM:        return "I2C Comm Error";
+        case TCA9548_ERR_TIMEOUT:     return "I2C Timeout";
+        case TCA9548_ERR_BUS_BUSY:    return "I2C Bus Busy";
+        case TCA9548_ERR_BUS_FAULT:   return "I2C Bus Fault";
+        default:                      return "Unknown Error";
+    }
 }

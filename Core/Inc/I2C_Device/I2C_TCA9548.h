@@ -53,5 +53,8 @@ TCA9548_Status TCA9548_DisableAll(void);
 /* 讀回目前通道設定（除錯用） */
 TCA9548_Status TCA9548_GetChannel(uint8_t *mask);
 
+const char* TCA9548_Status_ToString(TCA9548_Status status);
+
+
 
 #endif /* INC_I2C_TCA9548_H_ */

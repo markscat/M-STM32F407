@@ -38,8 +38,9 @@ Core/Src/uart_io.o: ../Core/Src/uart_io.c ../Core/Inc/uart_io.h \
  ../Core/Inc/i2c.h ../Core/Inc/I2C_Device/I2C_parameter.h \
  ../Core/Inc/I2C_Device/I2C_TCA9548.h \
  ../Core/Inc/I2C_Device/I2C_parameter.h ../Core/Inc/I2C_Device/ads1115.h \
- ../Core/Inc/OLED/I2C_OLED_SH1106.h ../Core/Inc/main.h \
- ../Core/Inc/OLED/I2C_OLED_fonts.h ../Core/Inc/Tools.h \
+ ../Core/Inc/I2C_Device/I2C_MCP4725.h \
+ ../Core/Inc/I2C_Device/I2C_PCA9685.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
+ ../Core/Inc/main.h ../Core/Inc/OLED/I2C_OLED_fonts.h ../Core/Inc/Tools.h \
  ../Core/Inc/I2C_Device\I2C_parameter.h ../Core/Inc/error_handler.h \
  ../Core/Inc/I2C_Device\I2C_Peripherals.h ../Core/Inc/gpio.h \
  ../Core/Inc/i2c.h ../Core/Inc/I2C_Device/I2C_Peripherals.h \
@@ -90,6 +91,8 @@ Core/Src/uart_io.o: ../Core/Src/uart_io.c ../Core/Inc/uart_io.h \
 ../Core/Inc/I2C_Device/I2C_TCA9548.h:
 ../Core/Inc/I2C_Device/I2C_parameter.h:
 ../Core/Inc/I2C_Device/ads1115.h:
+../Core/Inc/I2C_Device/I2C_MCP4725.h:
+../Core/Inc/I2C_Device/I2C_PCA9685.h:
 ../Core/Inc/OLED/I2C_OLED_SH1106.h:
 ../Core/Inc/main.h:
 ../Core/Inc/OLED/I2C_OLED_fonts.h:

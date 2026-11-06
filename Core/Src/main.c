@@ -63,8 +63,8 @@
  * SH1106				0x3C         ok
  * RTC(DS3231/ DS1307) 	0x68         ok
  * ADS1115(ADC)			0x48         ok
- * mcp4725              0x61		 todo
- * pca9685              0x40		 ok
+ * mcp4725              0x61		 ok
+ * TCA9685              0x40		 ok
  * PCA9548_I2C Mux 		0x70		 ok
  * 
  *
@@ -345,43 +345,62 @@ int main(void)
 #ifdef PWM_Servo_motor
 
 #ifdef use_TCA9548
-
+  /*
   uint8_t ch=0xFF;
 
-  for(uint8_t i= 0; i<g_scan_count ; i++){
-	  if (g_scan_result[i].Peripheral_address == 0x40)	{
-		  ch=g_scan_result[i].TCA9548_CH;
-		  printf("PCA9685 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
-          break; // 找到了就可以跳出迴圈了
-	  }
+   for(uint8_t i= 0; i<g_scan_count ; i++){
+ 	  if (g_scan_result[i].Peripheral_address == 0x40)	{
+ 		  ch=g_scan_result[i].TCA9548_CH;
+ 		  printf("PCA9685 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
+           break; // 找到了就可以跳出迴圈了
+ 	  }
+   }
+   printf("\n\nPCA9685 ch = %d\n\n",ch);
+
+ 	  TCA9548_SelectChannel(ch);   // ← 切到 PCA9685 所在通道
+*/
+  //這邊就沒有波形
+  if(TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK)
+  {
+	  printf("\n can't find PCA9685\n");
+  }else{
+	  printf("\n PCA9685 switch chinel \n");
+
   }
-  printf("\n\nPCA9685 ch = %d\n\n",ch);
 
-	  TCA9548_SelectChannel(ch);   // ← 切到 PCA9685 所在通道
+
+
 #endif
+  // --- 初始化結束，裝置已待命 ---
 
-	  printf("\n Initializing PCA9685...\n");
-	      if (PCA9685_Init() == HAL_OK) {
-	          printf("PCA9685 ready. (50Hz PWM)\n");
-	      } else {
-	          printf("PCA9685 init failed! Check wiring.\n");
-	          // 這裡可以選擇停在 Error_Handler 或繼續
-	      }
-
-	      // --- 初始化結束，裝置已待命 ---
-
+/*
+ * 舵機控制程式
+ * 輸入：角度
+ *
+ * */
 	      // 直到這裡，才開始下達「動作」指令
 	      printf("Moving Servo to 90 deg...\n");
 
 
-	    	  PCA9685_SetPWM(1 , 102);// 通道 0，0度
-	          HAL_Delay(1000);
+#define Servo_Moving_by_Ticks
 
-	    	  PCA9685_SetPWM(1 , 307); // 通道 0，90度
-	          HAL_Delay(1000);
+	      #ifdef Servo_Moving_by_Ticks
+	      for(int i=5; i<= 4090;i++){
+	    	  PCA9685_SetPWM(1 , i);// 通道 0，0度
+	    	  printf("\n\n %d tick",i);
+	          HAL_Delay(5);	 //停一秒,用示波器看波形變化
+	          //HAL_Delay(1000); //停 10ms，整個過程約 4 秒，舵機會非常平順地轉過去
+	      }
 
-	    	  PCA9685_SetPWM(1 , 512); // 通道 0，180度
-	          HAL_Delay(1000);
+		 #else //Servo_Moving_by_angle
+			for (int angle = 0; angle <= 180; angle++) {
+	         // 將角度換算成 Ticks
+	         int ticks = 102 + (angle * 410 / 180);
+	         PCA9685_SetPWM(1, ticks);
+	         HAL_Delay(10);
+	      }
+
+#endif
 
 
 #endif
@@ -480,7 +499,7 @@ int main(void)
 
 // 最後的結尾,進入無盡迴圈
 #ifdef use_TCA9548_
-	  TCA9548_SelectChannel(0);   // ← 切到 EEPROM 所在通道
+	  TCA9548_SelectChannel(0);
 #endif
 
 //正弦波測試

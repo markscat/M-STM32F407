@@ -11,22 +11,15 @@
 /**
  * @brief 初始化 MCP4725 (確認設備在位)
  */
-	HAL_StatusTypeDef MCP4725_Init(void) {
+HAL_StatusTypeDef MCP4725_Init(void) {
+
 #ifdef use_TCA9548
+	if(TCA9548_SelectByAddress(MCP4725_I2C_ADDR) != HAL_OK){
 
-	uint8_t ch=0xFF;
-
-	  for(uint8_t i= 0; i<g_scan_count ; i++){
-		  if (g_scan_result[i].Peripheral_address == MCP4725_I2C_ADDR)	{
-			  ch=g_scan_result[i].TCA9548_CH;
-			  printf("MCP4725 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
-	          break; // 找到了就可以跳出迴圈了
-		  }
-	  }
-		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
+		printf("MCP4725 not exist, or Not connected to TCA9548");
+	}
 
 #endif
-
 		// 檢查設備是否在匯流排上
 		if (HAL_I2C_IsDeviceReady(hi2c_main, MCP4725_I2C_ADDR << 1, 3, 100) != HAL_OK) {
 			return HAL_ERROR;
@@ -38,6 +31,14 @@
 
 		return HAL_OK;
 	}
+
+
+int MCP4725_DeviceInit_Wrapper(void) {
+    // 假設你的 handler 是 &hi2c1
+	    return (int)MCP4725_Init() ; // 假設 EEPROM_DeviceInit 回傳 I2C_Status，I2C_OK 通常是 0
+	}
+
+
 
 /**
  * @brief 直接寫入 12-bit 原始數值 (0 ~ 4095)

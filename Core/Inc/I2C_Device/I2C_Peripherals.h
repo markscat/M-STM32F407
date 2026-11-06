@@ -23,7 +23,11 @@
 #include <I2C_Device/I2C_parameter.h>
 #include <I2C_Device/I2C_TCA9548.h>
 #include <I2C_Device/ads1115.h>
+#include <I2C_Device/I2C_MCP4725.h>
+#include <I2C_Device/I2C_PCA9685.h>
+
 #include <OLED/I2C_OLED_SH1106.h>
+
 #include "Tools.h"
 
 

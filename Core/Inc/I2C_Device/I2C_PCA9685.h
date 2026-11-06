@@ -63,7 +63,12 @@
 // 喚醒並設定頻率
 HAL_StatusTypeDef  PCA9685_Init(void);
 
+int  PCA9685_DeviceInit_Wrapper(void);
+
 // 設定指定通道的脈寬 (off_ticks)
 HAL_StatusTypeDef  PCA9685_SetPWM(uint8_t channel, uint16_t off_ticks);
+
+// 設定指定通道的頻率 (off_Frequency)
+HAL_StatusTypeDef PCA9685_SetFrequency(uint16_t freq_hz);
 
 #endif /* INC_I2C_PCA9685_H_ */

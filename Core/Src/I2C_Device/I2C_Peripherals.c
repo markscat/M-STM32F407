@@ -191,7 +191,7 @@ I2C_Status I2C_Init_Devices(void) {
       .dev_addr   = EEPROM_I2C_ADDR,  // 7位地址
       //.init_fn    = EEPROM_DeviceInit,
 	  .init_fn	  = EEPROM_DeviceInit_Wrapper,
-      .dev_name   = "AT24C32 EEPROM",
+      .dev_name   = "EEPROM : AT24C32 ",
       .is_required = true
     },
     // DS1307 设备
@@ -199,25 +199,31 @@ I2C_Status I2C_Init_Devices(void) {
       .dev_addr  = RTC_I2C_ADDR,  // 7位地址
       //.init_fn   = DS1307_DeviceInit,
 	  .init_fn	 = DS1307_DeviceInit_Wrapper,
-      .dev_name  = "DS1307 RTC",
+      .dev_name  = "RTC : DS1307",
       .is_required = true
     },
-    // 可在此添加更多设备...
 	{
-	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
-       //.init_fn   = SH1106_DeviceInit,
-	   .init_fn   = SH1106_DeviceInit_Wrapper,
-       .dev_name  = "SH1106 OLED",
-       .is_required = true
+	   .dev_addr  = ADS1115_Address,  // 7位地址
+	   .init_fn   = ADS1115_DeviceInit_Wrapper,
+	   .dev_name  = "ADC : ADS1115 ",
+	   .is_required = true
+	},{
+       .dev_addr  = MCP4725_I2C_ADDR,  // 7位地址
+	   .init_fn   = MCP4725_DeviceInit_Wrapper,
+	   .dev_name  = "DAC : MCP4725 ",
+	   .is_required = true
+	},{
+	   .dev_addr  = PCA9685_ADDR,
+	   .init_fn   = PCA9685_DeviceInit_Wrapper,
+	   .dev_name  = "PWM :  PCA9685",
+	   .is_required = true
 	},
 	{
-       //.dev_addr  = ADS1115_Address,  // 7位地址
-	   .dev_addr  = 0x48,  // 7位地址
-	   .init_fn   = ADS1115_DeviceInit_Wrapper,
-	   .dev_name  = "ADS1115 ADC",
+	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
+	   .init_fn   = SH1106_DeviceInit_Wrapper,
+	   .dev_name  = "OLED : SH1106 ",
 	   .is_required = true
 	}
-
   };
   //end I2C_DeviceConfig dev_config[]
 

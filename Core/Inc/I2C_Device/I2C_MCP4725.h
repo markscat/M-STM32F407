@@ -25,5 +25,8 @@ HAL_StatusTypeDef MCP4725_SetVoltage(float voltage, float vref);
 HAL_StatusTypeDef MCP4725_SetRawValue(uint16_t value);
 void mcp4725_sinWave_test(void);
 
+int MCP4725_DeviceInit_Wrapper(void);
+
+
 
 #endif /* INC_I2C_MCP4725_H_ */
