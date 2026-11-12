@@ -219,6 +219,12 @@ I2C_Status I2C_Init_Devices(void) {
 	   .is_required = true
 	},
 	{
+		.dev_addr  = TCA9555_ADDR,
+		.init_fn   = TCA9555_DeviceInit_Wrapper,
+		.dev_name  = "IO_expander : TCA9555",
+	    .is_required = true
+	},
+	{
 	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
 	   .init_fn   = SH1106_DeviceInit_Wrapper,
 	   .dev_name  = "OLED : SH1106 ",
@@ -318,6 +324,21 @@ HAL_StatusTypeDef RTC_SetTime(RTC_Time* time) {
 
 
 HAL_StatusTypeDef RTC_GetTime(RTC_Time* time) {
+
+#ifdef use_TCA9548
+
+	//printf(" \n\n here is RTC_GetTime \n\n ");
+
+	if(TCA9548_SelectByAddress(RTC_I2C_ADDR)!= HAL_OK){
+		printf(" \n\n switch TCA9548 ch. fail \n\n ");
+		return HAL_ERROR;
+	}
+	/*else{
+		printf(" \n\n switch TCA9548 ch. pass \n\n ");
+	}*/
+
+#endif
+
     uint8_t buffer[7];
     HAL_StatusTypeDef status;
 
@@ -346,6 +367,14 @@ HAL_StatusTypeDef RTC_GetTime(RTC_Time* time) {
 
 
 HAL_StatusTypeDef DS3231_GetTemp(DS3231_Temp* temp) {
+
+
+#ifdef use_TCA9548
+
+	TCA9548_SelectByAddress(RTC_I2C_ADDR);
+
+#endif
+
     uint8_t buffer[2];
 
     HAL_StatusTypeDef status_MSB,status_LSB;

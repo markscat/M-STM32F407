@@ -15,7 +15,9 @@ extern "C" {
 #endif
 
 #include "main.h" // For HAL types like I2C_HandleTypeDef
-#include <OLED/I2C_OLED_fonts.h>
+#include <OLED/Font/I2C_OLED_fonts.h>
+
+
 
 
 //==============================================================================
@@ -273,7 +275,11 @@ char SH1106_Putc(char ch, FontDef_t* Font, SH1106_COLOR_t color);
  * @param  color: String color.
  * @retval First character of the string.
  */
+
+/*不支援 換行／ｎ*/
 char SH1106_Puts(char* str, FontDef_t* Font, SH1106_COLOR_t color);
+/*支援 換行／ｎ*/
+char SH1106_Puts_line_break(char* str, FontDef_t* Font, SH1106_COLOR_t color);
 
 
 // --- Advanced Functions ---
@@ -290,6 +296,7 @@ void SH1106_InvertDisplay(uint8_t inverted);
  * @param on: 1 to turn on, 0 to turn off.
  */
 void SH1106_SetDisplayOn(uint8_t on);
+
 
 
 #ifdef __cplusplus

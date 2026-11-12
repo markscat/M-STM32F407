@@ -63,7 +63,7 @@ char* ParseCommand(const char* command_line, int* command_id_ptr);
 bool CheckTimeStruct (const RTC_Time* time_to_check );
 void HandleUartCommands(void);
 //掃描所有Ｉ２Ｃ設備
-void Scan_I2C_Address(void);
+bool Scan_I2C_Address(void);
 
 //ring Buffer
 void ProcessUartRingBuffer(void);

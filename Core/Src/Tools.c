@@ -272,7 +272,8 @@ TCA9548_CH_and_address g_scan_result[MAX_SCAN_RESULTS];
 
 uint8_t g_scan_count = 0;
 
-void Scan_I2C_Address(void) {
+bool Scan_I2C_Address(void) {
+
     printf("--- Starting I2C Bus Scan ---\n");
     HAL_StatusTypeDef status;
     uint8_t found_count = 0;
@@ -309,10 +310,15 @@ void Scan_I2C_Address(void) {
 
     if (found_count == 0) {
         printf("RESULT: No I2C devices found on the bus.\n");
+        return false;  // <--- 新增這行：回報「什麼都沒有」
+
     } else {
     	 printf("--- Scan Finished. Found %u device(s). ---\n", found_count);
     	 printf("--- Recorded %u device(s) in g_scan_result[] ---\n", g_scan_count);
+         return true;   // <--- 新增這行：回報「有找到東西」
+
     }
+
 }
 
 #endif

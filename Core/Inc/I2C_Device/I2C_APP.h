@@ -67,6 +67,12 @@ HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
 /* 讀取一次（依目前設定） */
 HAL_StatusTypeDef APP_ADS1115_Read(float *voltage);
 
+void APP_OLED_ShowClock(const RTC_Time *rtc_dt, const DS3231_Temp *temp);
+
+HAL_StatusTypeDef APP_OLED_UpdateClock(void);
+
+
+
 #endif
 
 

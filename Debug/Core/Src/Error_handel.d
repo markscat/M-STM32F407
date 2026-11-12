@@ -40,12 +40,14 @@ Core/Src/Error_handel.o: ../Core/Src/Error_handel.c \
  ../Core/Inc/i2c.h ../Core/Inc/I2C_Device/I2C_Peripherals.h \
  ../Core/Inc/spi.h ../Core/Inc/usart.h ../Core/Inc/gpio.h \
  ../Core/Inc/crc.h ../Core/Inc/OLED/I2C_OLED_SH1106.h ../Core/Inc/main.h \
- ../Core/Inc/OLED/I2C_OLED_fonts.h ../Core/Inc/OLED/I2C_OLED_horse_anim.h \
- ../Core/Inc/OLED/UI.h ../Core/Inc/I2C_Device/I2C_parameter.h \
+ ../Core/Inc/OLED/Font/I2C_OLED_fonts.h \
+ ../Core/Inc/OLED/I2C_OLED_horse_anim.h ../Core/Inc/OLED/UI.h \
+ ../Core/Inc/I2C_Device/I2C_parameter.h \
  ../Core/Inc/I2C_Device/I2C_TCA9548.h \
  ../Core/Inc/I2C_Device/I2C_parameter.h ../Core/Inc/I2C_Device/ads1115.h \
  ../Core/Inc/I2C_Device/I2C_MCP4725.h \
- ../Core/Inc/I2C_Device/I2C_PCA9685.h ../Core/Inc/Tools.h \
+ ../Core/Inc/I2C_Device/I2C_PCA9685.h ../Core/Inc/I2C_Device/I2C_TCA555.h \
+ ../Core/Inc/I2C_Device/BPS_i2c.h ../Core/Inc/Tools.h \
  ../Core/Inc/data_recovery.h
 ../Core/Inc/error_handler.h:
 ../Core/Inc/I2C_Device\I2C_Peripherals.h:
@@ -98,7 +100,7 @@ Core/Src/Error_handel.o: ../Core/Src/Error_handel.c \
 ../Core/Inc/crc.h:
 ../Core/Inc/OLED/I2C_OLED_SH1106.h:
 ../Core/Inc/main.h:
-../Core/Inc/OLED/I2C_OLED_fonts.h:
+../Core/Inc/OLED/Font/I2C_OLED_fonts.h:
 ../Core/Inc/OLED/I2C_OLED_horse_anim.h:
 ../Core/Inc/OLED/UI.h:
 ../Core/Inc/I2C_Device/I2C_parameter.h:
@@ -107,5 +109,7 @@ Core/Src/Error_handel.o: ../Core/Src/Error_handel.c \
 ../Core/Inc/I2C_Device/ads1115.h:
 ../Core/Inc/I2C_Device/I2C_MCP4725.h:
 ../Core/Inc/I2C_Device/I2C_PCA9685.h:
+../Core/Inc/I2C_Device/I2C_TCA555.h:
+../Core/Inc/I2C_Device/BPS_i2c.h:
 ../Core/Inc/Tools.h:
 ../Core/Inc/data_recovery.h:

@@ -318,25 +318,44 @@ int main(void)
 
   //掃描所有I2C的設備
 
-
+  printf("\n\n ***************init TCA9548*************** \n\n");
   /*  I2C MUX TCA9548 初始化 */
   #ifdef use_TCA9548
 
   if (TCA9548_Init() != TCA9548_OK) {
       printf("TCA9548 init failed!\n");
       HAL_Delay(1000);
+      while(1){};		//直接結束
+
       //return 1;
   }
+
+  printf("\n\n ***************TCA9548 init ok *************** \n\n");
 
 #endif   /*  I2C MUX TCA9548 初始化 */
 
   /* 掃描所有的 i2C 的週邊 以及相對應位址 */
-  Scan_I2C_Address();
+  // 執行掃描
+
+  bool scan_success = Scan_I2C_Address();
+
+  // 判斷結果
+  if (scan_success == false) {
+      printf("\n[FATAL] 匯流排上沒有任何 I2C 設備，系統停止！\n");
+
+      // 停下來，不要讓它去跑後面的 TCA9548_SelectByAddress 或是 Init
+      while (1) {
+          HAL_Delay(1000);
+      }
+  }
+
 
   /* 輪著週邊初始化 */
 
   if (APP_I2C_Init() != I2C_OK) {
+      printf("No device \n \t END");
         HAL_Delay(1000);
+        while(1){};		//直接結束
         return 1;             // main 回傳 int，不要直接回傳 I2C_Status
     }
 
@@ -345,20 +364,7 @@ int main(void)
 #ifdef PWM_Servo_motor
 
 #ifdef use_TCA9548
-  /*
-  uint8_t ch=0xFF;
 
-   for(uint8_t i= 0; i<g_scan_count ; i++){
- 	  if (g_scan_result[i].Peripheral_address == 0x40)	{
- 		  ch=g_scan_result[i].TCA9548_CH;
- 		  printf("PCA9685 ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
-           break; // 找到了就可以跳出迴圈了
- 	  }
-   }
-   printf("\n\nPCA9685 ch = %d\n\n",ch);
-
- 	  TCA9548_SelectChannel(ch);   // ← 切到 PCA9685 所在通道
-*/
   //這邊就沒有波形
   if(TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK)
   {
@@ -367,11 +373,42 @@ int main(void)
 	  printf("\n PCA9685 switch chinel \n");
 
   }
-
-
-
 #endif
   // --- 初始化結束，裝置已待命 ---
+
+
+#ifdef oled
+	//SH1106 1.3 inch OLED address= 0x3C
+	#ifdef use_TCA9548
+		if (TCA9548_SelectByAddress(0x3C) == HAL_OK) {
+	#endif
+
+	  SH1106_Fill(SH1106_COLOR_BLACK);
+	  SH1106_UpdateScreen();
+	  SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
+	  HAL_Delay(5000);
+
+
+		// 設定游標位置（例如 X=0, Y=0）
+	  SH1106_Fill(SH1106_COLOR_BLACK);
+	  SH1106_GotoXY(0, 20);
+	  /*
+	   *  Font_11x18每行可以印出11個字
+	   * Font_7x10每行可以印出18個字
+	   * 如果斷行符號超過螢幕,很可能會無法斷行
+	   *
+	   * */
+		SH1106_Puts_line_break("System init ok\n", &Font_7x10, SH1106_COLOR_WHITE);
+
+		SH1106_UpdateScreen();
+
+	#ifdef use_TCA9548
+		}
+		printf("Visual monitor status \n\n");
+	#endif
+
+#endif
+
 
 /*
  * 舵機控制程式
@@ -384,8 +421,8 @@ int main(void)
 
 #define Servo_Moving_by_Ticks
 
-	      #ifdef Servo_Moving_by_Ticks
-	      for(int i=5; i<= 4090;i++){
+#ifdef Servo_Moving_by_Ticks
+	      for(int i=5; i<= 10;i++){
 	    	  PCA9685_SetPWM(1 , i);// 通道 0，0度
 	    	  printf("\n\n %d tick",i);
 	          HAL_Delay(5);	 //停一秒,用示波器看波形變化
@@ -449,27 +486,37 @@ int main(void)
 	#endif
 #endif
 
+#define TCA555_IO_extern
+
+#ifdef TCA555_IO_extern
+	  // 初始先全滅
+	  if (TCA9555_WriteOutput(0xFF,0xFF) != HAL_OK) {
+	        printf("TCA9555 寫入失敗！\n");
+	  }
+
+	  for (int i = 0; i < 16; i++) {
+	      if (i < 8) {
+	          // 亮 Port 0 的腳位，Port 1 全滅 (Active Low 所以是 0xFF)
+	          if(TCA9555_WriteOutput(~(1 << i), 0xFF) != HAL_OK){
+	        	  printf("TCA9555 失敗");
+	        	  return HAL_ERROR;
+	          };
+	      } else {
+	          // 亮 Port 1 的腳位，Port 0 全滅
+	          if(TCA9555_WriteOutput(0xFF, ~(1 << (i - 8)))){
+	        	  printf("TCA9555 失敗");
+	        	  return HAL_ERROR;
+	          }
+	      }
+	      HAL_Delay(200);
+	  }
+
+#endif
 
 
 //#define on_off_screen
 //#define Horse_run
 
-#ifdef oled
-	//SH1106 1.3 inch OLED address= 0x3C
-	#ifdef use_TCA9548
-		if (TCA9548_SelectByAddress(0x3C) == HAL_OK) {
-	#endif
-
-	  SH1106_Fill(SH1106_COLOR_BLACK);
-	  SH1106_UpdateScreen();
-	  SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
-
-	#ifdef use_TCA9548
-		}
-		printf("Visual monitor status \n\n");
-	#endif
-
-#endif
 
 #ifdef DAC_MCP4725
 
@@ -496,6 +543,60 @@ int main(void)
 		#endif
 		  //模板結束
 #endif
+
+#define clock
+
+#ifdef clock
+		  while (10)
+		  		  {
+		  uint32_t last_clock_update = 0;
+
+			  /* UART 輪詢（非阻塞） */
+			  APP_UART_Poll();
+
+			  /* 每 500ms 更新一次 OLED 時鐘 */
+			  if (HAL_GetTick() - last_clock_update >= 500) {
+				  last_clock_update = HAL_GetTick();
+				  APP_OLED_UpdateClock();   /* 讀 RTC + 溫度 → 刷 OLED */
+			  }
+			  /* 若要同時在 UART 上輸出時間，可在這裡偶爾呼叫 APP_RTC_ShowTimeAndTemp() */
+		  }
+
+#endif
+
+		  #ifdef oled_
+	//SH1106 1.3 inch OLED address= 0x3C
+	#ifdef use_TCA9548
+		if (TCA9548_SelectByAddress(0x3C) == HAL_OK) {
+	#endif
+			// 設定游標位置（例如 X=0, Y=0）
+			SH1106_GotoXY(0, 0);
+
+			/*
+			 * Font_11x18每行可以印出11個字
+			 * Font_7x10每行可以印出18個字
+			 * 如果斷行符號超過螢幕,很可能會無法斷行
+			 *
+			 * */
+			SH1106_Puts_line_break("123456789012345678\n", &Font_7x10, SH1106_COLOR_WHITE);
+			SH1106_Puts_line_break("ABCDEFGHnLMNOPQRST\n", &Font_7x10, SH1106_COLOR_WHITE);
+			SH1106_Puts_line_break("UVWXYZabcd\n", &Font_7x10, SH1106_COLOR_WHITE);
+			//\nefghijkl\nmnopqrst\nuvwxyz\n
+			// 重新整理螢幕送出
+			SH1106_UpdateScreen();
+
+	#ifdef use_TCA9548
+		}
+		printf("Visual monitor status \n\n");
+	#endif
+
+#endif
+
+while(1){
+
+
+	}
+}
 
 // 最後的結尾,進入無盡迴圈
 #ifdef use_TCA9548_
@@ -993,7 +1094,7 @@ const unsigned char* horse_anim_frames[10] = {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+
   /* USER CODE END 3 */
 
 

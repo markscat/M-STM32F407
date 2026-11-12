@@ -1,5 +1,5 @@
 Core/Src/OLED/I2C_OLED_fonts.o: ../Core/Src/OLED/I2C_OLED_fonts.c \
- ../Core/Inc/OLED/I2C_OLED_fonts.h \
+ ../Core/Inc/OLED/Font/I2C_OLED_fonts.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -34,7 +34,7 @@ Core/Src/OLED/I2C_OLED_fonts.o: ../Core/Src/OLED/I2C_OLED_fonts.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-../Core/Inc/OLED/I2C_OLED_fonts.h:
+../Core/Inc/OLED/Font/I2C_OLED_fonts.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:

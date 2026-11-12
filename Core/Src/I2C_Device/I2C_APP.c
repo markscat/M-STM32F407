@@ -210,3 +210,74 @@ void PCA9685_MoveSlowly(uint8_t channel, uint8_t target_angle, uint16_t step_del
 #endif
 
 
+/* ---- 時鐘顯示到 OLED ---- */
+
+/**
+ * @brief 將 RTC 時間格式化並顯示在 OLED 上
+ * @param rtc_dt  RTC 時間結構體指標
+ * @param temp    DS3231 溫度結構體指標（若為 NULL 則不顯示溫度）
+ */
+void APP_OLED_ShowClock(const RTC_Time *rtc_dt, const DS3231_Temp *temp)
+{
+
+#ifdef use_TCA9548
+	//切換頻道到OLED
+	TCA9548_SelectByAddress(0x3c);
+
+#endif
+
+    char line_buf[22];
+    static const char* fracStr[] = {"00", "25", "50", "75"};
+    static const char* weekStr[] = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
+
+    /* 清空螢幕緩衝區 */
+    SH1106_Fill(SH1106_COLOR_BLACK);
+
+    /* 第一行：日期  YYYY-MM-DD (Www) */
+    snprintf(line_buf, sizeof(line_buf), "20%02d-%02d-%02d %s",
+             rtc_dt->year, rtc_dt->month, rtc_dt->date,
+             (rtc_dt->day >= 1 && rtc_dt->day <= 7) ? weekStr[rtc_dt->day - 1] : "---");
+    SH1106_GotoXY(0, 0);
+    SH1106_Puts(line_buf, &Font_7x10, SH1106_COLOR_WHITE);
+
+    /* 第二行：時間  HH:MM:SS  （用 11x18 大字體讓時間更醒目） */
+    snprintf(line_buf, sizeof(line_buf), "%02d:%02d:%02d",
+             rtc_dt->hours, rtc_dt->minutes, rtc_dt->seconds);
+    SH1106_GotoXY(0, 14);
+    SH1106_Puts(line_buf, &Font_11x18, SH1106_COLOR_WHITE);
+
+    /* 第三行：溫度（若有提供） */
+    if (temp != NULL) {
+        snprintf(line_buf, sizeof(line_buf), "Temp: %d.%s C",
+                 temp->Integer, fracStr[temp->Fraction & 0x03]);
+        SH1106_GotoXY(0, 40);
+        SH1106_Puts(line_buf, &Font_7x10, SH1106_COLOR_WHITE);
+    }
+
+    /* 刷到螢幕 */
+    SH1106_UpdateScreen();
+}
+
+/**
+ * @brief 從 RTC 讀取時間並顯示到 OLED（含溫度）
+ * @retval HAL_OK 成功；其他表示時間讀取失敗
+ */
+
+HAL_StatusTypeDef APP_OLED_UpdateClock(void)
+{
+    RTC_Time rtc_dt = {0};
+    DS3231_Temp temp = {0};
+    HAL_StatusTypeDef st;
+
+    st = RTC_GetTime(&rtc_dt);
+    if (st != HAL_OK) {
+        return st;
+    }
+
+    /* 溫度讀取失敗不影響時間顯示，所以不檢查返回值 */
+    DS3231_GetTemp(&temp);
+
+    APP_OLED_ShowClock(&rtc_dt, &temp);
+    return HAL_OK;
+}
+
