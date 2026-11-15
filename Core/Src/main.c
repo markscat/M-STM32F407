@@ -528,7 +528,6 @@ int main(void)
 		  if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
 
 		#endif
-
 				if (MCP4725_Init() == HAL_OK) {
 					printf("\n MCP4725 init ok \n\n");
 				}else{
