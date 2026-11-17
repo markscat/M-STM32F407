@@ -77,9 +77,11 @@ TCA9555_Status TCA9555_Init() {
     //** 檢查 I2C 是否就緒*/
 
 #ifdef use_TCA9548
+
 	if(TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK){
-		printf("TCA9555 not exist, or Not connected to TCA9548");
-		return HAL_ERROR;
+		printf("TCA9555_I/O expander not exist, or Not connected to TCA9548");
+	}else{
+		TCA9548_ShowChAndAddress_SelectByAddress(TCA9555_ADDR,"TCA9555_I/O expander");
 	}
 
 #endif
@@ -156,9 +158,9 @@ void Test_TCA9555_LED(void) {
 HAL_StatusTypeDef TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data) {
 
 #ifdef use_TCA9548
+
 	if(TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK){
-		printf("TCA9555 not exist, or Not connected to TCA9548");
-		return HAL_ERROR;
+		printf("TCA9555_I/O expander not exist, or Not connected to TCA9548");
 	}
 
 #endif
@@ -201,6 +203,61 @@ uint16_t TCA9555_ReadInput()
 
     return (input_data[1] << 8) | input_data[0];
 }
+
+/**
+ * @brief 動態設定 TCA9555 的 Port 0 和 Port 1 方向
+ * @param p0_dir Port 0 (P00~P07) 的方向 (使用 TCA9555_DIR_OUTPUT 或 TCA9555_DIR_INPUT)
+ * @param p1_dir Port 1 (P10~P17) 的方向
+ */
+void TCA9555_ConfigPorts(uint8_t p0_dir, uint8_t p1_dir) {
+
+#ifdef use_TCA9548
+    // 確保切換到 TCA9555 的通道
+    if (TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK) {
+        printf("TCA9555 not found on MUX\n");
+        return;
+    }
+#endif
+
+    uint8_t config_cmd[3] = {
+        0x06,   // 從 Port 0 的配置暫存器開始
+        p0_dir, // Port 0 的方向
+        p1_dir  // Port 1 的方向 (自動遞增寫入 0x07)
+    };
+
+    // 使用 BSP 寫入 (假設你已經改好 BSP)
+    if (BSP_I2C_Write(TCA9555_ADDR, config_cmd, 3) != HAL_OK) {
+        printf("TCA9555 ConfigPorts failed!\n");
+    }
+}
+
+void TCA9555_SetPort0Dir(uint8_t dir) {
+#ifdef use_TCA9548
+    // 確保切換到 TCA9555 的通道
+    if (TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK) {
+        printf("TCA9555 not found on MUX\n");
+        return;
+    }
+#endif
+    uint8_t cmd[2] = {0x06, dir};
+    BSP_I2C_Write(TCA9555_ADDR, cmd, 2);
+}
+
+void TCA9555_SetPort1Dir(uint8_t dir) {
+
+#ifdef use_TCA9548
+    // 確保切換到 TCA9555 的通道
+    if (TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK) {
+        printf("TCA9555 not found on MUX\n");
+        return;
+    }
+#endif
+
+    uint8_t cmd[2] = {0x07, dir};
+    BSP_I2C_Write(TCA9555_ADDR, cmd, 2);
+}
+
+
 
 /**
  *  @brief 設定單一port的方向

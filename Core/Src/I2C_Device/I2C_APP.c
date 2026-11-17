@@ -131,28 +131,31 @@ HAL_StatusTypeDef APP_ADS1115_Config(uint16_t mux, uint16_t pga,
     s_dataRate   = dataRate;
     s_continuous = continuous;
 
-    I2C_ADS1115_Status init_status = I2C_ADS1115_Init(&hi2c1, dataRate, pga);
+//因為這邊又跑到初始化去了,為什麼需要初始化???
+    //I2C_ADS1115_Status init_status = I2C_ADS1115_Init(&hi2c1, dataRate, pga);
 
     /* 初始化（設定 PGA / 取樣率） */
-    if (init_status != I2C_ADS1115_OK) {
+  /*  if (init_status != I2C_ADS1115_OK) {
     	// 這裡可以順便印出詳細錯誤，或者交給 Wrapper 去印
     	printf("[APP] ADS1115 Init failed! Code: %d\n", init_status);
     	return HAL_ERROR;
     }
 
+*/
+    ADS1115_UpdateVoltCoef(pga);
+
+
     /* 連續模式：立刻啟動轉換 */
     if (continuous) {
         return I2C_ADS1115_StartContinuous(mux, pga, dataRate);
-        /*
-         * implicit declaration of function 'I2C_ADS1115_StartContinuous'; did you mean 'ADS1115_StartContinuous'? [-Wimplicit-function-declaration]
-         * */
-        //return ADS1115_StartContinuous(mux, pga, dataRate);
     }
     return HAL_OK;
+
 }
 
 HAL_StatusTypeDef APP_ADS1115_Read(float *voltage)
 {
+
     if (s_continuous) {
         return I2C_ADS1115_ReadContinuous(voltage);
     } else {

@@ -462,16 +462,51 @@ int main(void)
 
 //ADC設定
 
+#ifdef DAC_MCP4725
+
+		//模板開始
+		#ifdef use_TCA9548
+		    //要執行下面這行,必須先執行  Scan_I2C_Address();
+		    //但這是系統一開始就該做的,所以不太需要特別說明;
+		    //不過,狗工程師很多,寫個說明,以防萬一
+		  if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+
+		#endif
+			  if(MCP4725_SetVoltage(2.2,4.9) != HAL_OK){
+				  printf("\n設備不存在\n");
+			  }
+				  printf("\nMCP4725 ok\n");
+
+
+			  //程式主體
+			  //初始化必須要在之前就做好這個區塊是用來做應用層的東西,不是用來做初始化
+
+		#ifdef use_TCA9548
+		  }
+		#endif
+		  //模板結束
+#endif
+
+
+
+
 #ifdef ADC_1115
 	//ADS1115 I2C address = 0x48
 	    float adc_voltage = 0.0f;
 
 	#ifdef use_TCA9548
-	  if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
+	  if (TCA9548_SelectByAddress(0x48) != HAL_OK) {
+		  printf("ADC Fail \n\n");
+		  while(1){}
+	  }else{
+		  printf("ADC ok \n\n");
+	  }
 
 	#endif
-    APP_ADS1115_Config(ADS1115_MUX_AIN0, ADS1115_PGA_TWOTHIRDS,
+
+    APP_ADS1115_Config(ADS1115_MUX_AIN0, ADS1115_PGA_ONE,
                        ADS1115_DATA_RATE_128, 1);
+    HAL_Delay(50);              // 等它轉換穩定
 
     // 呼叫你的封裝函式讀取
     if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
@@ -481,9 +516,34 @@ int main(void)
     	printf("ADC 讀取失敗!\n");
     }
 
-#ifdef use_TCA9548
-	  }
-	#endif
+/*
+    printf("in while\n");
+
+    while(1){
+        // 1. 每次讀取前，確保 TCA9548 切到了 ADS1115 的通道
+          #ifdef use_TCA9548
+            if (TCA9548_SelectByAddress(0x48) != HAL_OK) {
+                printf("ADC Channel Switch Fail \n");
+                HAL_Delay(1000);
+                continue; // 切換失敗，直接跳過這次，等下一輪
+            }
+          #endif
+        // 呼叫你的封裝函式讀取
+
+            HAL_StatusTypeDef status = APP_ADS1115_Read(&adc_voltage);
+
+        if (status == HAL_OK) {
+        	// 注意：ADS1115 讀出來的單位是「毫伏 (mV)」
+        	printf("ADC 電壓: %.3f V\r\n", adc_voltage / 1000.0f);
+        } else {
+            printf("ADC 讀取失敗! 錯誤碼: %d\n", status);
+        }
+        HAL_Delay(1000); // 每秒讀一次就好，10000ms 太久了
+
+    }
+    */
+
+
 #endif
 
 #define TCA555_IO_extern
@@ -518,30 +578,6 @@ int main(void)
 //#define Horse_run
 
 
-#ifdef DAC_MCP4725
-
-		//模板開始
-		#ifdef use_TCA9548
-		    //要執行下面這行,必須先執行  Scan_I2C_Address();
-		    //但這是系統一開始就該做的,所以不太需要特別說明;
-		    //不過,狗工程師很多,寫個說明,以防萬一
-		  if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
-
-		#endif
-				if (MCP4725_Init() == HAL_OK) {
-					printf("\n MCP4725 init ok \n\n");
-				}else{
-					printf("\n\n MCP4725 init fail \n\n");
-				}
-
-			  //程式主體
-			  //初始化必須要在之前就做好這個區塊是用來做應用層的東西,不是用來做初始化
-
-		#ifdef use_TCA9548
-		  }
-		#endif
-		  //模板結束
-#endif
 
 #define clock
 

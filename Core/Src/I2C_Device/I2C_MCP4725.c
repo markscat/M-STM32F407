@@ -16,7 +16,9 @@ HAL_StatusTypeDef MCP4725_Init(void) {
 #ifdef use_TCA9548
 	if(TCA9548_SelectByAddress(MCP4725_I2C_ADDR) != HAL_OK){
 
-		printf("MCP4725 not exist, or Not connected to TCA9548");
+		printf("MCP4725_ADC not exist, or Not connected to TCA9548");
+	}else{
+		TCA9548_ShowChAndAddress_SelectByAddress(MCP4725_I2C_ADDR,"MCP4725_ADC");
 	}
 
 #endif

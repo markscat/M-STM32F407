@@ -156,6 +156,6 @@ I2C_ADS1115_Status I2C_ADS1115_StartContinuous(uint16_t muxPort, uint16_t pga, u
 I2C_ADS1115_Status I2C_ADS1115_ReadContinuous(float *voltage);
 
 int ADS1115_DeviceInit_Wrapper(void);
-
+void ADS1115_UpdateVoltCoef(uint16_t pga);
 
 #endif

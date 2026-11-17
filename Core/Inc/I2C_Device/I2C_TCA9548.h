@@ -46,6 +46,12 @@ TCA9548_Status TCA9548_SelectChannel(uint8_t ch);
  */
 HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr);
 
+/**
+ * @brief 根據設備位址，自動切換 TCA9548 通道
+ * @param target_addr 目標設備的 7-bit 位址 (例如 PCA9685 是 0x40)
+ * @不做切換,只是顯示目前的頻道和裝置位址
+ */
+HAL_StatusTypeDef TCA9548_ShowChAndAddress_SelectByAddress(uint8_t target_addr,const char* dev_name);
 
 /* 關閉所有通道（隔離 downstream） */
 TCA9548_Status TCA9548_DisableAll(void);
@@ -54,6 +60,7 @@ TCA9548_Status TCA9548_DisableAll(void);
 TCA9548_Status TCA9548_GetChannel(uint8_t *mask);
 
 const char* TCA9548_Status_ToString(TCA9548_Status status);
+
 
 
 

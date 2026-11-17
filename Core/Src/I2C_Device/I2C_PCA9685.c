@@ -53,10 +53,14 @@
 */
 HAL_StatusTypeDef PCA9685_Init(void) {
 #ifdef use_TCA9548
-	if(TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK){
 
-		printf("PCA9685 not exist, or Not connected to TCA9548");
+
+	if(TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK){
+		printf("PCA9685_PWMController not exist, or Not connected to TCA9548");
+	}else{
+		TCA9548_ShowChAndAddress_SelectByAddress(PCA9685_ADDR,"PCA9685_PWMController");
 	}
+
 
 #endif
     uint8_t oldmode, newmode;

@@ -89,11 +89,17 @@ typedef enum {
  *  2. 配置 TCA9555 的 16 個 GPIO 為輸出模式（默認全部輸入）
  */
 
+// 定義 Port 方向常數
+#define TCA9555_DIR_OUTPUT  0x00  // 0 = 輸出
+#define TCA9555_DIR_INPUT   0xFF  // 1 = 輸入
+#define TCA9555_GPIO_MASK(port, pin) ((uint16_t)(1 << (port * 8 + pin)))
 
+extern I2C_HandleTypeDef hi2c1;  // CubeMX 生成的 I2C 句柄
+
+//void TCA9555_Init();
 TCA9555_Status TCA9555_Init(void);
 int TCA9555_DeviceInit_Wrapper(void);
 
-//void TCA9555_Init();
 /**
  *  @brief 輸出
  *  @param data 輸出的
@@ -104,12 +110,34 @@ HAL_StatusTypeDef TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data);
 
 uint16_t TCA9555_ReadInput();
 
+/*測試程式
+ * 把所有的io全部設定為輸出,輪流輸出,確認io都有輸出
+ *
+ * */
 void Test_TCA9555_LED(void);
 
+/*
+ * @brief 動態設定 TCA9555 的 Port 0 和 Port 1 方向
+ * @param p0_dir Port 0 (P00~P07) 的方向 (使用 TCA9555_DIR_OUTPUT 或 TCA9555_DIR_INPUT)
+ * @param p1_dir Port 1 (P10~P17) 的方向
+ * */
+void TCA9555_ConfigPorts(uint8_t p0_dir, uint8_t p1_dir);
 
-#define TCA9555_GPIO_MASK(port, pin) ((uint16_t)(1 << (port * 8 + pin)))
+/*
+ * @brief 動態設定 TCA9555 的 Port 0 的方向
+ * @param p0_dir Port 0 (P00~P07) 的方向 (使用 TCA9555_DIR_OUTPUT 或 TCA9555_DIR_INPUT)
+ */
+void TCA9555_SetPort0Dir(uint8_t dir);
 
-extern I2C_HandleTypeDef hi2c1;  // CubeMX 生成的 I2C 句柄
+/*
+ * @brief 動態設定 TCA9555 的 Port 1 的方向
+ * @param p0_dir Port 1 (P10~P17) 的方向 (使用 TCA9555_DIR_OUTPUT 或 TCA9555_DIR_INPUT)
+ */
+void TCA9555_SetPort1Dir(uint8_t dir);
+
+
+
+
 
 
 

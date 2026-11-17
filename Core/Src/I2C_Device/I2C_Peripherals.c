@@ -83,16 +83,12 @@ static I2C_Status EEPROM_DeviceInit(void) {
   //確認通道上有eeprom
 #ifdef use_TCA9548
 
-	uint8_t ch=0xFF;
+	if(TCA9548_SelectByAddress(EEPROM_I2C_ADDR) != HAL_OK){
 
-	  for(uint8_t i= 0; i<g_scan_count ; i++){
-		  if (g_scan_result[i].Peripheral_address == 0x57)	{
-			  ch=g_scan_result[i].TCA9548_CH;
-			  printf("EEPROM ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
-	          break; // 找到了就可以跳出迴圈了
-		  }
-	  }
-		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
+		printf("AT24C32_EEPROM not exist, or Not connected to TCA9548");
+	}else{
+		TCA9548_ShowChAndAddress_SelectByAddress(EEPROM_I2C_ADDR,"AT24C32_EEPROM");
+	}
 
 #endif
   // 检测设备是否存在
@@ -118,17 +114,12 @@ int EEPROM_DeviceInit_Wrapper(void) {
 static I2C_Status DS1307_DeviceInit(void) {
 #ifdef use_TCA9548
 
-	uint8_t ch=0xFF;
+	if(TCA9548_SelectByAddress(RTC_I2C_ADDR) != HAL_OK){
 
-	  for(uint8_t i= 0; i<g_scan_count ; i++){
-		  if (g_scan_result[i].Peripheral_address == RTC_I2C_ADDR)	{
-			  ch=g_scan_result[i].TCA9548_CH;
-			  printf("RTC EEPROM ch = %d, Address =  0x%02X\n ",ch,g_scan_result[i].Peripheral_address);
-	          break; // 找到了就可以跳出迴圈了
-		  }
-	  }
-		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
-
+		printf("DS3231/DS1307_RTC not exist, or Not connected to TCA9548");
+	}else{
+		TCA9548_ShowChAndAddress_SelectByAddress(RTC_I2C_ADDR,"DS3231/DS1307_RTC");
+	}
 #endif
 
 
@@ -408,7 +399,7 @@ HAL_StatusTypeDef DS3231_GetTemp(DS3231_Temp* temp) {
 
 RTC_Time Parse_TimeString(const char *str) {
 
-	 printf("DEBUG: Parse_TimeString received the raw string: --->%s<---\n", str);
+	 //printf("DEBUG: Parse_TimeString received the raw string: --->%s<---\n", str);
     RTC_Time DT = {0};
     char *token = NULL;
 
@@ -468,7 +459,7 @@ RTC_Time Parse_TimeString(const char *str) {
     token = strtok(NULL, ",");
     if (token == NULL) { printf("ERR: Parsing date failed.\n"); goto cleanup; }
     DT.day = atoi(token);
-    printf("OK: Parsed Day = %u\n", DT.day);
+    //printf("OK: Parsed Day = %u\n", DT.day);
 
     /*
      * 這是一個備用的程式,因為年代已久遠,所以忘記功能是什麼,所以註解掉.
@@ -481,7 +472,7 @@ RTC_Time Parse_TimeString(const char *str) {
     //printf("OK: Parsed Command_ID = %u\n", DT.Command_ID);
      */
     DT.Command_ID = 1;
-    printf("OK: Parsed Command_ID = %u\n", DT.Command_ID);
+    //printf("OK: Parsed Command_ID = %u\n", DT.Command_ID);
 
 
     //8. 解析 checksum

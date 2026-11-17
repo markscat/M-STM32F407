@@ -181,6 +181,25 @@ HAL_StatusTypeDef TCA9548_SelectByAddress(uint8_t target_addr) {
     return HAL_ERROR;
 }
 
+/**
+ * 利用已知周邊的位址,來確認是否存在,在Debug的畫面中顯示出來
+ *
+ * */
+HAL_StatusTypeDef TCA9548_ShowChAndAddress_SelectByAddress(uint8_t target_addr,const char* dev_name) {
+
+	uint8_t ch=0xFF;
+
+	for(uint8_t i= 0; i<g_scan_count ; i++){
+		if (g_scan_result[i].Peripheral_address == target_addr)	{
+			ch=g_scan_result[i].TCA9548_CH;
+			printf("====== Device info ======\n");
+			printf("Device = %s \nch     = %d, \nAddress =  0x%02X\n ",dev_name,ch,g_scan_result[i].Peripheral_address);
+			printf("=========================\n");
+			break; // 找到了就可以跳出迴圈了
+		  }
+	}
+	return HAL_OK;
+}
 
 const char* TCA9548_Status_ToString(TCA9548_Status status)
 {

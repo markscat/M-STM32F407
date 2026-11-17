@@ -87,7 +87,7 @@ static SH1106_StatusTypeDef SH1106_Translate_HAL_Status(HAL_StatusTypeDef hal_st
  */
 
 static SH1106_StatusTypeDef SH1106_WriteCommand(uint8_t command) {
-    HAL_StatusTypeDef status = HAL_I2C_Mem_Write(&hi2c1, OLED_ADDRESS, 0x00, 1, &command, 1, 100);
+    HAL_StatusTypeDef status = HAL_I2C_Mem_Write(&hi2c1, SH1106_I2C_ADDR, 0x00, 1, &command, 1, 100);
 
     if (status != HAL_OK) {
         // 在返回错误之前，先打印详细的日志！
@@ -222,6 +222,7 @@ void SH1106_ShowRawBuffer(const uint8_t* buffer) {
 // ... (宏定义部分不变) ...
 
 SH1106_StatusTypeDef SH1106_Init(void) {
+
     if (HAL_I2C_IsDeviceReady(&hi2c1, SH1106_I2C_ADDR, 1, 200) != HAL_OK) {
         LOG_ERROR("Device not found at I2C address 0x%02X", SH1106_I2C_ADDR);
         return SH1106_ERROR_INIT_DEV_NOT_FOUND;
@@ -296,6 +297,7 @@ SH1106_StatusTypeDef SH1106_Init(void) {
 I2C_Status SH1106_DeviceInit(void)
 {
 #ifdef use_TCA9548
+
 	uint8_t ch=0xFF;
 
 		  for(uint8_t i= 0; i<g_scan_count ; i++){
@@ -311,14 +313,24 @@ I2C_Status SH1106_DeviceInit(void)
     SH1106_StatusTypeDef st = SH1106_Init();
     if (st == SH1106_OK) {
         return I2C_OK;
+    }else{
+    	printf("[I2C Init] SH1106_Init failed: %d\n", st);
+        return I2C_ERR_INIT;
     }
-    printf("[I2C Init] SH1106_Init failed: %d\n", st);
-    return I2C_ERR_INIT;
 }
 
 int SH1106_DeviceInit_Wrapper(void){
-
+printf("\n in SH1106_DeviceInit_Wrapper \n\n");
 #ifdef use_TCA9548
+
+	if(TCA9548_SelectByAddress(0x3C) != HAL_OK){
+
+			printf("SH1106_OLED not exist, or Not connected to TCA9548");
+		}else{
+			TCA9548_ShowChAndAddress_SelectByAddress(0x3C,"SH1106_OLED");
+		}
+
+/*
 	uint8_t ch=0xFF;
 	for(uint8_t i= 0; i<g_scan_count ; i++){
 		if (g_scan_result[i].Peripheral_address == 0x3C){
@@ -327,8 +339,13 @@ int SH1106_DeviceInit_Wrapper(void){
 			break; // 找到了就可以跳出迴圈了
 			}
 	}
+
 	TCA9548_SelectChannel(ch);   // ← 切到 SH1106 所在通道
+	printf("\nDebug:TCA9548 setup ch ok  \n\n");
+*/
 #endif
+	//printf("\nDebug:SH1106_Init  \n\n");
+
 	SH1106_StatusTypeDef st = SH1106_Init();
 	if (st == SH1106_OK) {
 		return I2C_OK;

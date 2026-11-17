@@ -172,7 +172,7 @@ I2C_HandleTypeDef ADS1115_I2C_Handler;	// HAL I2C handler store variable.
 uint16_t ADS1115_dataRate = ADS1115_DATA_RATE_128; // Default
 uint16_t ADS1115_pga = ADS1115_PGA_TWO; // Default
 uint16_t ADS1115_port = ADS1115_MUX_AIN0; // Default
-//1 xxx 100
+
 
 /**
  * @param ADS1115_config[2]
@@ -200,6 +200,13 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
 
 #ifdef use_TCA9548
 
+	if(TCA9548_SelectByAddress(ADS1115_Address) != HAL_OK){
+		printf("ADS1115_DAC not exist, or Not connected to TCA9548");
+	}else{
+		TCA9548_ShowChAndAddress_SelectByAddress(ADS1115_Address,"ADS1115_DAC");
+	}
+
+/*
 	uint8_t ch=0xFF;
 
 	  for(uint8_t i= 0; i<g_scan_count ; i++){
@@ -210,7 +217,7 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
 		  }
 	  }
 		  TCA9548_SelectChannel(ch);   // ← 切到 EEPROM 所在通道
-
+*/
 #endif
 
     if (handler == NULL) {
@@ -254,6 +261,8 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
         return I2C_ADS1115_ERR_INVALID_PGA; // 抓到亂填的 PGA
 
 		}
+
+
 	// 檢查晶片
 	HAL_StatusTypeDef hal_st = HAL_I2C_IsDeviceReady(&ADS1115_I2C_Handler, (uint16_t)(ADS1115_Address << 1),
 													  5, ADS1115_TIMEOUT);
@@ -290,6 +299,49 @@ I2C_ADS1115_Status I2C_ADS1115_Init(I2C_HandleTypeDef *handler, uint16_t setData
 	} else {
 		return HAL_ERROR;
 	}*/
+}
+
+void ADS1115_UpdateVoltCoef(uint16_t pga) {
+
+	// Data rate and PGA configurations.
+
+		ADS1115_pga = pga;
+
+		// Voltage coefficient update.
+		switch (ADS1115_pga) {
+
+		case ADS1115_PGA_TWOTHIRDS:
+			ADS1115_voltCoef = 0.1875;
+			break;
+
+		case ADS1115_PGA_ONE:
+			ADS1115_voltCoef = 0.125;
+			break;
+
+		case ADS1115_PGA_TWO:
+			ADS1115_voltCoef = 0.0625;
+			break;
+
+		case ADS1115_PGA_FOUR:
+			ADS1115_voltCoef = 0.03125;
+			break;
+
+		case ADS1115_PGA_EIGHT:
+			ADS1115_voltCoef = 0.015625;
+			break;
+
+		case ADS1115_PGA_SIXTEEN:
+			ADS1115_voltCoef = 0.0078125;
+			break;
+	    default:
+	    	ADS1115_voltCoef=0.125;
+		}
+
+	    // 👈 在這裡印出，表示順利的設定完畢了
+	    // %d 印出 PGA 的十六進位值 (例如 0x02)
+	    // %.4f 印出對應的電壓係數 (例如 0.1250)
+	    printf("\n[ADS1115] PGA set to 0x%02X, VoltCoef = %.4f mV/bit\n", ADS1115_pga, ADS1115_voltCoef);
+
 }
 
 

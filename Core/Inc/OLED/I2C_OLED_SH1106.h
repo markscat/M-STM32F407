@@ -25,7 +25,7 @@ extern "C" {
 //==============================================================================
 
 #define SH1106_I2C_ADDR         (0x3C << 1) // 7-bit address 0x3C left-shifted
-#define OLED_ADDRESS	   		(0x3C << 1) // 7-bit address 0x3C left-shifted
+#define OLED_ADDRESS	   		(0x3C) // 7-bit address 0x3C left-shifted
 #define SH1106_WIDTH            128
 #define SH1106_HEIGHT           64
 
