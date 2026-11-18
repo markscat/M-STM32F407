@@ -14,6 +14,16 @@
 // 定義一個通用的 I2C 寫入函式
 
 HAL_StatusTypeDef BSP_I2C_Write(uint8_t dev_addr_7bit, const uint8_t *pData, uint16_t size);
+
+HAL_StatusTypeDef BSP_I2C_MemWrite(uint8_t dev_addr_7bit, uint8_t reg_addr, const uint8_t *pData, uint16_t size);
+
+
+HAL_StatusTypeDef BSP_I2C_Read(uint8_t dev_addr_7bit, uint8_t *pData, uint16_t size);
+//expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'uint8_t' {aka 'unsigned char'}
+
+
+HAL_StatusTypeDef BSP_I2C_MemRead(uint8_t dev_addr_7bit, uint8_t reg_addr, uint8_t *pData, uint16_t size);
+
 HAL_StatusTypeDef BSP_I2C_IsReady(uint8_t dev_addr_7bit);
 
 #endif/*BPS_I2C_H_ */

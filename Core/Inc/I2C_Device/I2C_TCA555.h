@@ -96,8 +96,9 @@ typedef enum {
 
 extern I2C_HandleTypeDef hi2c1;  // CubeMX 生成的 I2C 句柄
 
-//void TCA9555_Init();
+
 TCA9555_Status TCA9555_Init(void);
+
 int TCA9555_DeviceInit_Wrapper(void);
 
 /**
@@ -135,8 +136,16 @@ void TCA9555_SetPort0Dir(uint8_t dir);
  */
 void TCA9555_SetPort1Dir(uint8_t dir);
 
+/**
+ * @brief 獨立設定 TCA9555 某個腳位是輸入還是輸出 (不影響同 Port 的其他腳位)
+ * @param pin 腳位編號 (0~15，0代表P00，8代表P10)
+ * @param is_input 1 = 設為輸入，0 = 設為輸出
+ */
+void TCA9555_SetPinDirection(uint8_t pin, uint8_t is_input);
 
+uint8_t TCA9555_ReadPin(uint8_t pin);
 
+void TCA9555_WritePin(uint8_t pin, uint8_t level);
 
 
 

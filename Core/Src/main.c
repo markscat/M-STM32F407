@@ -549,18 +549,46 @@ int main(void)
 #define TCA555_IO_extern
 
 #ifdef TCA555_IO_extern
-	  // 初始先全滅
-	  if (TCA9555_WriteOutput(0xFF,0xFF) != HAL_OK) {
-	        printf("TCA9555 寫入失敗！\n");
-	  }
 
-	  for (int i = 0; i < 16; i++) {
-	      if (i < 8) {
-	          // 亮 Port 0 的腳位，Port 1 全滅 (Active Low 所以是 0xFF)
-	          if(TCA9555_WriteOutput(~(1 << i), 0xFF) != HAL_OK){
-	        	  printf("TCA9555 失敗");
-	        	  return HAL_ERROR;
-	          };
+	  // 初始先全滅
+    if (TCA9555_WriteOutput(0xFF,0xFF) != HAL_OK) {
+        	printf("TCA9555 寫入失敗！\n");
+        }
+
+    TCA9555_SetPinDirection(0,1);//pin0, output
+
+    TCA9555_WritePin(0,0);//pin0, out, 1
+
+    TCA9555_SetPinDirection(1,1);//Pin1,input
+
+    HAL_Delay(10);
+
+    uint16_t Pin1 =  TCA9555_ReadInput(1);
+
+    printf("Debug:Pin1 = %d\n\n",Pin1);
+
+    if (Pin1 == 1){
+    	printf("Pin1 is high \n ");
+    }else{
+    	printf("Pin1 is Low \n ");
+    }
+    printf("Debug:end\n\n");
+
+
+    HAL_Delay(200);
+
+    //#define TCA555_IO_extern_LED_Test
+
+    #ifdef TCA555_IO_extern_LED_Test
+
+
+
+    for (int i = 0; i < 16; i++) {
+    	if (i < 8) {
+    		// 亮 Port 0 的腳位，Port 1 全滅 (Active Low 所以是 0xFF)
+    		if(TCA9555_WriteOutput(~(1 << i), 0xFF) != HAL_OK){
+    			printf("TCA9555 失敗");
+    			return HAL_ERROR;
 	      } else {
 	          // 亮 Port 1 的腳位，Port 0 全滅
 	          if(TCA9555_WriteOutput(0xFF, ~(1 << (i - 8)))){
@@ -570,6 +598,9 @@ int main(void)
 	      }
 	      HAL_Delay(200);
 	  }
+    }
+
+	  #endif
 
 #endif
 

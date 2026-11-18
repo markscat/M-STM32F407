@@ -118,29 +118,6 @@ int TCA9555_DeviceInit_Wrapper(void) {
 	    return (int)TCA9555_Init() ; // 假設 EEPROM_DeviceInit 回傳 I2C_Status，I2C_OK 通常是 0
 	}
 
-
-void Test_TCA9555_LED(void) {
-
-    						//暫存器, P0  ,  P1
-    uint8_t output_high[3] = {0x02, 0xFF, 0xFF}; // 全部輸出 High
-    uint8_t output_low[3]  = {0x02, 0x00, 0x00}; // 全部輸出 Low
-
-    printf("輸出 HIGH... 量 P00 應該是 5V\n");
-    BSP_I2C_Write(TCA9555_ADDR, output_high , 3);
-    HAL_Delay(10000);
-
-
-    printf("輸出 LOW... 量 P00 應該是 0V\n");
-    BSP_I2C_Write(TCA9555_ADDR, output_low, 3);
-    HAL_Delay(10000);
-
-    // 4. 再輸出 High 10秒 (量電壓應該是 5V)
-    printf("輸出 HIGH... 量 P00 應該是 5V\n");
-    BSP_I2C_Write(TCA9555_ADDR, output_high, 3);
-    HAL_Delay(10000);
-
-}
-
 /**
  *  @brief 寫入輸出
  *  @param data 設定輸出埠的數值
@@ -153,56 +130,8 @@ void Test_TCA9555_LED(void) {
 // 如果之前是定義 0x40，請改成 0x20
 
 
-#ifdef with_BSP
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝設定io方向＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
-HAL_StatusTypeDef TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data) {
-
-#ifdef use_TCA9548
-
-	if(TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK){
-		printf("TCA9555_I/O expander not exist, or Not connected to TCA9548");
-	}
-
-#endif
-
-    uint8_t output_cmd[3] = {
-        0x02,  // 輸出暫存器地址（從 Port0 開始，會自動遞增到 Port1）
-        P0_data,       // Port0 (低8位)
-        P1_data // Port1 (高8位)
-    };
-
-    // 改用 BSP 抽象層，並回傳狀態
-    return BSP_I2C_Write(TCA9555_ADDR, output_cmd, 3);
-}
-
-#else
-void TCA9555_WriteOutput(uint16_t data) {
-    uint8_t output_cmd[3] = {
-        0x02,  // 輸出暫存器地址（Port0 和 Port1）
-        (uint8_t)(data & 0xFF),     // Port0 (低8位)
-        (uint8_t)((data >> 8) & 0xFF) // Port1 (高8位)
-    };
-    HAL_I2C_Master_Transmit(&hi2c1, TCA9555_ADDR, output_cmd, 3, 100);
-}
-#endif
-
-/**
- *  @brief 讀取輸入
- *  @param data 設定輸出埠的數值
- *
- */
-uint16_t TCA9555_ReadInput()
- {
-    uint8_t reg_addr = 0x00;  // 輸入暫存器地址（Port0）
-    uint8_t input_data[2] = {0};
-
-    // 寫入要讀取的暫存器地址
-    HAL_I2C_Master_Transmit(&hi2c1, TCA9555_ADDR, &reg_addr, 1, 100);
-    // 讀取 2 個位元組（Port0 和 Port1）
-    HAL_I2C_Master_Receive(&hi2c1, TCA9555_ADDR, input_data, 2, 100);
-
-    return (input_data[1] << 8) | input_data[0];
-}
 
 /**
  * @brief 動態設定 TCA9555 的 Port 0 和 Port 1 方向
@@ -258,6 +187,44 @@ void TCA9555_SetPort1Dir(uint8_t dir) {
 }
 
 
+/**
+ * @brief 獨立設定 TCA9555 某個腳位是輸入還是輸出 (不影響同 Port 的其他腳位)
+ * @param pin 腳位編號 (0~15，0代表P00，8代表P10)
+ * @param is_input 1 = 設為輸入，0 = 設為輸出
+ *
+ */
+void TCA9555_SetPinDirection(uint8_t pin, uint8_t is_input) {
+    if (pin > 15) return;
+
+    uint8_t port = (pin >= 8) ? 1 : 0;
+    uint8_t bit_pos = pin % 8;
+    uint8_t reg_addr = 0x06 + port;
+    //printf("Debug port= %d \n bit_pos = %d ,\n reg_addr =  0x%02X \n\n",port,bit_pos,reg_addr);
+    // 確保切換到正確的通道
+    #ifdef use_TCA9548
+        if (TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK) return;
+    #endif
+
+    // 1. 讀取目前的 Config 暫存器 (改用 MemRead)
+    uint8_t current_config = 0;
+    if (BSP_I2C_MemRead(TCA9555_ADDR, reg_addr, &current_config, 1) != HAL_OK) {
+        printf("TCA9555 Read Config Failed\n");
+        return;
+    }
+
+    // 2. 修改那個 bit
+    if (is_input) {
+        current_config |= (1 << bit_pos);
+    } else {
+        current_config &= ~(1 << bit_pos);
+    }
+    printf("\n Debug port= %d \n bit_pos = %d ,\n reg_addr =  0x%02X \n\n",port,bit_pos,reg_addr);
+    // 3. 寫回 Config 暫存器
+    uint8_t cmd[2] = {reg_addr, current_config};
+    BSP_I2C_Write(TCA9555_ADDR, cmd, 2);
+
+}
+
 
 /**
  *  @brief 設定單一port的方向
@@ -273,3 +240,151 @@ void TCA9555_SetDirection(uint16_t direction) {
     };
     HAL_I2C_Master_Transmit(&hi2c1, TCA9555_ADDR, config_cmd, 3, 100);
 }
+
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝設定io方向＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+#ifdef with_BSP
+
+HAL_StatusTypeDef TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data) {
+
+#ifdef use_TCA9548
+
+	if(TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK){
+		printf("TCA9555_I/O expander not exist, or Not connected to TCA9548");
+	}
+
+#endif
+
+    uint8_t output_cmd[3] = {
+        0x02,  // 輸出暫存器地址（從 Port0 開始，會自動遞增到 Port1）
+        P0_data,       // Port0 (低8位)
+        P1_data // Port1 (高8位)
+    };
+
+    // 改用 BSP 抽象層，並回傳狀態
+    return BSP_I2C_Write(TCA9555_ADDR, output_cmd, 3);
+}
+
+#else
+void TCA9555_WriteOutput(uint16_t data) {
+    uint8_t output_cmd[3] = {
+        0x02,  // 輸出暫存器地址（Port0 和 Port1）
+        (uint8_t)(data & 0xFF),     // Port0 (低8位)
+        (uint8_t)((data >> 8) & 0xFF) // Port1 (高8位)
+    };
+    HAL_I2C_Master_Transmit(&hi2c1, TCA9555_ADDR, output_cmd, 3, 100);
+}
+#endif
+
+// 追蹤目前 16 個 Pin 的輸出狀態（避免每次寫入都蓋掉其他 Pin）
+static uint16_t g_tca9555_output_cache = 0xFFFF;
+
+/**
+ * @brief 設定單一指定的 Pin 輸出 High 或 Low
+ * @param pin 0 ~ 15
+ * @param level 1 = High, 0 = Low
+ */
+
+void TCA9555_WritePin(uint8_t pin, uint8_t level) {
+    if (pin > 15) return;
+
+    // 1. 更新快取中的指定 bit
+    if (level) {
+        g_tca9555_output_cache |= (1 << pin);   // 設為 1 (High)
+    } else {
+        g_tca9555_output_cache &= ~(1 << pin);  // 設為 0 (Low)
+    }
+
+    // 2. 拆成 Port 0 (低 8 位) 與 Port 1 (高 8 位) 寫入晶片
+    uint8_t p0 = (uint8_t)(g_tca9555_output_cache & 0xFF);
+    uint8_t p1 = (uint8_t)((g_tca9555_output_cache >> 8) & 0xFF);
+
+    TCA9555_WriteOutput(p0, p1);
+}
+
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝讀取＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+
+/**
+ *  @brief 讀取輸入
+ *  @param data 設定輸出埠的數值
+ *
+ */
+uint16_t TCA9555_ReadInput()
+ {
+    uint8_t reg_addr = 0x00;  // 輸入暫存器地址（Port0）
+    uint8_t input_data[2] = {0};
+
+#ifdef use_TCA9548
+    // 確保讀取前有切到正確的 I2C 多工器通道
+    if (TCA9548_SelectByAddress(TCA9555_ADDR) != HAL_OK) {
+        printf("TCA9555 not found on MUX during ReadInput\n");
+        return 0;
+    }
+#endif
+
+    // 使用你專案中統一的 BSP 記憶體讀取函式，正確讀取 2 個位元組 (Port 0 和 Port 1)
+        if (BSP_I2C_MemRead(TCA9555_ADDR, reg_addr, input_data, 2) != HAL_OK) {
+            printf("TCA9555 ReadInput Failed\n");
+            return 0;
+        }
+    /*
+    // 寫入要讀取的暫存器地址
+    HAL_I2C_Master_Transmit(&hi2c1, TCA9555_ADDR, &reg_addr, 1, 100);
+    // 讀取 2 個位元組（Port0 和 Port1）
+    HAL_I2C_Master_Receive(&hi2c1, TCA9555_ADDR, input_data, 2, 100);*/
+
+    //return (input_data[1] << 8) | input_data[0];
+
+   // 回傳 16-bit 狀態 (Port 1 在高位，Port 0 在低位)
+       return ((uint16_t)input_data[1] << 8) | input_data[0];
+}
+
+
+/**
+ * @brief 讀取單一指定的 Pin 狀態
+ * @param pin 0 ~ 15
+ * @return 0 或 1 (代表 Low 或 High)
+ */
+uint8_t TCA9555_ReadPin(uint8_t pin) {
+    if (pin > 15) return 0;
+
+    // 呼叫你原本寫好的 16-bit 讀取函數
+    uint16_t all_pins = TCA9555_ReadInput();
+
+    // 用遮罩把指定的那一顆 Pin 抓出來，並移到最右邊 (0 或 1)
+    return (all_pins >> pin) & 0x01;
+}
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝讀取＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+
+
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入測試＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+void Test_TCA9555_LED(void) {
+
+    						//暫存器, P0  ,  P1
+    uint8_t output_high[3] = {0x02, 0xFF, 0xFF}; // 全部輸出 High
+    uint8_t output_low[3]  = {0x02, 0x00, 0x00}; // 全部輸出 Low
+
+    printf("輸出 HIGH... 量 P00 應該是 5V\n");
+    BSP_I2C_Write(TCA9555_ADDR, output_high , 3);
+    HAL_Delay(10000);
+
+
+    printf("輸出 LOW... 量 P00 應該是 0V\n");
+    BSP_I2C_Write(TCA9555_ADDR, output_low, 3);
+    HAL_Delay(10000);
+
+    // 4. 再輸出 High 10秒 (量電壓應該是 5V)
+    printf("輸出 HIGH... 量 P00 應該是 5V\n");
+    BSP_I2C_Write(TCA9555_ADDR, output_high, 3);
+    HAL_Delay(10000);
+
+}
+
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入測試＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
