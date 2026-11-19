@@ -275,7 +275,34 @@ void clear_input_buffer() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
+/**
+ * @brief  UART 接收錯誤中斷回調函式（覆寫 stm32f4xx_hal_uart.c 的 __weak 空殼）
+ * @param  huart: 觸發錯誤的 UART 控制結構體指標
+ * @note
+ *   1. 【不需要主動呼叫】：此函式由硬體中斷自動觸發：
+ *      硬體錯誤 (ORE/FE/NE) -> USART2_IRQHandler() -> HAL_UART_IRQHandler() -> 本函式
+ *   2. 【為什麼必須寫】：
+ *      當發生 Overrun (ORE) 等錯誤時，HAL 會自動關閉 RX 接收中斷。
+ *      如果沒寫本函式重啟接收，就會變成「TX (printf) 正常，但 RX 從此收不到任何字」。
+ *   3. 【核心動作】：清除錯誤旗標後，重新掛回 HAL_UART_Receive_IT() 讓 RX 恢復待命。
+ * @warning
+ *   本函式執行於中斷服務常式 (ISR) 內：
+ *   - 嚴禁呼叫 HAL_Delay()（SysTick 與 USART2 同為優先級 0，會直接卡死）
+ *   - 嚴禁呼叫 printf()（_write() 內的等待機制在中斷中可能造成死鎖）
+ */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART2)
+    {
+        /* 清除常見的接收錯誤旗標（讀 SR/DR，避免卡死或重複進入錯誤中斷） */
+        __HAL_UART_CLEAR_OREFLAG(huart); /* Overrun Error：資料來不及讀就被覆蓋 */
+        __HAL_UART_CLEAR_FEFLAG(huart);  /* Framing Error：Stop bit 異常（插拔線/鮑率飄移） */
+        __HAL_UART_CLEAR_NEFLAG(huart);  /* Noise Error  ：RX 訊號線雜訊干擾 */
 
+        /* 重新啟動單字節中斷接收，恢復 RX 接收功能 */
+        HAL_UART_Receive_IT(&huart2, (uint8_t *)rxBuffer, 1);
+    }
+}
 
 #ifdef signal_Buffer
 /**

@@ -5,3 +5,4 @@
 ../Core/Src/uart_io.c:182:5:_read	32	static
 ../Core/Src/uart_io.c:238:6:HAL_UART_RxCpltCallback	24	static
 ../Core/Src/uart_io.c:273:6:clear_input_buffer	16	static
+../Core/Src/uart_io.c:293:6:HAL_UART_ErrorCallback	32	static

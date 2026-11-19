@@ -39,8 +39,9 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
  ../Core/Inc/I2C_Device/I2C_TCA9548.h \
  ../Core/Inc/I2C_Device/I2C_parameter.h ../Core/Inc/I2C_Device/ads1115.h \
  ../Core/Inc/I2C_Device/I2C_MCP4725.h \
- ../Core/Inc/I2C_Device/I2C_PCA9685.h ../Core/Inc/I2C_Device/I2C_TCA555.h \
- ../Core/Inc/I2C_Device/BPS_i2c.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
+ ../Core/Inc/I2C_Device/I2C_PCA9685.h \
+ ../Core/Inc/I2C_Device/I2C_TCA9555.h ../Core/Inc/I2C_Device/BPS_i2c.h \
+ ../Core/Inc/OLED/I2C_OLED_SH1106.h \
  ../Core/Inc/OLED/Font/I2C_OLED_fonts.h ../Core/Inc/Tools.h \
  ../Core/Inc/I2C_Device\I2C_parameter.h ../Core/Inc/ring_buffer.h \
  ../Core/Inc/error_handler.h ../Core/Inc/I2C_Device\I2C_Peripherals.h \
@@ -95,7 +96,7 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
 ../Core/Inc/I2C_Device/ads1115.h:
 ../Core/Inc/I2C_Device/I2C_MCP4725.h:
 ../Core/Inc/I2C_Device/I2C_PCA9685.h:
-../Core/Inc/I2C_Device/I2C_TCA555.h:
+../Core/Inc/I2C_Device/I2C_TCA9555.h:
 ../Core/Inc/I2C_Device/BPS_i2c.h:
 ../Core/Inc/OLED/I2C_OLED_SH1106.h:
 ../Core/Inc/OLED/Font/I2C_OLED_fonts.h:

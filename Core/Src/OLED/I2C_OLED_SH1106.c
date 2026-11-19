@@ -566,7 +566,7 @@ void SH1106_DrawImageDirect(
 }
 
 
-
+/*
 void RunDisplayTest(void)
 {
     // 1. 清除螢幕緩衝區
@@ -585,7 +585,7 @@ void RunDisplayTest(void)
     // 5. 將緩衝區內容更新到螢幕
     SH1106_UpdateScreen();
 }
-
+*/
 
 
 

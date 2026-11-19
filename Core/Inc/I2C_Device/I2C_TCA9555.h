@@ -102,9 +102,10 @@ TCA9555_Status TCA9555_Init(void);
 int TCA9555_DeviceInit_Wrapper(void);
 
 /**
- *  @brief 輸出
+ *  @brief TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data)
+ *  @brief 配置 TCA9555 的 16 個 GPIO 為輸出模式（默認全部輸入）
  *  @param data 輸出的
- *  2. 配置 TCA9555 的 16 個 GPIO 為輸出模式（默認全部輸入）
+ *
  */
 HAL_StatusTypeDef TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data);
 
@@ -140,8 +141,43 @@ void TCA9555_SetPort1Dir(uint8_t dir);
  * @brief 獨立設定 TCA9555 某個腳位是輸入還是輸出 (不影響同 Port 的其他腳位)
  * @param pin 腳位編號 (0~15，0代表P00，8代表P10)
  * @param is_input 1 = 設為輸入，0 = 設為輸出
+ *
+ * TCA9555_SetPinDirection,TCA9555_WritePin,TCA9555_ReadPin
+ * 綜合範例程式
+ *
+ * 1. 先將所有的io全部都
+ *
+	// 初始先全滅
+    if (TCA9555_WriteOutput(0xFF,0xFF) != HAL_OK) {
+        	printf("TCA9555 寫入失敗！\n");
+        }
+
+    TCA9555_SetPinDirection(0,1);//pin0, output
+
+    TCA9555_WritePin(0,0);//pin0, out, 1
+
+    TCA9555_SetPinDirection(1,1);//Pin1,input
+
+    HAL_Delay(10);
+
+    uint16_t Pin1 =  TCA9555_ReadPin(1);
+
+    printf("Debug:Pin1 = %d\n\n",Pin1);
+
+    if (Pin1 == 1){
+    	printf("Pin1 is high \n ");
+    }else{
+    	printf("Pin1 is Low \n ");
+    }
+    printf("Debug:end\n\n");
+
+
+    HAL_Delay(200);
+ *
+ *
  */
 void TCA9555_SetPinDirection(uint8_t pin, uint8_t is_input);
+
 
 uint8_t TCA9555_ReadPin(uint8_t pin);
 

@@ -233,22 +233,22 @@ void SH1106_DrawBitmap(int16_t x, int16_t y, const unsigned char* bitmap, int16_
 /**
  * @brief  Draws a line between two points.
  */
-void SH1106_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, SH1106_COLOR_t color);
+//void SH1106_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, SH1106_COLOR_t color);
 
 /**
  * @brief  Draws a rectangle outline.
  */
-void SH1106_DrawRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, SH1106_COLOR_t color);
+//void SH1106_DrawRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, SH1106_COLOR_t color);
 
 /**
  * @brief  Draws a filled rectangle.
  */
-void SH1106_DrawFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, SH1106_COLOR_t color);
+//void SH1106_DrawFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, SH1106_COLOR_t color);
 
 /**
  * @brief  Draws a circle outline.
  */
-void SH1106_DrawCircle(int16_t x0, int16_t y0, int16_t r, SH1106_COLOR_t color);
+//void SH1106_DrawCircle(int16_t x0, int16_t y0, int16_t r, SH1106_COLOR_t color);
 
 
 // --- Text Functions ---

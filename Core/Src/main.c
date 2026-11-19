@@ -90,7 +90,6 @@
 #include "I2C_Device\I2C_TCA9548.h"        // TCA9548 的 API
 
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -114,6 +113,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 //#define EEPROM_write
 //#define EEPROM_read
 
+#define Servo_Moving_by_Ticks
+
+#define TCA555_IO_extern
 
 
 
@@ -354,39 +356,28 @@ int main(void)
 
   if (APP_I2C_Init() != I2C_OK) {
       printf("No device \n \t END");
-        HAL_Delay(1000);
+        HAL_Delay(100);
         while(1){};		//直接結束
         return 1;             // main 回傳 int，不要直接回傳 I2C_Status
     }
-
-//#define PWM_Servo_motor
-
-#ifdef PWM_Servo_motor
-
-#ifdef use_TCA9548
-
-  //這邊就沒有波形
-  if(TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK)
-  {
-	  printf("\n can't find PCA9685\n");
-  }else{
-	  printf("\n PCA9685 switch chinel \n");
-
-  }
-#endif
   // --- 初始化結束，裝置已待命 ---
 
+
+
+//#define PWM_Servo_motor
 
 #ifdef oled
 	//SH1106 1.3 inch OLED address= 0x3C
 	#ifdef use_TCA9548
-		if (TCA9548_SelectByAddress(0x3C) == HAL_OK) {
+		if (TCA9548_SelectByAddress(0x3C) != HAL_OK) {
+			printf(" Oled 沒準備好,或是不存在 \n\n");
+		}
 	#endif
 
 	  SH1106_Fill(SH1106_COLOR_BLACK);
 	  SH1106_UpdateScreen();
 	  SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
-	  HAL_Delay(5000);
+	  HAL_Delay(500);
 
 
 		// 設定游標位置（例如 X=0, Y=0）
@@ -401,12 +392,6 @@ int main(void)
 		SH1106_Puts_line_break("System init ok\n", &Font_7x10, SH1106_COLOR_WHITE);
 
 		SH1106_UpdateScreen();
-
-	#ifdef use_TCA9548
-		}
-		printf("Visual monitor status \n\n");
-	#endif
-
 #endif
 
 
@@ -415,13 +400,20 @@ int main(void)
  * 輸入：角度
  *
  * */
-	      // 直到這裡，才開始下達「動作」指令
-	      printf("Moving Servo to 90 deg...\n");
 
+#ifdef PWM_Servo_motor
+		printf("\n Moving Servo to 90 deg...\n");
+	#ifdef use_TCA9548
+	      if (TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK) {
+	    	  printf("PCA9685 Fail \n");
+	    	  while(1){}
+	      }else{
+	    	  printf("PCA9685 ok \n");
+	      }
+	      #endif
 
-#define Servo_Moving_by_Ticks
+	#ifdef Servo_Moving_by_Ticks
 
-#ifdef Servo_Moving_by_Ticks
 	      for(int i=5; i<= 10;i++){
 	    	  PCA9685_SetPWM(1 , i);// 通道 0，0度
 	    	  printf("\n\n %d tick",i);
@@ -429,7 +421,7 @@ int main(void)
 	          //HAL_Delay(1000); //停 10ms，整個過程約 4 秒，舵機會非常平順地轉過去
 	      }
 
-		 #else //Servo_Moving_by_angle
+	#elif Servo_Moving_by_angle  //Servo_Moving_by_angle
 			for (int angle = 0; angle <= 180; angle++) {
 	         // 將角度換算成 Ticks
 	         int ticks = 102 + (angle * 410 / 180);
@@ -437,10 +429,10 @@ int main(void)
 	         HAL_Delay(10);
 	      }
 
+	#endif
+
 #endif
 
-
-#endif
 
   //時間設定
 
@@ -448,14 +440,13 @@ int main(void)
 	//  * RTC(DS3231/ DS1307) I2C address = 0x68
 
 	#ifdef use_TCA9548
-	  if (TCA9548_SelectByAddress(0x68) == HAL_OK) {
+	  if (TCA9548_SelectByAddress(0x68) != HAL_OK) {
+		  printf("\n設備不存在\n");
+	  }
 	#endif
 		  APP_RTC_SetupInteractive();
 		  APP_RTC_ShowTimeAndTemp();
 		  APP_UART_Poll();
-#ifdef use_TCA9548
-	  }
-#endif
 
 #endif
 
@@ -469,26 +460,19 @@ int main(void)
 		    //要執行下面這行,必須先執行  Scan_I2C_Address();
 		    //但這是系統一開始就該做的,所以不太需要特別說明;
 		    //不過,狗工程師很多,寫個說明,以防萬一
-		  if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
-
-		#endif
-			  if(MCP4725_SetVoltage(2.2,4.9) != HAL_OK){
-				  printf("\n設備不存在\n");
-			  }
-				  printf("\nMCP4725 ok\n");
-
-
-			  //程式主體
-			  //初始化必須要在之前就做好這個區塊是用來做應用層的東西,不是用來做初始化
-
-		#ifdef use_TCA9548
+		  if (TCA9548_SelectByAddress(0x61) != HAL_OK) {
+			  printf("\n設備不存在這個頻道\n");
 		  }
+
 		#endif
-		  //模板結束
+		  //程式主體
+		  //設定電壓,同時判斷裝置還活著沒
+		  if(MCP4725_SetVoltage(2.2,4.9) != HAL_OK){
+			  printf("\n設備不存在\n");
+		  }
+		  printf("\nMCP4725 ok\n");
+
 #endif
-
-
-
 
 #ifdef ADC_1115
 	//ADS1115 I2C address = 0x48
@@ -516,37 +500,8 @@ int main(void)
     	printf("ADC 讀取失敗!\n");
     }
 
-/*
-    printf("in while\n");
-
-    while(1){
-        // 1. 每次讀取前，確保 TCA9548 切到了 ADS1115 的通道
-          #ifdef use_TCA9548
-            if (TCA9548_SelectByAddress(0x48) != HAL_OK) {
-                printf("ADC Channel Switch Fail \n");
-                HAL_Delay(1000);
-                continue; // 切換失敗，直接跳過這次，等下一輪
-            }
-          #endif
-        // 呼叫你的封裝函式讀取
-
-            HAL_StatusTypeDef status = APP_ADS1115_Read(&adc_voltage);
-
-        if (status == HAL_OK) {
-        	// 注意：ADS1115 讀出來的單位是「毫伏 (mV)」
-        	printf("ADC 電壓: %.3f V\r\n", adc_voltage / 1000.0f);
-        } else {
-            printf("ADC 讀取失敗! 錯誤碼: %d\n", status);
-        }
-        HAL_Delay(1000); // 每秒讀一次就好，10000ms 太久了
-
-    }
-    */
-
-
 #endif
 
-#define TCA555_IO_extern
 
 #ifdef TCA555_IO_extern
 
@@ -556,16 +511,10 @@ int main(void)
         }
 
     TCA9555_SetPinDirection(0,1);//pin0, output
-
     TCA9555_WritePin(0,0);//pin0, out, 1
-
     TCA9555_SetPinDirection(1,1);//Pin1,input
-
     HAL_Delay(10);
-
-    uint16_t Pin1 =  TCA9555_ReadInput(1);
-
-    printf("Debug:Pin1 = %d\n\n",Pin1);
+    uint16_t Pin1 =  TCA9555_ReadPin(1);
 
     if (Pin1 == 1){
     	printf("Pin1 is high \n ");
@@ -577,7 +526,7 @@ int main(void)
 
     HAL_Delay(200);
 
-    //#define TCA555_IO_extern_LED_Test
+//#define TCA555_IO_extern_LED_Test
 
     #ifdef TCA555_IO_extern_LED_Test
 

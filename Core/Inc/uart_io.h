@@ -28,5 +28,7 @@ void echo_received_data(void);
 
 void clear_input_buffer() ;
 
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
+
 
 #endif /* INC_UART_IO_H_ */

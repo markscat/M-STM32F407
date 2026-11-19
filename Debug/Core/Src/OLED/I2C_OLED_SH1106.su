@@ -15,7 +15,6 @@
 ../Core/Src/OLED/I2C_OLED_SH1106.c:497:6:SH1106_Puts	24	static
 ../Core/Src/OLED/I2C_OLED_SH1106.c:512:6:SH1106_Puts_line_break	32	static
 ../Core/Src/OLED/I2C_OLED_SH1106.c:529:6:SH1106_DrawImageDirect	24	static
-../Core/Src/OLED/I2C_OLED_SH1106.c:570:6:RunDisplayTest	16	static
 ../Core/Src/OLED/I2C_OLED_SH1106.c:592:6:SH1106_ToggleInvert	16	static
 ../Core/Src/OLED/I2C_OLED_SH1106.c:604:6:SH1106_I2C_Write	32	static
 ../Core/Src/OLED/I2C_OLED_SH1106.c:611:6:SH1106_Clear	8	static

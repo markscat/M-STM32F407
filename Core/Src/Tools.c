@@ -166,14 +166,12 @@ void HandleUartCommands(void) {
                     break;
                     }
             }
+            // 步驟 4: 【非常重要】處理完畢，必須放下旗子，重置緩衝區，準備接收下一條命令
+            g_command_line_index = 0;
+            memset(g_command_line_buffer, 0, sizeof(g_command_line_buffer));
+            g_command_line_ready = false;
     }
-
-        // 步驟 4: 【非常重要】處理完畢，必須放下旗子，重置緩衝區，準備接收下一條命令
-        g_command_line_index = 0;
-        memset(g_command_line_buffer, 0, sizeof(g_command_line_buffer));
-        g_command_line_ready = false;
-
-        // --- 命令處理流程結束 ---
+    // --- 命令處理流程結束 ---
 
 }
 
@@ -306,7 +304,8 @@ bool Scan_I2C_Address(void) {
             }
         }
     }
-    TCA9548_SelectChannel(0);
+    //TCA9548_SelectChannel(0);
+    TCA9548_DisableAll();
 
     if (found_count == 0) {
         printf("RESULT: No I2C devices found on the bus.\n");

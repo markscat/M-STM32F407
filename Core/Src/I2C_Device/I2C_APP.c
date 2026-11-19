@@ -240,7 +240,9 @@ void APP_OLED_ShowClock(const RTC_Time *rtc_dt, const DS3231_Temp *temp)
     snprintf(line_buf, sizeof(line_buf), "20%02d-%02d-%02d %s",
              rtc_dt->year, rtc_dt->month, rtc_dt->date,
              (rtc_dt->day >= 1 && rtc_dt->day <= 7) ? weekStr[rtc_dt->day - 1] : "---");
+
     SH1106_GotoXY(0, 0);
+
     SH1106_Puts(line_buf, &Font_7x10, SH1106_COLOR_WHITE);
 
     /* 第二行：時間  HH:MM:SS  （用 11x18 大字體讓時間更醒目） */

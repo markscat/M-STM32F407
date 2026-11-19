@@ -63,7 +63,7 @@
  *  Created on: Feb 28, 2025
  *      Author: user
  */
-#include <I2C_Device\I2C_TCA555.h>
+#include <I2C_Device/I2C_TCA9555.h>
 #include "i2c.h"
 
 //extern I2C_HandleTypeDef hi2c1;
@@ -159,7 +159,10 @@ void TCA9555_ConfigPorts(uint8_t p0_dir, uint8_t p1_dir) {
         printf("TCA9555 ConfigPorts failed!\n");
     }
 }
-
+/**
+ * @brief 設定 Port 0 的方向
+ * @param dir Port 0 (P00~P07) 的方向 (使用 TCA9555_DIR_OUTPUT 或 TCA9555_DIR_INPUT)
+ */
 void TCA9555_SetPort0Dir(uint8_t dir) {
 #ifdef use_TCA9548
     // 確保切換到 TCA9555 的通道
@@ -172,6 +175,10 @@ void TCA9555_SetPort0Dir(uint8_t dir) {
     BSP_I2C_Write(TCA9555_ADDR, cmd, 2);
 }
 
+/**
+* @brief 設定 Port 1 的方向
+ * @param dir Port 1 (P10~P17) 的方向 (使用 TCA9555_DIR_OUTPUT 或 TCA9555_DIR_INPUT)
+ */
 void TCA9555_SetPort1Dir(uint8_t dir) {
 
 #ifdef use_TCA9548
@@ -191,7 +198,7 @@ void TCA9555_SetPort1Dir(uint8_t dir) {
  * @brief 獨立設定 TCA9555 某個腳位是輸入還是輸出 (不影響同 Port 的其他腳位)
  * @param pin 腳位編號 (0~15，0代表P00，8代表P10)
  * @param is_input 1 = 設為輸入，0 = 設為輸出
- *
+ * @note 這個函數會先讀取目前的 Config 暫存器，修改指定的 bit，再寫回去，避免影響其他腳位
  */
 void TCA9555_SetPinDirection(uint8_t pin, uint8_t is_input) {
     if (pin > 15) return;
@@ -227,9 +234,10 @@ void TCA9555_SetPinDirection(uint8_t pin, uint8_t is_input) {
 
 
 /**
- *  @brief 設定單一port的方向
- *  @param data 設定輸出埠的數值
- *
+*  @brief TCA9555_SetDirection(uint16_t direction)
+*  @brief 設定單一port的方向
+*  @param data 設定輸出埠的數值
+*
  */
 
 void TCA9555_SetDirection(uint16_t direction) {
@@ -246,6 +254,16 @@ void TCA9555_SetDirection(uint16_t direction) {
 //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
 #ifdef with_BSP
+
+
+/**
+ *  @brief TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data)
+ *  @brief 配置 TCA9555 的 16 個 GPIO 為輸出模式（默認全部輸入）
+ *  @param P0_data 輸出的低 8 位 (Port0)
+ *  @param P1_data 輸出的高 8 位 (Port1)
+ *  @return HAL_StatusTypeDef HAL_OK 表示成功，其他值表示失敗
+ *  @note 這個函數使用 BSP 抽象層來進行 I2C 寫入，並回傳 HAL 狀態碼，方便上層程式判斷是否成功。
+ */
 
 HAL_StatusTypeDef TCA9555_WriteOutput(uint8_t P0_data,uint8_t P1_data) {
 
@@ -282,8 +300,9 @@ void TCA9555_WriteOutput(uint16_t data) {
 static uint16_t g_tca9555_output_cache = 0xFFFF;
 
 /**
+* @brief TCA9555_WritePin(uint8_t pin, uint8_t level)
  * @brief 設定單一指定的 Pin 輸出 High 或 Low
- * @param pin 0 ~ 15
+ * @param pin Pin 編號 (0~15)
  * @param level 1 = High, 0 = Low
  */
 
@@ -310,9 +329,11 @@ void TCA9555_WritePin(uint8_t pin, uint8_t level) {
 
 
 /**
+*   @brief TCA9555_ReadInput()
  *  @brief 讀取輸入
- *  @param data 設定輸出埠的數值
- *
+ *  @return 16-bit 狀態 (Port 1 在高位，Port 0 在低位)
+ *  @note 這個函數會讀取 TCA9555 的輸入暫存器，並回傳 16 位元的狀態，
+ *        其中 Port 1 的狀態在高位，Port 0 的狀態在低位。
  */
 uint16_t TCA9555_ReadInput()
  {
@@ -332,23 +353,17 @@ uint16_t TCA9555_ReadInput()
             printf("TCA9555 ReadInput Failed\n");
             return 0;
         }
-    /*
-    // 寫入要讀取的暫存器地址
-    HAL_I2C_Master_Transmit(&hi2c1, TCA9555_ADDR, &reg_addr, 1, 100);
-    // 讀取 2 個位元組（Port0 和 Port1）
-    HAL_I2C_Master_Receive(&hi2c1, TCA9555_ADDR, input_data, 2, 100);*/
-
-    //return (input_data[1] << 8) | input_data[0];
-
-   // 回傳 16-bit 狀態 (Port 1 在高位，Port 0 在低位)
        return ((uint16_t)input_data[1] << 8) | input_data[0];
 }
 
 
 /**
+ * @brief TCA9555_ReadPin(uint8_t pin)
  * @brief 讀取單一指定的 Pin 狀態
- * @param pin 0 ~ 15
+ * @param pin Pin 編號 (0~15)
  * @return 0 或 1 (代表 Low 或 High)
+ * @note 這個函數會先呼叫 TCA9555_ReadInput() 取得整個 16 位元的狀態，
+ * @	  然後使用位元遮罩和位移來取得指定 Pin 的狀態，並回傳 0 或 1。
  */
 uint8_t TCA9555_ReadPin(uint8_t pin) {
     if (pin > 15) return 0;
@@ -363,7 +378,13 @@ uint8_t TCA9555_ReadPin(uint8_t pin) {
 
 
 
-//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入測試＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝測試＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+/**
+ * @brief Test_TCA9555_LED
+ * @brief 測試 TCA9555 的 LED 輸出功能
+ * @note 這個函數會先將所有 Port 設為輸出，然後依序輸出 High 和 Low，並延遲 10 秒，
+ *       方便測試 LED 是否亮起。
+ */
 void Test_TCA9555_LED(void) {
 
     						//暫存器, P0  ,  P1
@@ -386,5 +407,5 @@ void Test_TCA9555_LED(void) {
 
 }
 
-//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝寫入測試＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+//＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝測試＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
