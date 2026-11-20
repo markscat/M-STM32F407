@@ -34,13 +34,18 @@ Core/Src/data_recovery.o: ../Core/Src/data_recovery.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h \
  ../Core/Inc/i2c.h ../Core/Inc/main.h ../Core/Inc/uart_io.h \
  ../Core/Inc/Tools.h ../Core/Inc/I2C_Device\I2C_Peripherals.h \
  ../Core/Inc/I2C_Device\I2C_parameter.h ../Core/Inc/ring_buffer.h \
- ../Core/Inc/error_handler.h ../Core/Inc/gpio.h ../Core/Inc/i2c.h \
- ../Core/Inc/I2C_Device/I2C_Peripherals.h ../Core/Inc/spi.h \
- ../Core/Inc/usart.h ../Core/Inc/crc.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
- ../Core/Inc/main.h ../Core/Inc/OLED/Font/I2C_OLED_fonts.h \
+ ../Core/Inc/error_handler.h ../Core/Inc/gpio.h ../Core/Inc/tim.h \
+ ../Core/Inc/i2c.h ../Core/Inc/spi.h ../Core/Inc/usart.h \
+ ../Core/Inc/sdio.h ../Core/Inc/usb_otg.h ../Core/Inc/crc.h \
+ ../Core/Inc/I2C_Device/I2C_Peripherals.h \
+ ../Core/Inc/OLED/I2C_OLED_SH1106.h ../Core/Inc/main.h \
+ ../Core/Inc/OLED/Font/I2C_OLED_fonts.h \
  ../Core/Inc/OLED/I2C_OLED_horse_anim.h ../Core/Inc/OLED/UI.h \
  ../Core/Inc/I2C_Device/I2C_parameter.h \
  ../Core/Inc/I2C_Device/I2C_TCA9548.h \
@@ -84,6 +89,9 @@ Core/Src/data_recovery.o: ../Core/Src/data_recovery.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h:
 ../Core/Inc/i2c.h:
 ../Core/Inc/main.h:
 ../Core/Inc/uart_io.h:
@@ -93,11 +101,14 @@ Core/Src/data_recovery.o: ../Core/Src/data_recovery.c \
 ../Core/Inc/ring_buffer.h:
 ../Core/Inc/error_handler.h:
 ../Core/Inc/gpio.h:
+../Core/Inc/tim.h:
 ../Core/Inc/i2c.h:
-../Core/Inc/I2C_Device/I2C_Peripherals.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/usart.h:
+../Core/Inc/sdio.h:
+../Core/Inc/usb_otg.h:
 ../Core/Inc/crc.h:
+../Core/Inc/I2C_Device/I2C_Peripherals.h:
 ../Core/Inc/OLED/I2C_OLED_SH1106.h:
 ../Core/Inc/main.h:
 ../Core/Inc/OLED/Font/I2C_OLED_fonts.h:

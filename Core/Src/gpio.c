@@ -53,7 +53,7 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin|ILI9552_RS_Pin|ILI9552_RTS_Pin|ILI9552_CS_Pin
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3|ILI9552_RS_Pin|ILI9552_RTS_Pin|ILI9552_CS_Pin
                           |SPI1_CS_Pin|SPI2_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -68,14 +68,19 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, LD4_Pin|LD3_Pin|LD5_Pin|LD6_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : CS_I2C_SPI_Pin ILI9552_RS_Pin ILI9552_RTS_Pin ILI9552_CS_Pin
+  /*Configure GPIO pins : PE3 ILI9552_RS_Pin ILI9552_RTS_Pin ILI9552_CS_Pin
                            SPI1_CS_Pin SPI2_CS_Pin */
-
-  GPIO_InitStruct.Pin = CS_I2C_SPI_Pin|ILI9552_RS_Pin|ILI9552_RTS_Pin|ILI9552_CS_Pin
+  GPIO_InitStruct.Pin = GPIO_PIN_3|ILI9552_RS_Pin|ILI9552_RTS_Pin|ILI9552_CS_Pin
                           |SPI1_CS_Pin|SPI2_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OTG_FS_PowerSwitchOn_Pin SEG_CLK_Pin SEG_DIO_Pin */

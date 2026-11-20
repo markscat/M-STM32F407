@@ -48,14 +48,16 @@ extern "C" {
 #include "Tools.h"
 #include "error_handler.h"
 #include "ring_buffer.h"
-#include "main.h"
+#include "tim.h"
 #include "i2c.h"
-#include <I2C_Device/I2C_Peripherals.h>
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
+#include "sdio.h"
+#include "usb_otg.h"
 #include "crc.h"
 #include <ctype.h>
+#include <I2C_Device/I2C_Peripherals.h>
 #include <OLED/I2C_OLED_SH1106.h>
 #include <OLED/I2C_OLED_horse_anim.h>
 #include <OLED/UI.h>
@@ -88,8 +90,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define CS_I2C_SPI_Pin GPIO_PIN_3
-#define CS_I2C_SPI_GPIO_Port GPIOE
 #define PC14_OSC32_IN_Pin GPIO_PIN_14
 #define PC14_OSC32_IN_GPIO_Port GPIOC
 #define PC15_OSC32_OUT_Pin GPIO_PIN_15

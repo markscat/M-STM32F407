@@ -1,5 +1,4 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/I2C_Device\I2C_APP.h \
- ../Core/Inc/I2C_Device\I2C_parameter.h \
+Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -34,26 +33,29 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/I2C_Device\I2C_APP.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/I2C_Device\I2C_PCA9685.h ../Core/Inc/I2C_Device\ads1115.h \
- ../Core/Inc/I2C_Device\I2C_TCA9548.h ../Core/Inc/i2c.h \
- ../Core/Inc/main.h ../Core/Inc/uart_io.h ../Core/Inc/Tools.h \
- ../Core/Inc/I2C_Device\I2C_Peripherals.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h \
+ ../Core/Inc/uart_io.h ../Core/Inc/Tools.h \
+ ../Core/Inc/I2C_Device\I2C_Peripherals.h ../Core/Inc/i2c.h \
+ ../Core/Inc/main.h ../Core/Inc/I2C_Device/I2C_parameter.h \
+ ../Core/Inc/I2C_Device/I2C_TCA9548.h \
  ../Core/Inc/I2C_Device/I2C_parameter.h ../Core/Inc/I2C_Device/ads1115.h \
  ../Core/Inc/I2C_Device/I2C_MCP4725.h \
  ../Core/Inc/I2C_Device/I2C_PCA9685.h \
- ../Core/Inc/I2C_Device/I2C_TCA9555.h ../Core/Inc/main.h \
- ../Core/Inc/I2C_Device/BPS_i2c.h ../Core/Inc/OLED/I2C_OLED_SH1106.h \
+ ../Core/Inc/I2C_Device/I2C_TCA9555.h ../Core/Inc/I2C_Device/BPS_i2c.h \
+ ../Core/Inc/OLED/I2C_OLED_SH1106.h \
  ../Core/Inc/OLED/Font/I2C_OLED_fonts.h ../Core/Inc/Tools.h \
  ../Core/Inc/I2C_Device\I2C_parameter.h ../Core/Inc/ring_buffer.h \
  ../Core/Inc/error_handler.h ../Core/Inc/I2C_Device\I2C_Peripherals.h \
- ../Core/Inc/gpio.h ../Core/Inc/i2c.h \
- ../Core/Inc/I2C_Device/I2C_Peripherals.h ../Core/Inc/spi.h \
- ../Core/Inc/usart.h ../Core/Inc/crc.h \
+ ../Core/Inc/gpio.h ../Core/Inc/tim.h ../Core/Inc/i2c.h ../Core/Inc/spi.h \
+ ../Core/Inc/usart.h ../Core/Inc/sdio.h ../Core/Inc/usb_otg.h \
+ ../Core/Inc/crc.h ../Core/Inc/I2C_Device/I2C_Peripherals.h \
  ../Core/Inc/OLED/I2C_OLED_horse_anim.h ../Core/Inc/OLED/UI.h \
- ../Core/Inc/I2C_Device\I2C_parameter.h \
+ ../Core/Inc/I2C_Device\I2C_APP.h ../Core/Inc/I2C_Device\I2C_parameter.h \
+ ../Core/Inc/I2C_Device\I2C_PCA9685.h ../Core/Inc/I2C_Device\ads1115.h \
  ../Core/Inc/I2C_Device\I2C_MCP4725.h
-../Core/Inc/I2C_Device\I2C_APP.h:
-../Core/Inc/I2C_Device\I2C_parameter.h:
+../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
@@ -88,20 +90,21 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/I2C_Device\I2C_APP.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-../Core/Inc/I2C_Device\I2C_PCA9685.h:
-../Core/Inc/I2C_Device\ads1115.h:
-../Core/Inc/I2C_Device\I2C_TCA9548.h:
-../Core/Inc/i2c.h:
-../Core/Inc/main.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h:
 ../Core/Inc/uart_io.h:
 ../Core/Inc/Tools.h:
 ../Core/Inc/I2C_Device\I2C_Peripherals.h:
+../Core/Inc/i2c.h:
+../Core/Inc/main.h:
+../Core/Inc/I2C_Device/I2C_parameter.h:
+../Core/Inc/I2C_Device/I2C_TCA9548.h:
 ../Core/Inc/I2C_Device/I2C_parameter.h:
 ../Core/Inc/I2C_Device/ads1115.h:
 ../Core/Inc/I2C_Device/I2C_MCP4725.h:
 ../Core/Inc/I2C_Device/I2C_PCA9685.h:
 ../Core/Inc/I2C_Device/I2C_TCA9555.h:
-../Core/Inc/main.h:
 ../Core/Inc/I2C_Device/BPS_i2c.h:
 ../Core/Inc/OLED/I2C_OLED_SH1106.h:
 ../Core/Inc/OLED/Font/I2C_OLED_fonts.h:
@@ -111,12 +114,18 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/I2C_Device\I2C_APP.h \
 ../Core/Inc/error_handler.h:
 ../Core/Inc/I2C_Device\I2C_Peripherals.h:
 ../Core/Inc/gpio.h:
+../Core/Inc/tim.h:
 ../Core/Inc/i2c.h:
-../Core/Inc/I2C_Device/I2C_Peripherals.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/usart.h:
+../Core/Inc/sdio.h:
+../Core/Inc/usb_otg.h:
 ../Core/Inc/crc.h:
+../Core/Inc/I2C_Device/I2C_Peripherals.h:
 ../Core/Inc/OLED/I2C_OLED_horse_anim.h:
 ../Core/Inc/OLED/UI.h:
+../Core/Inc/I2C_Device\I2C_APP.h:
 ../Core/Inc/I2C_Device\I2C_parameter.h:
+../Core/Inc/I2C_Device\I2C_PCA9685.h:
+../Core/Inc/I2C_Device\ads1115.h:
 ../Core/Inc/I2C_Device\I2C_MCP4725.h:

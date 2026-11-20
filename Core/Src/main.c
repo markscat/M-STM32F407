@@ -30,9 +30,12 @@
  * I2C1 GPIO Configuration<br/>
  *  PB6     ------> I2C1_SCL<br/>
  *	PB7     ------> I2C1_SDA<br/>
+ *
  * USART2 GPIO Configuration<br/>
  *	PA2     ------> USART2_TX<br/>
  * 	PA3     ------> USART2_RX<br/>
+ * USART3 GPIO Configuration<br/>
+ *
  * TM1638 GPIO Configuration<br/>
  *	PC4     ------> SEG_CLK<br/>
  * 	PC5     ------> SEG_DIO<br/>
@@ -82,14 +85,12 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <I2C_Device\I2C_APP.h>
+
 #include "main.h"
+#include <I2C_Device\I2C_APP.h>
 #include "I2C_Device\ads1115.h"
 #include "I2C_Device\I2C_MCP4725.h"//ok
-
 #include "I2C_Device\I2C_TCA9548.h"        // TCA9548 的 API
-
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -252,18 +253,30 @@ int main(void)
 
   /**
      * @brief  SPI1初始化
+	 * @note   SPI1 GPIO Configuration
+	 * @note   PA5     ------> SPI1_SCK
+	 * @note   PA6     ------> SPI1_MISO
+	 * @note   PA7     ------> SPI1_MOSI
+	 * @note   PE10    ------> SPI1_CS
      * param  無
      * @return 無
 
      */
   MX_SPI1_Init();
-    /**
-     * @brief  SPI2初始化
-     * param  無
-     * @return 無
+
+  /**
+  * @brief  SPI2初始化
+  * @note   SPI2 GPIO Configuration
+  * @note   PB13     ------> SPI2_SCK
+  * @note   PB14     ------> SPI2_MISO
+  * @note   PB15     ------> SPI2_MOSI
+  * @note   PB12     ------> SPI2_CS
+  * 
+  * param  無
+  * @return 無
 
      */
-    MX_SPI2_Init();
+   MX_SPI2_Init();
 
   
   /**
@@ -275,27 +288,37 @@ int main(void)
   MX_USART2_UART_Init();
 
   /**
-      * @brief  USART2初始化
+      * @brief  USART3初始化
       * param  無
       * @return 無
       * 說明：備用,所以不會初始化
       */
   
-  //MX_USART3_UART_Init();
+  MX_USART3_UART_Init();
 
 
   
   /**
-      * @brief  I2C初始化
-      * I2C1 GPIO Configuration
+     * @brief  I2C 1 初始化
+     * I2C1 GPIO Configuration
  	 * PB6     ------> I2C1_SCL
  	 * PB7     ------> I2C1_SDA
-      * param  無
-      * @return 無
-      *
- 	 *
+     * param  無
+     * @return 無
      */
   MX_I2C1_Init();
+
+
+  /**
+     * @brief  I2C 2 初始化
+     * I2C2 GPIO Configuration
+     * PB10     ------> I2C2_SCL
+     * PB11     ------> I2C2_SDA
+     * param  無
+     * @return 無
+     */
+
+  MX_I2C2_Init();
   
     /**
       * @brief  Tim初始化
@@ -305,9 +328,9 @@ int main(void)
       * 備用,先不使用
  	  *
     */  
-    //MX_TIM1_Init();
+    MX_TIM1_Init();
 
-  //MX_I2C3_Init();
+  
 
   /* USER CODE BEGIN 2 */
   uart_io_init(); // 初始化UART輸入輸出
@@ -315,6 +338,37 @@ int main(void)
     * @}
     */  //確保 `Initialize` 進入 `Initialize` 群組
 
+
+
+    /**
+       * @brief  usb 初始化
+	   * @note   USB OTG FS GPIO Configuration
+	   * PA12     ------> OTG_FS_DP
+	   * PB11     ------> OTG_FS_DM
+       * param  無
+       * @return 無
+       */
+  
+  MX_USB_OTG_FS_PCD_Init();
+  
+
+  /**
+      * @brief  CRC 初始化
+      * @note   
+      * param  無
+      * @return 無
+      */
+
+  //MX_CRC_Init();
+
+  /**
+      * @brief  SDIO 初始化
+      * @note
+      * param  無
+      * @return 無
+      */
+
+  MX_SDIO_SD_Init();
 
   /* USER CODE BEGIN 2 */
 
