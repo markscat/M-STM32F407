@@ -53,7 +53,8 @@ Core/Src/data_recovery.o: ../Core/Src/data_recovery.c \
  ../Core/Inc/I2C_Device/I2C_MCP4725.h \
  ../Core/Inc/I2C_Device/I2C_PCA9685.h \
  ../Core/Inc/I2C_Device/I2C_TCA9555.h ../Core/Inc/I2C_Device/BPS_i2c.h \
- ../Core/Inc/Tools.h ../Core/Inc/data_recovery.h
+ ../Core/Inc/I2C_Device/I2C-PCF8574_LCM.h ../Core/Inc/Tools.h \
+ ../Core/Inc/data_recovery.h
 ../Core/Inc/I2C_Device\I2C_Peripherals.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -122,5 +123,6 @@ Core/Src/data_recovery.o: ../Core/Src/data_recovery.c \
 ../Core/Inc/I2C_Device/I2C_PCA9685.h:
 ../Core/Inc/I2C_Device/I2C_TCA9555.h:
 ../Core/Inc/I2C_Device/BPS_i2c.h:
+../Core/Inc/I2C_Device/I2C-PCF8574_LCM.h:
 ../Core/Inc/Tools.h:
 ../Core/Inc/data_recovery.h:

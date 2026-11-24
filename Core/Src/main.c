@@ -318,7 +318,7 @@ int main(void)
      * @return 無
      */
 
-  MX_I2C2_Init();
+  //MX_I2C2_Init();
   
     /**
       * @brief  Tim初始化
@@ -349,7 +349,7 @@ int main(void)
        * @return 無
        */
   
-  MX_USB_OTG_FS_PCD_Init();
+  //MX_USB_OTG_FS_PCD_Init();
   
 
   /**
@@ -367,7 +367,7 @@ int main(void)
       * param  無
       * @return 無
       */
-
+printf("\n wait SDIO......\n");
   MX_SDIO_SD_Init();
 
   /* USER CODE BEGIN 2 */
@@ -392,19 +392,6 @@ int main(void)
 
   /* 掃描所有的 i2C 的週邊 以及相對應位址 */
   // 執行掃描
-
-  bool scan_success = Scan_I2C_Address();
-
-  // 判斷結果
-  if (scan_success == false) {
-      printf("\n[FATAL] 匯流排上沒有任何 I2C 設備，系統停止！\n");
-
-      // 停下來，不要讓它去跑後面的 TCA9548_SelectByAddress 或是 Init
-      while (1) {
-          HAL_Delay(1000);
-      }
-  }
-
 
   /* 輪著週邊初始化 */
 
@@ -611,7 +598,27 @@ int main(void)
 //#define on_off_screen
 //#define Horse_run
 
+#define LCM
 #ifdef LCM
+
+/*
+    LCM_Backlight(0);
+    HAL_Delay(1000);
+    LCM_Backlight(1);
+    HAL_Delay(1000);*/
+
+
+    printf("LCM test \n");
+
+
+    if (LCM_Print("Hellow LCM ") != HAL_OK){
+    	printf("LCM Fail");
+    }
+    HAL_Delay(10);      // Clear 指令需要較長時間
+
+    if (LCM_Print("Hellow ") != HAL_OK){
+    	printf("LCM Fail");
+    }
 
 #endif
 

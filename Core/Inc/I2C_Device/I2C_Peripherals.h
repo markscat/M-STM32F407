@@ -27,6 +27,7 @@
 #include <I2C_Device/I2C_PCA9685.h>
 #include <I2C_Device/I2C_TCA9555.h>
 #include <OLED/I2C_OLED_SH1106.h>
+#include <I2C_Device/I2C-PCF8574_LCM.h>
 
 #include "Tools.h"
 

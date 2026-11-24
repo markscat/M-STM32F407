@@ -32,5 +32,7 @@ HAL_StatusTypeDef LCM_Print(const char *str);
 HAL_StatusTypeDef LCM_SetCursor(uint8_t row, uint8_t col);
 HAL_StatusTypeDef LCM_Clear(void);
 HAL_StatusTypeDef LCM_Backlight(uint8_t on);
+HAL_StatusTypeDef PCF8574_Init(void);
+int PCF8574_DeviceInit_Wrapper(void);
 
 #endif /* INC_I2C_DEVICE_I2C_PCF8574_LCM_H_ */

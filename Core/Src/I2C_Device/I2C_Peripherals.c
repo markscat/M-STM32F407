@@ -216,6 +216,12 @@ I2C_Status I2C_Init_Devices(void) {
 	    .is_required = true
 	},
 	{
+		.dev_addr  = LCM_I2C_ADDR,
+		.init_fn   = PCF8574_DeviceInit_Wrapper,
+		.dev_name  = "LCM Controller : PCF8574",
+	    .is_required = true
+	},
+	{
 	   .dev_addr  = SH1106_I2C_ADDR,  // 7位地址
 	   .init_fn   = SH1106_DeviceInit_Wrapper,
 	   .dev_name  = "OLED : SH1106 ",

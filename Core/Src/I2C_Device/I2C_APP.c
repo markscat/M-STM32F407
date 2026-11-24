@@ -29,7 +29,19 @@ I2C_Status APP_I2C_Init(void)
 {
     printf("\n*************Scan_I2C_Address********************\n");
     printf("Scan All I2C Device Address \n");
-    Scan_I2C_Address();
+    //Scan_I2C_Address();
+
+    bool scan_success = Scan_I2C_Address();
+
+    // 判斷結果
+    if (scan_success == false) {
+        printf("\n[FATAL] 匯流排上沒有任何 I2C 設備，系統停止！\n");
+
+        // 停下來，不要讓它去跑後面的 TCA9548_SelectByAddress 或是 Init
+        while (1) {
+            HAL_Delay(1000);
+        }
+    }
     printf("\n************************************************\n");
 
     printf("\n**************I2C init. Device *****************\n");

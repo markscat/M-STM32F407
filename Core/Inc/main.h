@@ -61,13 +61,25 @@ extern "C" {
 #include <OLED/I2C_OLED_SH1106.h>
 #include <OLED/I2C_OLED_horse_anim.h>
 #include <OLED/UI.h>
-
+/*
+#include <I2C_Device\I2C_APP.h>
+#include "I2C_Device\ads1115.h"
+#include "I2C_Device\I2C_MCP4725.h"//ok
+#include "I2C_Device\I2C_TCA9548.h"        // TCA9548 的 API
+*/
+                                  
 //#include "EXT_ADC/ads1115.h"
 
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+
+#define MAX_INPUT_LEN 32 // 输入字符串最大长度
+#define MAX_INPUT_LEN_MINIMAL 32
+#define MAX_COMMAND_LEN_MAIN 32                         // UART 命令行的最大允許字符數 (不包括 '\0')
+#define LINE_BUFFER_SIZE_MAIN (MAX_COMMAND_LEN_MAIN + 1) // <<<< 在此處定義！ 行緩衝區大小（+1 用於 '\0'）
 
 /* USER CODE END ET */
 

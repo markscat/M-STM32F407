@@ -1,0 +1,1257 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ @file           : main.c
+ @brief          : Main program body
+ ******************************************************************************
+ * \mainpage
+ *  # 各種關於STM32F407的測試
+ *  目前的進度：
+ *  	- 板上LED的操作
+ *  	- printf和scanf的重寫
+ *  	- TCA555,I2C擴充IO的寫入;但讀取有待測試
+ *  	- TM1638的寫入;讀取有待測試
+ *  	- 完成EEPROM AT24C32以及AT24C02的讀寫
+ *  	- 完成OLED 螢幕開啟以及關閉的功能
+ *
+ * # EEPROM的檔案結構
+ * ├── Core<br/>
+ * │   ├── Inc<br/>
+ * │   │   ├── eeprom_handler.h    // EEPROM操作接口<br/>
+ * │   │   ├── data_recovery.h     // 数据恢复机制<br/>
+ * │   │   └── error_handler.h     // 错误处理系统<br/>
+ * │   ├── Src<br/>
+ * │   │   ├── eeprom_handler.c    // EEPROM底层驱动<br/>
+ * │   │   ├── data_recovery.c     // 数据恢复实现<br/>
+ * │   │   ├── error_handler.c     // 错误处理实现<br/>
+ * │   │   └── main.c             // 主程序<br/>
+ *
+ * #IO setup:<br/>
+ * I2C1 GPIO Configuration<br/>
+ *  PB6     ------> I2C1_SCL<br/>
+ *	PB7     ------> I2C1_SDA<br/>
+ *
+ * USART2 GPIO Configuration<br/>
+ *	PA2     ------> USART2_TX<br/>
+ * 	PA3     ------> USART2_RX<br/>
+ * USART3 GPIO Configuration<br/>
+ *
+ * TM1638 GPIO Configuration<br/>
+ *	PC4     ------> SEG_CLK<br/>
+ * 	PC5     ------> SEG_DIO<br/>
+ * 	PB0     ------> SEG_STB<br/>
+ *
+ *　SPI GPIO Configuration<br/>
+ *  VCC
+ *  PE10 	------> SPI1_CS_Pin<br/>
+ *  PA7		------> SPI1_MOSI_Pin<br/>
+ *  PA5		------> SPI1_SCK_Pin<br/>
+ *  PA6		------> SPI1_MISO_Pin<br/>
+ *  
+ * SPI Panel ili9225
+ *  VCC
+ *  GND
+ *  GND
+ *  NC
+ *  NC
+ *  NC
+ *  PA5		------> SPI1_SCK_Pin<br/>
+ *  PA6		------> SPI1_MISO_Pin<br/>
+ *  PE7		------> 9552_RS_Pin<br/>
+ *  PE8		------> 9552_RTS_Pin<br/>
+ *  PE9		------> 9552_CS_Pin<br/>
+ 
+ * I2C Address:
+ * AT24C02				0x57 / 0x50  ok
+ * SH1106				0x3C         ok
+ * RTC(DS3231/ DS1307) 	0x68         ok
+ * ADS1115(ADC)			0x48         ok
+ * mcp4725              0x61		 ok
+ * TCA9685              0x40		 ok
+ * PCA9548_I2C Mux 		0x70		 ok
+ * PCF8574 I2C_LCM      0x27
+ *
+ * ##版權：<br/>
+ * GNU GENERAL PUBLIC LICENSE<br/>
+ * Version 3, 29 June 2007<br/>
+ * Copyright (C) [2025] [Ethan]<br/>
+ * 本程式是一個自由軟體：您可以依照 **GNU 通用公共授權條款（GPL）** 發佈和/或修改，<br/>
+ * GPL 版本 3 或（依您選擇）任何更新版本。<br/>
+ * 本程式的發佈目的是希望它對您有幫助，但 **不提供任何擔保**，甚至不包含適銷性或特定用途適用性的默示擔保。<br/>
+ * 請參閱 **GNU 通用公共授權條款** 以獲取更多詳細資訊。<br/>
+ * 您應當已經收到一份 **GNU 通用公共授權條款** 副本。<br/>
+ * 如果沒有，請參閱 <https://www.gnu.org/licenses/gpl-3.0.html>。<br/>
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+
+#include "main.h"
+#include <I2C_Device\I2C_APP.h>
+#include "I2C_Device\ads1115.h"
+#include "I2C_Device\I2C_MCP4725.h"//ok
+#include "I2C_Device\I2C_TCA9548.h"        // TCA9548 的 API
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/**
+ * @defgroup Function_selete Function_selete
+ * @brief 切換要執行的驅動程式,達到程式執行時的單純性
+ * @{
+ */
+
+//#define uartPrintfloop
+//#define EEPROM
+//#define PrintfScanfTestCode
+//#define RTCSet
+//#define  RTC_Write_interr
+
+//#define RTC_Write
+
+
+//#define clear_EEPROM
+//#define EEPROM_write
+//#define EEPROM_read
+
+#define Servo_Moving_by_Ticks
+
+#define TCA555_IO_extern
+
+
+
+bool CheckTimeStruct (const RTC_Time* time_to_check );
+
+
+char line_buffer_main[LINE_BUFFER_SIZE_MAIN];
+volatile uint16_t line_buffer_index_main = 0;
+
+uint8_t rx_data;
+
+
+#ifdef EEPROM
+#include "error_handler.h"
+#include <I2C_Peripherals.h>
+
+/**
+#define EEPROM_I2C_ADDR        0x50  // 7位地址 (A2A1A0接地)
+
+#define EEPROM_PAGE_SIZE       32     // 每頁32字節
+#define EEPROM_MAX_ADDR        0x0FFF // 最大地址 (4KB)
+#define DATA_WITH_CRC_SIZE(data_size) (data_size + 2)  // 16-bit CRC
+*/
+#endif
+
+
+
+/**  @brief 設定只執行TCA555的程式 */
+#ifdef TCA555
+#include <I2C_TCA555.h>
+#endif
+/**
+ * @}
+ */
+
+
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+//使用者自訂型別定義（Private Typedef）
+
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+//使用者自訂 #define（Private Define）
+
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+//	使用者自訂巨集（Private Macro）
+
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+//使用者自訂變數（Private Variables）
+
+
+// 來自 uart_io.c 的外部變數 (根據您的專案定義)
+extern volatile uint16_t RxCounter;
+extern volatile uint8_t RxFinishFlag;
+
+/* USER CODE END PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+
+/* USER CODE BEGIN PFP */
+//使用者自訂「函式原型（Private Function Prototypes）
+
+
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+//用來放「使用者自訂函式（Private User Code）」的實作
+
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  /**
+     * @defgroup Initialize Initialize
+     * @brief Initialize all configured peripherals
+     * @{
+     */
+
+    /**
+     * @brief  GPIO初始化
+     * param  無
+     * @return 無
+     * @note   這裡可以寫一些額外的備註
+     * @warning 這裡可以寫警告資訊
+     */
+  MX_GPIO_Init();
+
+  /**
+     * @brief  SPI1初始化
+	 * @note   SPI1 GPIO Configuration
+	 * @note   PA5     ------> SPI1_SCK
+	 * @note   PA6     ------> SPI1_MISO
+	 * @note   PA7     ------> SPI1_MOSI
+	 * @note   PE10    ------> SPI1_CS
+     * param  無
+     * @return 無
+
+     */
+  MX_SPI1_Init();
+
+  /**
+  * @brief  SPI2初始化
+  * @note   SPI2 GPIO Configuration
+  * @note   PB13     ------> SPI2_SCK
+  * @note   PB14     ------> SPI2_MISO
+  * @note   PB15     ------> SPI2_MOSI
+  * @note   PB12     ------> SPI2_CS
+  * 
+  * param  無
+  * @return 無
+
+     */
+   MX_SPI2_Init();
+
+  
+  /**
+      * @brief  USART2初始化
+      * param  無
+      * @return 無
+      */
+
+  MX_USART2_UART_Init();
+
+  /**
+      * @brief  USART3初始化
+      * param  無
+      * @return 無
+      * 說明：備用,所以不會初始化
+      */
+  
+  MX_USART3_UART_Init();
+
+
+  
+  /**
+     * @brief  I2C 1 初始化
+     * I2C1 GPIO Configuration
+ 	 * PB6     ------> I2C1_SCL
+ 	 * PB7     ------> I2C1_SDA
+     * param  無
+     * @return 無
+     */
+  MX_I2C1_Init();
+
+
+  /**
+     * @brief  I2C 2 初始化
+     * I2C2 GPIO Configuration
+     * PB10     ------> I2C2_SCL
+     * PB11     ------> I2C2_SDA
+     * param  無
+     * @return 無
+     */
+
+  MX_I2C2_Init();
+  
+    /**
+      * @brief  Tim初始化
+      * PWM GPIO Configuration
+      * param  無
+      * @return 無
+      * 備用,先不使用
+ 	  *
+    */  
+    MX_TIM1_Init();
+
+  
+
+  /* USER CODE BEGIN 2 */
+  uart_io_init(); // 初始化UART輸入輸出
+  /**
+    * @}
+    */  //確保 `Initialize` 進入 `Initialize` 群組
+
+
+
+    /**
+       * @brief  usb 初始化
+	   * @note   USB OTG FS GPIO Configuration
+	   * PA12     ------> OTG_FS_DP
+	   * PB11     ------> OTG_FS_DM
+       * param  無
+       * @return 無
+       */
+  
+  MX_USB_OTG_FS_PCD_Init();
+  
+
+  /**
+      * @brief  CRC 初始化
+      * @note   
+      * param  無
+      * @return 無
+      */
+
+  //MX_CRC_Init();
+
+  /**
+      * @brief  SDIO 初始化
+      * @note
+      * param  無
+      * @return 無
+      */
+
+  MX_SDIO_SD_Init();
+
+  /* USER CODE BEGIN 2 */
+
+  //掃描所有I2C的設備
+
+  printf("\n\n ***************init TCA9548*************** \n\n");
+  /*  I2C MUX TCA9548 初始化 */
+  #ifdef use_TCA9548
+
+  if (TCA9548_Init() != TCA9548_OK) {
+      printf("TCA9548 init failed!\n");
+      HAL_Delay(1000);
+      while(1){};		//直接結束
+
+      //return 1;
+  }
+
+  printf("\n\n ***************TCA9548 init ok *************** \n\n");
+
+#endif   /*  I2C MUX TCA9548 初始化 */
+
+  /* 掃描所有的 i2C 的週邊 以及相對應位址 */
+  // 執行掃描
+
+  bool scan_success = Scan_I2C_Address();
+
+  // 判斷結果
+  if (scan_success == false) {
+      printf("\n[FATAL] 匯流排上沒有任何 I2C 設備，系統停止！\n");
+
+      // 停下來，不要讓它去跑後面的 TCA9548_SelectByAddress 或是 Init
+      while (1) {
+          HAL_Delay(1000);
+      }
+  }
+
+
+  /* 輪著週邊初始化 */
+
+  if (APP_I2C_Init() != I2C_OK) {
+      printf("No device \n \t END");
+        HAL_Delay(100);
+        while(1){};		//直接結束
+        return 1;             // main 回傳 int，不要直接回傳 I2C_Status
+    }
+  // --- 初始化結束，裝置已待命 ---
+
+
+
+//#define PWM_Servo_motor
+
+#ifdef oled
+	//SH1106 1.3 inch OLED address= 0x3C
+	#ifdef use_TCA9548
+		if (TCA9548_SelectByAddress(0x3C) != HAL_OK) {
+			printf(" Oled 沒準備好,或是不存在 \n\n");
+		}
+	#endif
+
+	  SH1106_Fill(SH1106_COLOR_BLACK);
+	  SH1106_UpdateScreen();
+	  SH1106_ShowRawBuffer(UI); // ✅ 一行顯示匯出的圖片
+	  HAL_Delay(500);
+
+
+		// 設定游標位置（例如 X=0, Y=0）
+	  SH1106_Fill(SH1106_COLOR_BLACK);
+	  SH1106_GotoXY(0, 20);
+	  /*
+	   *  Font_11x18每行可以印出11個字
+	   * Font_7x10每行可以印出18個字
+	   * 如果斷行符號超過螢幕,很可能會無法斷行
+	   *
+	   * */
+		SH1106_Puts_line_break("System init ok\n", &Font_7x10, SH1106_COLOR_WHITE);
+
+		SH1106_UpdateScreen();
+#endif
+
+
+/*
+ * 舵機控制程式
+ * 輸入：角度
+ *
+ * */
+
+#ifdef PWM_Servo_motor
+		printf("\n Moving Servo to 90 deg...\n");
+	#ifdef use_TCA9548
+	      if (TCA9548_SelectByAddress(PCA9685_ADDR) != HAL_OK) {
+	    	  printf("PCA9685 Fail \n");
+	    	  while(1){}
+	      }else{
+	    	  printf("PCA9685 ok \n");
+	      }
+	      #endif
+
+	#ifdef Servo_Moving_by_Ticks
+
+	      for(int i=5; i<= 10;i++){
+	    	  PCA9685_SetPWM(1 , i);// 通道 0，0度
+	    	  printf("\n\n %d tick",i);
+	          HAL_Delay(5);	 //停一秒,用示波器看波形變化
+	          //HAL_Delay(1000); //停 10ms，整個過程約 4 秒，舵機會非常平順地轉過去
+	      }
+
+	#elif Servo_Moving_by_angle  //Servo_Moving_by_angle
+			for (int angle = 0; angle <= 180; angle++) {
+	         // 將角度換算成 Ticks
+	         int ticks = 102 + (angle * 410 / 180);
+	         PCA9685_SetPWM(1, ticks);
+	         HAL_Delay(10);
+	      }
+
+	#endif
+
+#endif
+
+
+  //時間設定
+
+#ifdef time_setting
+	//  * RTC(DS3231/ DS1307) I2C address = 0x68
+
+	#ifdef use_TCA9548
+	  if (TCA9548_SelectByAddress(0x68) != HAL_OK) {
+		  printf("\n設備不存在\n");
+	  }
+	#endif
+		  APP_RTC_SetupInteractive();
+		  APP_RTC_ShowTimeAndTemp();
+		  APP_UART_Poll();
+
+#endif
+
+
+//ADC設定
+
+#ifdef DAC_MCP4725
+
+		//模板開始
+		#ifdef use_TCA9548
+		    //要執行下面這行,必須先執行  Scan_I2C_Address();
+		    //但這是系統一開始就該做的,所以不太需要特別說明;
+		    //不過,狗工程師很多,寫個說明,以防萬一
+		  if (TCA9548_SelectByAddress(0x61) != HAL_OK) {
+			  printf("\n設備不存在這個頻道\n");
+		  }
+
+		#endif
+		  //程式主體
+		  //設定電壓,同時判斷裝置還活著沒
+		  if(MCP4725_SetVoltage(2.2,4.9) != HAL_OK){
+			  printf("\n設備不存在\n");
+		  }
+		  printf("\nMCP4725 ok\n");
+
+#endif
+
+#ifdef ADC_1115
+	//ADS1115 I2C address = 0x48
+	    float adc_voltage = 0.0f;
+
+	#ifdef use_TCA9548
+	  if (TCA9548_SelectByAddress(0x48) != HAL_OK) {
+		  printf("ADC Fail \n\n");
+		  while(1){}
+	  }else{
+		  printf("ADC ok \n\n");
+	  }
+
+	#endif
+
+    APP_ADS1115_Config(ADS1115_MUX_AIN0, ADS1115_PGA_ONE,
+                       ADS1115_DATA_RATE_128, 1);
+    HAL_Delay(50);              // 等它轉換穩定
+
+    // 呼叫你的封裝函式讀取
+    if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
+    	// 注意：ADS1115 讀出來的單位是「毫伏 (mV)」
+    	printf("ADC 電壓: %.3f V\r\n", adc_voltage / 1000.0f);
+    } else {
+    	printf("ADC 讀取失敗!\n");
+    }
+
+#endif
+
+
+#ifdef TCA555_IO_extern
+
+	  // 初始先全滅
+    if (TCA9555_WriteOutput(0xFF,0xFF) != HAL_OK) {
+        	printf("TCA9555 寫入失敗！\n");
+        }
+
+    TCA9555_SetPinDirection(0,1);//pin0, output
+    TCA9555_WritePin(0,0);//pin0, out, 1
+    TCA9555_SetPinDirection(1,1);//Pin1,input
+    HAL_Delay(10);
+    uint16_t Pin1 =  TCA9555_ReadPin(1);
+
+    if (Pin1 == 1){
+    	printf("Pin1 is high \n ");
+    }else{
+    	printf("Pin1 is Low \n ");
+    }
+    printf("Debug:end\n\n");
+
+
+    HAL_Delay(200);
+
+//#define TCA555_IO_extern_LED_Test
+
+    #ifdef TCA555_IO_extern_LED_Test
+
+
+
+    for (int i = 0; i < 16; i++) {
+    	if (i < 8) {
+    		// 亮 Port 0 的腳位，Port 1 全滅 (Active Low 所以是 0xFF)
+    		if(TCA9555_WriteOutput(~(1 << i), 0xFF) != HAL_OK){
+    			printf("TCA9555 失敗");
+    			return HAL_ERROR;
+	      } else {
+	          // 亮 Port 1 的腳位，Port 0 全滅
+	          if(TCA9555_WriteOutput(0xFF, ~(1 << (i - 8)))){
+	        	  printf("TCA9555 失敗");
+	        	  return HAL_ERROR;
+	          }
+	      }
+	      HAL_Delay(200);
+	  }
+    }
+
+	  #endif
+
+#endif
+
+
+//#define on_off_screen
+//#define Horse_run
+
+#ifdef LCM
+
+#endif
+
+#define clock
+
+#ifdef clock
+		  while (10)
+		  		  {
+		  uint32_t last_clock_update = 0;
+
+			  /* UART 輪詢（非阻塞） */
+			  APP_UART_Poll();
+
+			  /* 每 500ms 更新一次 OLED 時鐘 */
+			  if (HAL_GetTick() - last_clock_update >= 500) {
+				  last_clock_update = HAL_GetTick();
+				  APP_OLED_UpdateClock();   /* 讀 RTC + 溫度 → 刷 OLED */
+			  }
+			  /* 若要同時在 UART 上輸出時間，可在這裡偶爾呼叫 APP_RTC_ShowTimeAndTemp() */
+		  }
+
+#endif
+
+		  #ifdef oled_
+	//SH1106 1.3 inch OLED address= 0x3C
+	#ifdef use_TCA9548
+		if (TCA9548_SelectByAddress(0x3C) == HAL_OK) {
+	#endif
+			// 設定游標位置（例如 X=0, Y=0）
+			SH1106_GotoXY(0, 0);
+
+			/*
+			 * Font_11x18每行可以印出11個字
+			 * Font_7x10每行可以印出18個字
+			 * 如果斷行符號超過螢幕,很可能會無法斷行
+			 *
+			 * */
+			SH1106_Puts_line_break("123456789012345678\n", &Font_7x10, SH1106_COLOR_WHITE);
+			SH1106_Puts_line_break("ABCDEFGHnLMNOPQRST\n", &Font_7x10, SH1106_COLOR_WHITE);
+			SH1106_Puts_line_break("UVWXYZabcd\n", &Font_7x10, SH1106_COLOR_WHITE);
+			//\nefghijkl\nmnopqrst\nuvwxyz\n
+			// 重新整理螢幕送出
+			SH1106_UpdateScreen();
+
+	#ifdef use_TCA9548
+		}
+		printf("Visual monitor status \n\n");
+	#endif
+
+#endif
+
+while(1){
+
+
+	}
+}
+
+// 最後的結尾,進入無盡迴圈
+#ifdef use_TCA9548_
+	  TCA9548_SelectChannel(0);
+#endif
+
+//正弦波測試
+//#define sinWave_test
+
+#ifdef sinWave_test
+
+	    //int index = 0;
+
+	    while (1) {
+
+	        mcp4725_sinWave_test();
+
+	    }
+#endif
+
+//正弦波測試	-end
+
+#define MCP4725_test
+
+#ifdef MCP4725_test_
+/*MCP4725 測試程式*/
+
+	    while (1) {
+	        // 往上掃 (一次跳 100 階)
+	        for (uint16_t i = 0; i < 4096; i += 100) {
+	            if (TCA9548_SelectByAddress(0x61) == HAL_OK) MCP4725_SetRawValue(i);
+	            // 如果你要它在示波器上看起來平滑，這裡可以不用 Delay
+	        }
+	        // 往下掃
+	        for (int32_t i = 4095; i >= 0; i -= 100) {
+	            if (TCA9548_SelectByAddress(0x61) == HAL_OK) MCP4725_SetRawValue(i);
+	        }
+	    }
+/*MCP4725 測試程式 -end*/
+#endif
+
+
+#ifdef MCP4725_AND_ADS1115_test
+
+/*ads1115 and MCP4725 測試程式*/
+    while (1) {
+        printf("\n--- 開始往上掃描 (0 -> 4095) ---\n");
+        
+        // 1. 往上掃
+        for (uint16_t i = 0; i < 4096; i++) {
+            
+            // 設定 DAC 輸出
+            if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+                MCP4725_SetRawValue(i);
+            }
+            
+            HAL_Delay(2); // 等 DAC 穩壓 (這很重要)
+            
+            // 切換回 ADC 讀取
+            if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
+                if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
+                    // 因為掃描很快，如果你覺得印出太多行，可以自己加條件
+                    printf("DAC: %4u | ADC: %.3f V\r\n", i, adc_voltage / 1000.0f);
+                }
+            }
+        }
+
+        printf("\n--- 開始往下掃描 (4095 -> 0) ---\n");
+        
+        // 2. 往下掃 (注意：uint16_t 不能直接遞減到 -1，所以要寫點技巧)
+        for (int32_t i = 4095; i >= 0; i--) {
+            
+            // 設定 DAC 輸出
+            if (TCA9548_SelectByAddress(0x61) == HAL_OK) {
+                MCP4725_SetRawValue((uint16_t)i);
+            }
+            
+            HAL_Delay(2);
+            
+            // 切換回 ADC 讀取
+            if (TCA9548_SelectByAddress(0x48) == HAL_OK) {
+                if (APP_ADS1115_Read(&adc_voltage) == HAL_OK) {
+                    printf("DAC: %4d | ADC: %.3f V\r\n", i, adc_voltage / 1000.0f);
+                }
+            }
+        }
+        
+        printf("--- 掃描結束 ---\n\n");
+        HAL_Delay(2000); // 停兩秒後重新開始
+    }
+#endif
+/*ads1115 and MCP4725 測試程式 -End */
+
+
+#ifdef use_TCA9548_temp
+/*這是使用的模板
+ * 其實可以用更簡單的方式,但這個方式有個好處
+ * 只要把I2C_parameter.h中,『#define use_TCA9548』
+ * 這行刪掉或是標示註解,這樣只要有關TCA9548的程式碼都會變成註解
+ *
+ * */
+
+//模板開始
+#ifdef use_TCA9548
+    //要執行下面這行,必須先執行  Scan_I2C_Address();
+    //但這是系統一開始就該做的,所以不太需要特別說明;
+    //不過,狗工程師很多,寫個說明,以防萬一
+  if (TCA9548_SelectByAddress(<設備位址>) == HAL_OK) {
+
+#endif
+
+	  //程式主體
+	  //初始化必須要在之前就做好這個區塊是用來做應用層的東西,不是用來做初始化
+
+#ifdef use_TCA9548
+  }
+#endif
+  //模板結束
+#endif
+
+
+#ifdef on_off_screen
+    printf("init oled \n");
+
+    SH1106_StatusTypeDef oled_status; // 创建一个变量来接收返回值
+    oled_status = SH1106_Init();     // 调用初始化函数
+
+     // --- 【关键】检查初始化结果 ---
+     if (oled_status == SH1106_OK)
+     {
+       // --- 初始化成功 ---
+       printf("OLED SH1106 Initialized successfully!\r\n");
+       // 在这里可以执行一些开机画面或测试
+       SH1106_Fill(SH1106_COLOR_WHITE); // 将屏幕填充为白色
+       SH1106_UpdateScreen();          // 刷新屏幕
+       HAL_Delay(1000);                // 等待1秒
+
+       SH1106_Fill(SH1106_COLOR_BLACK); // 再填充为黑色
+       SH1106_UpdateScreen();
+       HAL_Delay(500);
+     }
+     else
+     {
+       // --- 初始化失败 ---
+       printf("OLED SH1106 Initialization FAILED! Error Code: %d\r\n", oled_status);
+
+       // 失败后可以采取一些措施，例如：
+       // 1. 点亮一个红色 LED 指示错误
+       //HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
+
+     }
+
+
+
+    //uint8_t oled_buffer[128*64/8] = {0};  // SH1106 的完整缓冲区（128x64位）
+
+    //memset(oled_buffer, 0x00, sizeof(oled_buffer)); // 全白
+    SH1106_Fill(1);
+    SH1106_UpdateScreen();
+
+ 	HAL_Delay(3000);
+ 	SH1106_Fill(0);
+ 	SH1106_UpdateScreen();
+
+
+ 	HAL_Delay(3000);
+ 	SH1106_Fill(1);
+ 	SH1106_UpdateScreen();
+
+
+    while(1){};
+
+
+    for (uint8_t x = 0; x < 128; x++) {
+         for (uint8_t y = 0; y < 64; y++) {
+         	//SH1106_OLED_DrawPixel(x, y, 1);
+         	SH1106_DrawPixel(x,y,1);
+            SH1106_UpdateScreen();
+
+         }
+     }
+    //SH1106_UpdateScreen();
+    //SH1106_UpdateScreen_org();
+ 	HAL_Delay(3000);
+ 	SH1106_Fill(1);
+    while (1);
+
+#endif
+
+#ifdef Horse_run
+#define HORSE_ANIM_WIDTH  128
+#define HORSE_ANIM_HEIGHT 64
+
+#define HORSE_ANIM_FRAME_COUNT (sizeof(horse_anim_frames) / sizeof(horse_anim_frames[0]))
+
+const unsigned char* horse_anim_frames[10] = {
+        horse1, horse2, horse3, horse4, horse5,
+        horse6, horse7, horse8, horse9, horse10
+    };
+
+    if(oled_status == SH1106_OK){
+    	while(1){
+    		for(int i=1;i< HORSE_ANIM_FRAME_COUNT;i++){// **修正：索引從 0 到 FRAME_COUNT-1**
+    			// 每繪製一幀前清屏，清除上一幀的殘影
+    			// 由於 DrawBitmap 會在畫圖前判斷像素是否為黑，所以通常只會在背景是靜態的情況下需要手動清屏
+                // 但對於動畫，通常是全屏重畫，所以每次清屏是正常的
+                SH1106_Fill(SH1106_COLOR_BLACK);
+
+                // 繪製當前幀的馬
+                SH1106_DrawBitmap(0, 0, horse_anim_frames[i], HORSE_ANIM_WIDTH, HORSE_ANIM_HEIGHT, SH1106_COLOR_WHITE);
+
+                // 更新螢幕，將緩衝區內容 (馬) 顯示出來
+                SH1106_UpdateScreen();
+
+                //HAL_Delay(100); // 調整這個值來控制速度，例如 50ms, 100ms, 200ms
+    		}
+    	}
+    }else{
+		printf("OLED SH1106 Initialization FAILED! Error Code: %d\r\n", oled_status);
+    }
+
+#endif
+
+
+#ifdef oled_test
+    #define Fill_OLED_Display_at_1
+    //#define Fill_OLED_Display_at_0
+
+#ifdef squr
+    for (uint8_t x = 50; x < 60; x++) {
+        for (uint8_t y = 10; y < 20; y++) {
+            SH1106_OLED_DrawPixel(oled_buffer, x, y, 1);
+    	    SH1106_OLED_UpdateScreen(oled_buffer);
+
+        }
+    }
+
+
+    while (1);
+#endif
+
+
+#ifdef Fill_OLED_Display_at_1
+
+    //uint8_t oled_buffer[1024] = {0}; // 128 * 64 / 8
+
+    SH1106_OLED_Init();
+    SH1106_OLED_Clear();
+
+    for (uint8_t x = 0; x < 128; x++) {
+        for (uint8_t y = 0; y < 64; y++) {
+        	SH1106_OLED_DrawPixel(oled_buffer, x, y, 1);
+        }
+    }
+    SH1106_OLED_UpdateScreen(oled_buffer);
+    //SH1106_UpdateScreen();
+
+	HAL_Delay(1000);
+
+#endif
+
+#ifdef Fill_OLED_Display_at_0
+
+    //uint8_t oled_buffer[1024] = {0}; // 128 * 64 / 8
+
+    SH1106_OLED_Init();
+    SH1106_OLED_Clear();
+
+    for (uint8_t x = 0; x < 128; x++) {
+        for (uint8_t y = 0; y < 64; y++) {
+        	SH1106_OLED_DrawPixel(oled_buffer, x, y, 0);
+        }
+    }
+
+    SH1106_OLED_UpdateScreen(oled_buffer);
+
+    while(0){}
+
+#endif
+
+#endif
+
+
+
+
+#ifdef clear_EEPROM
+    EEPROM_EraseAll();
+
+#endif
+
+
+#ifdef EEPROM_write
+    uint8_t Write_data[MAX_INPUT_LEN]="Hello Stm32f407"; //crc = 0xB965
+
+    //uint16_t W_data_len = strlen((char *)Write_data); // 实际长度=14（不含\0）
+
+    printf("EEPROM Write ...... \n\n");
+/*
+    printf("原始数据 (Hex): ");
+    for (int i = 0; i < W_data_len; i++) {
+        printf("%02X ", Write_data[i]);
+    }
+    printf("\n");
+
+	printf("read eeprom \n");
+*/
+
+    //EEPROM_Status W_status = EEPROM_Write(0x10, test_data, sizeof(test_data));
+
+	EEPROM_Status W_status = EEPROM_Write_NoCRC(0x0, Write_data, strlen((char *)Write_data));
+
+    HAL_Delay(5);
+
+    if(W_status != EEPROM_OK) {
+    	printf("Error \n");
+      Handle_Error(status);
+    }
+#endif
+
+
+#ifdef EEPROM_read
+    uint8_t read_data[MAX_INPUT_LEN]={0};
+    uint16_t R_data_len ;
+
+/*
+    for(int i = 0; i < MAX_INPUT_LEN ; i++) {
+        printf("%02X ", read_data[i]);
+        if((i+1) % 16 == 0){
+        	printf("\n");  // 每16字節換行
+        }
+      }
+      printf("\n\n");
+*/
+
+
+    EEPROM_Status E_status = EEPROM_Read_NoCRC(0x00, read_data,16);
+
+    if(E_status == EEPROM_OK) {
+        // 確保讀取的數據以 null 結尾
+        read_data[strlen((char *)read_data)-1] = '\0';
+
+        R_data_len = strlen((char *)read_data); // 实际长度=14（不含\0）
+
+        printf("Read from EEPROM: %s\n", read_data);
+        printf("原始数据 (Hex): ");
+        for (int i = 0; i < R_data_len; i++) {
+            printf("%02X ", read_data[i]);
+        }
+        printf("\n");
+
+    } else {
+        printf("EEPROM read failed with status: %d\n", status);
+    }
+/*
+    printf("prog end......\n\n");
+*/
+/*    while(1)
+    {
+
+    }*/
+
+#endif
+
+#ifdef PrintfScanfTestCode
+
+    char input_str[MAX_INPUT_LEN + 1]; // +1 为终止符'\0'
+
+	    scanf("%32s", input_str);
+	    printf("Received: %s\r\n",input_str);
+
+	    DateAndTime result = Parse_TimeString(input_str);
+
+	    printf("Parsed time: %04d-%02d-%02d %02d:%02d:%02d\n",
+	               result.year, result.month, result.day,
+	               result.hour, result.minute, result.second);
+
+		   while(1){
+
+		   }
+
+#endif
+
+
+#ifdef EEPROM
+  printf("\n");
+
+  printf("start......\n\n");
+
+  if(EEPROM_Init() != EEPROM_OK) {
+      Error_Handler();
+    }
+
+  printf("eeprom init ok......\n\n");
+
+
+    uint8_t test_data[] = "STM32 EEPROM 5566";
+
+    setvbuf(stdout, NULL, _IONBF, 0);
+    //int S_test_data=10;
+    //int S_test_data2=sizeof(test_data);
+
+    //printf("arry size (bytes): %d\n",S_test_data ); // 輸出 10
+    //printf("arry size (bytes): %d\n",S_test_data2 ); // 輸出 18
+
+    //fflush(stdout); // 確保每個數值立即輸出
+
+    while(1){
+
+   		   }
+#endif
+
+
+#ifdef uartPrintfloop
+
+    int i=0;
+        while(i<1000){
+
+        	 printf("USART2 Ready!%d\n",i);
+        	 i++;
+        	 HAL_Delay(1000);
+        }
+
+        // 發送 "ABCD" 驗證資料完整性
+        //const uint8_t test_data[] = {0x41, 0x42, 0x43, 0x44};
+       //  HAL_UART_Transmit(&huart2, test_data, sizeof(test_data), HAL_MAX_DELAY);
+
+
+        // 發送混合換行符的測試字串
+       // const char *test_str = "Line1\nLine2\r\nLine3\r";
+        //HAL_UART_Transmit(&huart2, (uint8_t*)test_str, strlen(test_str), HAL_MAX_DELAY);
+      /*
+        int val = 0;
+        printf("Test: ");
+        scanf("%d", &val);
+        clear_input_buffer();
+        HAL_Delay(0xFF);
+        printf("Value: %d\r\n", val);
+
+      */
+#endif
+
+  #ifdef uartPrintf
+
+  printf("USART2 Ready!\r\n");
+  printf("Enter a number: ");
+      int num = 0;
+      scanf("%d", &num);
+      printf("\n");
+
+      HAL_Delay(0xFF);
+
+      printf("You entered: %d\r\n", num);
+      HAL_Delay(0xFFF);
+#endif
+
+
+#ifdef TCA555
+
+    /**
+         * @brief  TCA9555 初始化
+         * param  無
+         * @return 無
+         */
+  TCA9555_Init();
+
+  // 初始化 TCA9555 為輸出模式
+  uint16_t output_data = 0xFFFF;
+  //output_data=
+  //|    bit 15   |   bit 14    |    bit 13   |    bit 12   |   bit 11    |    bit 10   |     bit 9   |     bit 8   |
+  //|   Port 15   |   Port 14   |   Port 13   |   Port 12   |   Port 11   |   Port 10   |   Port 09   |   Port 08   |
+  //
+  //|    bit 7    |     bit 6   |     bit 5   |    bit 4    |     bit 3   |    bit 2    |    bit 1    |    bit 0    |
+  //|   Port 07   |   Port 06   |   Port 05   |   Port 04   |   Port 03   |   Port 02   |   Port 01   |   Port 00   |
+
+
+
+
+ //uint16 mask = TCA9555_GPIO_MASK(port, pin);
+ ///int8_t position = 0;  // 當前點亮的位置（0~15）
+
+
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+	  TCA9555_WriteOutput(output_data);
+	  output_data--;
+	  HAL_Delay(500);
+	 //printf("in while loop\n");
+#endif
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+
+  /* USER CODE END 3 */
+
+
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 336;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/* USER CODE BEGIN 4 */
+
+
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
+
+
+
