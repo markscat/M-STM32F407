@@ -19,6 +19,7 @@
 "./Core/Src/usart.o"
 "./Core/Src/usb_otg.o"
 "./Core/Src/I2C_Device/BPS_i2c.o"
+"./Core/Src/I2C_Device/I2C-PCF8574_LCM.o"
 "./Core/Src/I2C_Device/I2C_APP.o"
 "./Core/Src/I2C_Device/I2C_MCP4725.o"
 "./Core/Src/I2C_Device/I2C_PCA9685.o"

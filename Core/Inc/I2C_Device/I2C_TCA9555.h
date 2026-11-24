@@ -94,7 +94,7 @@ typedef enum {
 #define TCA9555_DIR_INPUT   0xFF  // 1 = 輸入
 #define TCA9555_GPIO_MASK(port, pin) ((uint16_t)(1 << (port * 8 + pin)))
 
-extern I2C_HandleTypeDef hi2c1;  // CubeMX 生成的 I2C 句柄
+//extern I2C_HandleTypeDef hi2c1;  // CubeMX 生成的 I2C 句柄
 
 
 TCA9555_Status TCA9555_Init(void);

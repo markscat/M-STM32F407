@@ -69,7 +69,7 @@
  * mcp4725              0x61		 ok
  * TCA9685              0x40		 ok
  * PCA9548_I2C Mux 		0x70		 ok
- * 
+ * PCF8574 I2C_LCM      0x27
  *
  * ##版權：<br/>
  * GNU GENERAL PUBLIC LICENSE<br/>
@@ -611,7 +611,9 @@ int main(void)
 //#define on_off_screen
 //#define Horse_run
 
+#ifdef LCM
 
+#endif
 
 #define clock
 

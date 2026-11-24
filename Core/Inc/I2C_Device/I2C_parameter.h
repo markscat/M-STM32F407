@@ -101,7 +101,6 @@ typedef enum {
 #endif
 
 #define EEPROM_MAX_ADDR        	0x0FFF
-#define I2C_HANDLE        		hi2c1      // 使用的I2C实例
 #define EEPROM_PAGE_SIZE        32         // 设备页大小
 #define EEPROM_PWR_CTRL_ENABLE  false      // 是否启用电源控制功能
 
@@ -109,6 +108,10 @@ typedef enum {
   #define EEPROM_PWR_GPIO        GPIOB
   #define EEPROM_PWR_PIN         GPIO_PIN_12
 #endif
+
+
+#define I2C_HANDLE        		hi2c1      // 使用的I2C实例
+#define I2C_HANDLE_SUB			hi2c2
 
 //RTC
 /**
