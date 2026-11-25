@@ -619,15 +619,19 @@ printf("\n wait SDIO......\n");
     if (LCM_Print("Hellow ") != HAL_OK){
     	printf("LCM Fail");
     }
+    HAL_Delay(30);      // Clear 指令需要較長時間
+
 
 #endif
 
 #define clock
 
 #ifdef clock
-		  while (10)
-		  		  {
-		  uint32_t last_clock_update = 0;
+    	  LCM_Clear(); 		  //清除螢幕
+
+		  while (1)
+		  {
+			  uint32_t last_clock_update = 0;
 
 			  /* UART 輪詢（非阻塞） */
 			  APP_UART_Poll();
@@ -636,6 +640,7 @@ printf("\n wait SDIO......\n");
 			  if (HAL_GetTick() - last_clock_update >= 500) {
 				  last_clock_update = HAL_GetTick();
 				  APP_OLED_UpdateClock();   /* 讀 RTC + 溫度 → 刷 OLED */
+				  APP_LCM_UpdateClock();
 			  }
 			  /* 若要同時在 UART 上輸出時間，可在這裡偶爾呼叫 APP_RTC_ShowTimeAndTemp() */
 		  }

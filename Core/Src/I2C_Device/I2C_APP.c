@@ -275,6 +275,7 @@ void APP_OLED_ShowClock(const RTC_Time *rtc_dt, const DS3231_Temp *temp)
     SH1106_UpdateScreen();
 }
 
+
 /**
  * @brief 從 RTC 讀取時間並顯示到 OLED（含溫度）
  * @retval HAL_OK 成功；其他表示時間讀取失敗
@@ -298,3 +299,63 @@ HAL_StatusTypeDef APP_OLED_UpdateClock(void)
     return HAL_OK;
 }
 
+
+
+/**
+ * @brief 將 RTC 時間格式化並顯示在 LCM 上
+ * @param rtc_dt  RTC 時間結構體指標
+ * @param temp    DS3231 溫度結構體指標（若為 NULL 則不顯示溫度）
+ */
+
+void APP_LCM_ShowClock(const RTC_Time *rtc_dt, const DS3231_Temp *temp) {
+
+#ifdef use_TCA9548
+    // 切換通道到 LCM (PCF8574 位址是 0x27)
+    TCA9548_SelectByAddress(0x27);
+#endif
+
+    char line_buf[22];
+    static const char* fracStr[] = {"00", "25", "50", "75"};
+    static const char* weekStr[] = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
+
+    // --- 第一行：顯示日期與星期 ---
+    // 格式：20YY-MM-DD Mon
+    snprintf(line_buf, sizeof(line_buf), "20%02d-%02d-%02d %s",
+             rtc_dt->year, rtc_dt->month, rtc_dt->date,
+             (rtc_dt->day >= 1 && rtc_dt->day <= 7) ? weekStr[rtc_dt->day - 1] : "---");
+
+    LCM_SetCursor(0, 0);   // 游標移到第一行開頭
+    LCM_Print(line_buf);
+
+    // --- 第二行：顯示時間與溫度 ---
+    // 格式：HH:MM:SS 25.50°C
+    if (temp != NULL) {
+        snprintf(line_buf, sizeof(line_buf), "%02d:%02d:%02d %d.%sC",
+                 rtc_dt->hours, rtc_dt->minutes, rtc_dt->seconds,
+                 temp->Integer, fracStr[temp->Fraction]);
+    } else {
+        snprintf(line_buf, sizeof(line_buf), "%02d:%02d:%02d",
+                 rtc_dt->hours, rtc_dt->minutes, rtc_dt->seconds);
+    }
+
+    LCM_SetCursor(1, 0);   // 游標移到第二行開頭
+    LCM_Print(line_buf);
+}
+
+
+HAL_StatusTypeDef APP_LCM_UpdateClock(void){
+    RTC_Time rtc_dt = {0};
+    DS3231_Temp temp = {0};
+    HAL_StatusTypeDef st;
+
+    st = RTC_GetTime(&rtc_dt);
+    if (st != HAL_OK) {
+        return st;
+    }
+
+    /* 溫度讀取失敗不影響時間顯示，所以不檢查返回值 */
+    DS3231_GetTemp(&temp);
+
+    APP_LCM_ShowClock(&rtc_dt, &temp);
+    return HAL_OK;
+}

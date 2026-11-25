@@ -409,7 +409,7 @@ void SH1106_DrawPixel(uint16_t x, uint16_t y, SH1106_COLOR_t color) {
     if (color == SH1106_COLOR_WHITE) {
         SH1106_Buffer[x + (y / 8) * SH1106_WIDTH] |= (1 << (y % 8));
     } else {
-        SH1106_Buffer[x + (y / 8) * SH1106_WIDTH] &= ~(1 << (y % 8));
+         SH1106_Buffer[x + (y / 8) * SH1106_WIDTH] &= ~(1 << (y % 8));
     }
 }
 

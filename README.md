@@ -1,5 +1,8 @@
 我在ＳＴＭ３２Ｆ４０７上開發的程式……好吧！還有Deepseek、chargpt和Gemini
 <br>
+2026/11/25
+    測試程式：讀取RTC的時間，然後分別顯示在OLED和ＬCM上
+
 2026/11/20<br>
     加入SPI1,SPI2軟體模組<br>
     加入USB軟體模組<br>
